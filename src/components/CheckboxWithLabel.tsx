@@ -5,18 +5,20 @@ import { FormControlLabel, Checkbox, Typography } from "@mui/material";
 
 interface CheckboxWithLabelProps {
   label: string;
-  checked: boolean;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  name?: string;
+  checked?: boolean;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const CheckboxWithLabel: React.FC<CheckboxWithLabelProps> = ({
   label,
+  name,
   checked,
   onChange,
 }) => {
   return (
     <FormControlLabel
-      control={<Checkbox checked={checked} onChange={onChange} />}
+      control={<Checkbox name={name} checked={checked} onChange={onChange} />}
       label={<Typography variant="body2">{label}</Typography>}
     />
   );

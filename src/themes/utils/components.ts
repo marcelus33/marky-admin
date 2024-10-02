@@ -25,7 +25,7 @@ const components = {
       root: {
         color: colors.light.grey[100],
         "&.Mui-checked": {
-          color: colors.light.secondary,
+          color: colors.light.primary,
         },
       },
     },

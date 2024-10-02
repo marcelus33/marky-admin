@@ -1,26 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+//import "./App.css";
+import NotFound from "./pages/NotFound";
+import { publicRoutes } from "./routes/publicRoutes";
+import { CustomThemeProvider } from "./themes/ThemeContext";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <CustomThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Loop over public routes */}
+          {publicRoutes.map(({ path, component: Component }) => (
+            <Route key={path} path={path} element={<Component />} />
+          ))}
+
+          {/* Loop over private routes */}
+          {/* {privateRoutes.map(({ path, component: Component }) => (
+          <Route
+            key={path}
+            path={path}
+            element={isAuthenticated ? <Component /> : <Navigate to="/login" />}
+          />
+        ))} */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </CustomThemeProvider>
   );
-}
+};
 
 export default App;
