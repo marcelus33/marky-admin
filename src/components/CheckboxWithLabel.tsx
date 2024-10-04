@@ -18,7 +18,14 @@ const CheckboxWithLabel: React.FC<CheckboxWithLabelProps> = ({
 }) => {
   return (
     <FormControlLabel
-      control={<Checkbox name={name} checked={checked} onChange={onChange} />}
+      control={
+        <Checkbox
+          size="medium"
+          name={name}
+          checked={checked}
+          onChange={onChange}
+        />
+      }
       label={<Typography variant="body2">{label}</Typography>}
     />
   );

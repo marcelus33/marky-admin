@@ -1,5 +1,5 @@
 const typography = {
-  fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif', // Define la fuente principal
+  fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   h1: {
     fontSize: "34px",
     lineHeight: "34px",
@@ -42,11 +42,22 @@ const typography = {
     letterSpacing: "0.1px",
     fontWeight: 400,
   },
+  link: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: "14px",
+    fontWeight: 500,
+    lineHeight: "22px",
+    letterSpacing: "-0.1px",
+    textAlign: "left",
+  },
   caption: {
     fontSize: "12px",
     lineHeight: "22px",
     letterSpacing: "0.1px",
     fontWeight: 400,
+  },
+  button: {
+    fontSize: "15px",
   },
 };
 

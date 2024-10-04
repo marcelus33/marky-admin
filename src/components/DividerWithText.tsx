@@ -7,11 +7,7 @@ interface DividerWithTextProps {
 
 const DividerWithText: React.FC<DividerWithTextProps> = ({ children }) => {
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      sx={{ width: "100%", marginTop: 2, marginBottom: 2 }}
-    >
+    <Box display="flex" alignItems="center" sx={{ width: "100%" }}>
       <Box
         sx={{ flex: 1, borderBottom: "1px solid", borderColor: "grey.400" }}
       />

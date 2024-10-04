@@ -6,6 +6,10 @@ const components = {
     styleOverrides: {
       root: {
         textTransform: "none",
+        padding: "11px 0 11px 0",
+        gap: "8px",
+        borderRadius: "6px",
+        opacity: 1,
       },
     },
   },
