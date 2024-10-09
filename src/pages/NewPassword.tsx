@@ -3,33 +3,32 @@ import { useTheme } from "@mui/material/styles";
 import { Field, FieldProps, Form, Formik } from "formik";
 import React from "react";
 import * as Yup from "yup";
-import { ReactComponent as GoogleIcon } from "../assets/icons/google.svg";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ReactComponent as LoginImage } from "../assets/images/login.svg";
-import CheckboxWithLabel from "../components/CheckboxWithLabel";
-import DividerWithText from "../components/DividerWithText";
+import { ReactComponent as ResetPasswordImage } from "../assets/images/reset_password.svg";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
 
-const Login: React.FC = () => {
+const NewPassword: React.FC = () => {
   const theme = useTheme();
+
   const initialValues = {
-    email: "",
-    password: "",
-    rememberMe: false,
+    newPassword: "",
+    confirmPassword: "",
   };
 
   const validationSchema = Yup.object().shape({
-    email: Yup.string()
-      .email("Invalid email")
+    newPassword: Yup.string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
       .required("Este campo es obligatorio"),
-    password: Yup.string().required("Este campo es obligatorio"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref("newPassword")], "Las contraseñas no coinciden")
+      .required("Este campo es obligatorio"),
   });
 
   const handleSubmit = (values: typeof initialValues) => {
-    // Add your login logic here (e.g., API call)
-    console.log("Logging in with:", values);
+    // Aquí iría la lógica para cambiar la contraseña.
+    console.log("Updating password to:", values.newPassword);
   };
 
   return (
@@ -58,24 +57,24 @@ const Login: React.FC = () => {
           >
             <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
             <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-              Tus comensales merecen atención,{" "}
+              Llegó tu momento,{" "}
               <span style={{ color: theme.palette.primary.main }}>
-                consiéntelos.
+                protege tu cuenta y a tus clientes.
               </span>
             </Typography>
             <Typography variant="body2" gutterBottom>
-              Apóyate en tu plataforma gastronómica pensada para lograrlo.
+              Asegúrate de que sea segura y fácil de recordar.
             </Typography>
             <Box
               display="flex"
               justifyContent="center"
               sx={{ marginTop: theme.spacing(24) }}
             >
-              <LoginImage />
+              <ResetPasswordImage />
             </Box>
           </Box>
         </Grid>
-        {/* =========== LOGIN FORM CONTAINER ============= */}
+        {/*  */}
         <Grid
           item
           xs={12}
@@ -142,108 +141,62 @@ const Login: React.FC = () => {
                 }}
                 variant="h2"
               >
-                Inicia sesión
+                Nueva Contraseña
               </Typography>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: theme.palette.grey[400],
-                  color: theme.palette.text.primary,
-                  boxShadow: 0,
-                  marginBottom: theme.spacing(6),
-                }}
-                fullWidth
-                startIcon={<GoogleIcon />}
-              >
-                Continuar con Google
-              </Button>
-              <DividerWithText>
-                <Typography variant="h5" color="textDisabled">
-                  o accede con tus datos registrados
-                </Typography>
-              </DividerWithText>
               <Formik
                 initialValues={initialValues}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
+                validateOnMount={true}
               >
-                {({
-                  handleSubmit,
-                  setFieldValue,
-                  values,
-                  handleChange,
-                  errors,
-                  touched,
-                }) => (
+                {({ handleSubmit, touched, errors, values, setFieldValue }) => (
                   <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
-                    <Box
-                      sx={{
-                        marginBottom: theme.spacing(4),
-                        marginTop: theme.spacing(6),
-                      }}
-                    >
+                    <Box marginBottom={theme.spacing(4)}>
                       <Field
-                        name="email"
+                        name="newPassword"
                         component={Input}
-                        label="Correo electrónico"
-                        type="email"
-                        required
-                        error={touched.email && Boolean(errors.email)}
-                        helperText={touched.email && errors.email}
-                        value={values.email}
-                        onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("email", e.target.value);
-                        }}
-                      />
-                    </Box>
-                    <Box sx={{ marginBottom: theme.spacing(4) }}>
-                      <Field
-                        name="password"
-                        component={Input}
-                        label="Contraseña"
+                        label="Nueva Contraseña"
                         type="password"
                         required
-                        error={touched.password && Boolean(errors.password)}
-                        helperText={touched.password && errors.password}
-                        value={values.password}
+                        placeholder="Ingrese su nueva contraseña"
+                        error={
+                          touched.newPassword && Boolean(errors.newPassword)
+                        }
+                        helperText={touched.newPassword && errors.newPassword}
+                        value={values.newPassword}
                         onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("password", e.target.value);
+                          setFieldValue("newPassword", e.target.value);
                         }}
                       />
                     </Box>
-                    {/*  */}
-                    <Box
-                      display={"flex"}
-                      flexDirection={{ xs: "column", sm: "row" }}
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
-                      sx={{
-                        marginBottom: theme.spacing(4),
-                      }}
-                    >
+                    <Box marginBottom={theme.spacing(4)}>
                       <Field
-                        name="rememberMe"
-                        id="rememberMe"
-                        type="checkbox"
-                        checked={values.rememberMe}
-                        onChange={handleChange}
-                        as={CheckboxWithLabel}
-                        label="Mantener mi sesión iniciada"
+                        name="confirmPassword"
+                        component={Input}
+                        label="Confirmar Contraseña"
+                        type="password"
+                        required
+                        placeholder="Ingrese su nueva contraseña"
+                        error={
+                          touched.confirmPassword &&
+                          Boolean(errors.confirmPassword)
+                        }
+                        helperText={
+                          touched.confirmPassword && errors.confirmPassword
+                        }
+                        value={values.confirmPassword}
+                        onChange={(e: React.ChangeEvent<any>) => {
+                          setFieldValue("confirmPassword", e.target.value);
+                        }}
                       />
-                      <Link to={`${ROUTES.RECOVER_PASSWORD}`}>
-                        <Typography variant="link">
-                          ¿Olvidaste tu contraseña?
-                        </Typography>
-                      </Link>
                     </Box>
-                    {/*  */}
                     <Button
                       type="submit"
                       variant="contained"
                       color="primary"
                       fullWidth
                     >
-                      Iniciar sesión
+                      Cambiar contraseña
                     </Button>
                   </Form>
                 )}
@@ -256,4 +209,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default NewPassword;

@@ -15,6 +15,9 @@ interface InputProps {
   helperText?: string;
   disabled?: boolean;
   placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // opcional
+  onBlur?: () => void; // opcional
 }
 
 const Input: React.FC<InputProps> = ({
@@ -25,18 +28,25 @@ const Input: React.FC<InputProps> = ({
   helperText,
   disabled = false,
   placeholder,
+  value,
+  onChange,
+  onBlur,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
+
   return (
     <FormControl fullWidth error={error} disabled={disabled}>
       <FormLabel>
         {label} {required && <span style={{ color: "red" }}>*</span>}
       </FormLabel>
       <TextField
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
         type={showPassword ? "text" : type}
         variant="outlined"
         placeholder={placeholder}
@@ -55,9 +65,7 @@ const Input: React.FC<InputProps> = ({
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
-            ) : (
-              <></>
-            ),
+            ) : null,
         }}
       />
       {helperText && <FormHelperText>{helperText}</FormHelperText>}

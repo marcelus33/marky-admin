@@ -3,33 +3,29 @@ import { useTheme } from "@mui/material/styles";
 import { Field, FieldProps, Form, Formik } from "formik";
 import React from "react";
 import * as Yup from "yup";
-import { ReactComponent as GoogleIcon } from "../assets/icons/google.svg";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ReactComponent as LoginImage } from "../assets/images/login.svg";
-import CheckboxWithLabel from "../components/CheckboxWithLabel";
-import DividerWithText from "../components/DividerWithText";
+import { ReactComponent as RecoverPasswordImage } from "../assets/images/recover_password.svg";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
+import SubmitButtonWithCountdown from "../components/ButtonCountdown";
 
-const Login: React.FC = () => {
+const RecoverPassword: React.FC = () => {
   const theme = useTheme();
+
   const initialValues = {
     email: "",
-    password: "",
-    rememberMe: false,
   };
 
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .email("Invalid email")
       .required("Este campo es obligatorio"),
-    password: Yup.string().required("Este campo es obligatorio"),
   });
 
   const handleSubmit = (values: typeof initialValues) => {
-    // Add your login logic here (e.g., API call)
-    console.log("Logging in with:", values);
+    // TODO
+    console.log("Sending recovery link to:", values);
   };
 
   return (
@@ -58,24 +54,24 @@ const Login: React.FC = () => {
           >
             <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
             <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-              Tus comensales merecen atención,{" "}
+              Cuida tu contraseña,{" "}
               <span style={{ color: theme.palette.primary.main }}>
-                consiéntelos.
+                guárdala en un lugar seguro.
               </span>
             </Typography>
             <Typography variant="body2" gutterBottom>
-              Apóyate en tu plataforma gastronómica pensada para lograrlo.
+              Tus comensales pueden ser víctima de estafas.
             </Typography>
             <Box
               display="flex"
               justifyContent="center"
               sx={{ marginTop: theme.spacing(24) }}
             >
-              <LoginImage />
+              <RecoverPasswordImage />
             </Box>
           </Box>
         </Grid>
-        {/* =========== LOGIN FORM CONTAINER ============= */}
+        {/*  */}
         <Grid
           item
           xs={12}
@@ -96,9 +92,8 @@ const Login: React.FC = () => {
                 },
               }}
             >
-              <Typography variant="body2">¿Aún no formas parte?</Typography>
-              <Link to={`${ROUTES.REGISTER}`}>
-                <Typography variant="link">Registrate ahora</Typography>
+              <Link to={`${ROUTES.LOGIN}`}>
+                <Typography variant="link">Volver al login</Typography>
               </Link>
             </Box>
             {/* MOBILE HEADER */}
@@ -142,46 +137,36 @@ const Login: React.FC = () => {
                 }}
                 variant="h2"
               >
-                Inicia sesión
+                Recuperar contraseña
               </Typography>
-              <Button
-                variant="contained"
+              <Typography
+                variant="body2"
                 sx={{
-                  backgroundColor: theme.palette.grey[400],
-                  color: theme.palette.text.primary,
-                  boxShadow: 0,
+                  width: "100%",
                   marginBottom: theme.spacing(6),
                 }}
-                fullWidth
-                startIcon={<GoogleIcon />}
               >
-                Continuar con Google
-              </Button>
-              <DividerWithText>
-                <Typography variant="h5" color="textDisabled">
-                  o accede con tus datos registrados
-                </Typography>
-              </DividerWithText>
+                Ingresa tus datos a continuación para solicitar el
+                restablecimiento de la contraseña de tu cuenta.
+              </Typography>
+
               <Formik
                 initialValues={initialValues}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
+                validateOnMount={true}
               >
                 {({
                   handleSubmit,
-                  setFieldValue,
-                  values,
                   handleChange,
+                  setFieldValue,
+                  isValid,
                   errors,
                   touched,
+                  values,
                 }) => (
                   <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
-                    <Box
-                      sx={{
-                        marginBottom: theme.spacing(4),
-                        marginTop: theme.spacing(6),
-                      }}
-                    >
+                    <Box marginBottom={theme.spacing(4)}>
                       <Field
                         name="email"
                         component={Input}
@@ -196,55 +181,20 @@ const Login: React.FC = () => {
                         }}
                       />
                     </Box>
-                    <Box sx={{ marginBottom: theme.spacing(4) }}>
-                      <Field
-                        name="password"
-                        component={Input}
-                        label="Contraseña"
-                        type="password"
-                        required
-                        error={touched.password && Boolean(errors.password)}
-                        helperText={touched.password && errors.password}
-                        value={values.password}
-                        onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("password", e.target.value);
-                        }}
-                      />
-                    </Box>
-                    {/*  */}
-                    <Box
-                      display={"flex"}
-                      flexDirection={{ xs: "column", sm: "row" }}
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
-                      sx={{
-                        marginBottom: theme.spacing(4),
-                      }}
-                    >
-                      <Field
-                        name="rememberMe"
-                        id="rememberMe"
-                        type="checkbox"
-                        checked={values.rememberMe}
-                        onChange={handleChange}
-                        as={CheckboxWithLabel}
-                        label="Mantener mi sesión iniciada"
-                      />
-                      <Link to={`${ROUTES.RECOVER_PASSWORD}`}>
-                        <Typography variant="link">
-                          ¿Olvidaste tu contraseña?
-                        </Typography>
-                      </Link>
-                    </Box>
-                    {/*  */}
-                    <Button
+                    <SubmitButtonWithCountdown
                       type="submit"
                       variant="contained"
                       color="primary"
+                      isValid={isValid}
+                      sx={{
+                        marginTop: theme.spacing(2),
+                        marginBottom: theme.spacing(6),
+                      }}
                       fullWidth
+                      onSubmit={handleSubmit}
                     >
-                      Iniciar sesión
-                    </Button>
+                      Recuperar contraseña
+                    </SubmitButtonWithCountdown>
                   </Form>
                 )}
               </Formik>
@@ -256,4 +206,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default RecoverPassword;

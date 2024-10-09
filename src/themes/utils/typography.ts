@@ -30,6 +30,12 @@ const typography = {
     letterSpacing: "-0.1px",
     fontWeight: 500,
   },
+  subtitle2: {
+    fontSize: "14px",
+    lineHeight: "22px",
+    letterSpacing: "0.1px",
+    fontWeight: 700,
+  },
   body1: {
     fontSize: "14px",
     lineHeight: "22px",

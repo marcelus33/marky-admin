@@ -4,7 +4,7 @@ import React from "react";
 import { FormControlLabel, Checkbox, Typography } from "@mui/material";
 
 interface CheckboxWithLabelProps {
-  label: string;
+  label: string | React.ReactNode;
   name?: string;
   checked?: boolean;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
