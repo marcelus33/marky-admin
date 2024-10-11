@@ -1,5 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 //import "./App.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import NotFound from "./pages/NotFound";
 import { publicRoutes } from "./routes/publicRoutes";
 import { CustomThemeProvider } from "./themes/ThemeContext";
@@ -24,6 +26,7 @@ const App = () => {
         ))} */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ToastContainer />
       </BrowserRouter>
     </CustomThemeProvider>
   );
