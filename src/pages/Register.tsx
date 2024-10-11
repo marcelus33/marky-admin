@@ -13,6 +13,7 @@ import FormikPhoneInput from "../components/FormikPhoneInput";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
+import { useNavigate } from "react-router-dom";
 
 const AcceptTermsLabel = () => {
   return (
@@ -32,6 +33,7 @@ const AcceptTermsLabel = () => {
 
 const Register: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [isGoogleSignup, setIsGoogleSignup] = useState(false);
   const [googleEmail, setGoogleEmail] = useState<string>("");
 
@@ -63,6 +65,8 @@ const Register: React.FC = () => {
 
   const handleSubmit = (values: typeof initialValues) => {
     console.log("Registering with:", values);
+    // TODO: connect w backend
+    navigate(`${ROUTES.VERIFY_EMAIL}`.replace(":token", "test"));
   };
 
   const handleGoogleSuccess = (response: any) => {

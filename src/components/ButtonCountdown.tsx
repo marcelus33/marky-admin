@@ -5,6 +5,7 @@ interface SubmitButtonWithCountdownProps extends ButtonProps {
   onSubmit: () => void; // Custom submit function prop
   interval?: number; // Optional interval prop
   isValid?: boolean;
+  isDisabledOnMount?: boolean;
 }
 
 const SubmitButtonWithCountdown: React.FC<SubmitButtonWithCountdownProps> = ({
@@ -13,13 +14,13 @@ const SubmitButtonWithCountdown: React.FC<SubmitButtonWithCountdownProps> = ({
   interval = 30, // Default value of 30 seconds
   isValid,
   disabled,
+  isDisabledOnMount = false,
   ...props
 }) => {
-  const [isDisabled, setIsDisabled] = useState<boolean>(false);
+  const [isDisabled, setIsDisabled] = useState<boolean>(isDisabledOnMount);
   const [countdown, setCountdown] = useState<number>(interval);
 
   const handleClick = () => {
-    console.log("isValid", isValid);
     if (isValid !== undefined && isValid !== true) {
       return;
     }

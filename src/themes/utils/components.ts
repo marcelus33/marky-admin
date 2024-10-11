@@ -20,7 +20,10 @@ const components = {
         "&.MuiFormLabel-root": {
           color: colors.light.text.primary,
         },
-        ...typography.h5,
+        fontSize: "14px",
+        lineHeight: "22px",
+        letterSpacing: "-0.1px",
+        fontWeight: 500,
       },
     },
   },

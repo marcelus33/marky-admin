@@ -5,9 +5,9 @@ import { ROUTES } from "../routes/paths";
 const NotFound: React.FC = () => {
   return (
     <div>
-      <h1>404 - Page Not Found</h1>
-      <p>The page you're looking for does not exist.</p>
-      <Link to={ROUTES.LOGIN}>Go to Login</Link>
+      <h1>404 - Página no encontrada.</h1>
+      <p>La página que buscas no existe.</p>
+      <Link to={ROUTES.LOGIN}>Ir al login</Link>
     </div>
   );
 };

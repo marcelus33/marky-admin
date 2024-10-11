@@ -8,9 +8,11 @@ import Link from "../components/Link";
 import { ReactComponent as VerifyEmail } from "../assets/images/verify_email.svg";
 import SubmitButtonWithCountdown from "../components/ButtonCountdown";
 import VerificationCodeInput from "../components/VerificationCodeInput";
+import { useParams } from "react-router-dom";
 
 const EmailVerification: React.FC = () => {
   const theme = useTheme();
+  const { token = "error" } = useParams();
   const [verificationCode, setVerificationCode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ const EmailVerification: React.FC = () => {
     if (!verificationCode) {
       setError("Por favor, ingrese el código de verificación.");
     } else {
-      // Aquí procesas la verificación
+      // TODO: verify and redirect to onboarding
       console.log("Código de verificación:", verificationCode);
       setError(null);
     }
@@ -131,20 +133,30 @@ const EmailVerification: React.FC = () => {
                 sx={{ marginBottom: theme.spacing(6) }}
               />
 
-              <SubmitButtonWithCountdown
+              <Button
                 type="submit"
                 variant="contained"
                 color="primary"
-                // disabled={!isComplete}
+                disabled={!isComplete}
+                fullWidth
+                sx={{ marginBottom: theme.spacing(3) }}
+                onClick={handleSubmit}
+              >
+                Verificar correo
+              </Button>
+
+              <SubmitButtonWithCountdown
+                type="button"
+                variant="outlined"
+                color="primary"
+                isDisabledOnMount={false}
                 sx={{
-                  marginTop: theme.spacing(2),
-                  marginBottom: theme.spacing(6),
                   width: "100%",
                 }}
                 onSubmit={() => console.log("Submitting...")}
                 fullWidth
               >
-                Recuperar contraseña
+                Reenviar código
               </SubmitButtonWithCountdown>
             </Box>
           </Box>

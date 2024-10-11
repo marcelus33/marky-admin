@@ -13,7 +13,7 @@ const DividerWithText: React.FC<DividerWithTextProps> = ({ children }) => {
       />
       <Typography
         variant="body2"
-        sx={{ color: "grey.600", paddingLeft: 2, paddingRight: 2 }}
+        sx={{ paddingLeft: 2, paddingRight: 2 }} // color: "grey.600",
       >
         {children}
       </Typography>
