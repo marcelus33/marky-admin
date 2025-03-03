@@ -1,9 +1,13 @@
 export const ROUTES = {
-  HOME: "/",
+  // HOME: "/",
   LOGIN: "/login",
+  LOGOUT: "/logout",
   REGISTER: "/register",
   VERIFY_EMAIL_SEND: "/verify-email/",
   VERIFY_EMAIL: "/verify-email/:token",
   RECOVER_PASSWORD: "/recover-password",
-  NEW_PASSWORD: "/reset-password/:token",
+  NEW_PASSWORD: "/reset-password/:uid/:token",
+  // protected routes
+  CONFIGURATION: "/configuration",
+  HOME: "/home",
 };

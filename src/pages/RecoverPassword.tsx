@@ -1,7 +1,7 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Field, FieldProps, Form, Formik } from "formik";
-import React from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as RecoverPasswordImage } from "../assets/images/recover_password.svg";
@@ -9,9 +9,13 @@ import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
 import SubmitButtonWithCountdown from "../components/ButtonCountdown";
+import { sendPasswordRecovery } from "../services/authService";
+import { ShowNotification } from "../utils/utils";
+import { useNavigate } from "react-router-dom";
 
 const RecoverPassword: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const initialValues = {
     email: "",
@@ -23,9 +27,18 @@ const RecoverPassword: React.FC = () => {
       .required("Este campo es obligatorio"),
   });
 
-  const handleSubmit = (values: typeof initialValues) => {
-    // TODO
-    console.log("Sending recovery link to:", values);
+  const [emailSent, setEmailSent] = useState(false);
+
+  const handleSubmit = async (values: typeof initialValues) => {
+    try {
+      const response = await sendPasswordRecovery({
+        email: values.email,
+      });
+      ShowNotification({ message: response.message, type: "success" });
+      setEmailSent(true);
+    } catch (error: any) {
+      ShowNotification({ message: error.message, type: "error" });
+    }
   };
 
   return (
@@ -137,7 +150,7 @@ const RecoverPassword: React.FC = () => {
                 }}
                 variant="h2"
               >
-                Recuperar contraseña
+                {emailSent ? "¡Hecho!" : "Recuperar contraseña"}
               </Typography>
               <Typography
                 variant="body2"
@@ -146,58 +159,109 @@ const RecoverPassword: React.FC = () => {
                   marginBottom: theme.spacing(6),
                 }}
               >
-                Ingresa tus datos a continuación para solicitar el
-                restablecimiento de la contraseña de tu cuenta.
+                {emailSent
+                  ? "Te hemos enviado un correo electrónico con instrucciones para restablecer la contraseña."
+                  : "Ingresa tus datos a continuación para solicitar el restablecimiento de la contraseña de tu cuenta."}
               </Typography>
 
-              <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={handleSubmit}
-                validateOnMount={true}
-              >
-                {({
-                  handleSubmit,
-                  handleChange,
-                  setFieldValue,
-                  isValid,
-                  errors,
-                  touched,
-                  values,
-                }) => (
-                  <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
-                    <Box marginBottom={theme.spacing(4)}>
-                      <Field
-                        name="email"
-                        component={Input}
-                        label="Correo electrónico"
-                        type="email"
-                        required
-                        error={touched.email && Boolean(errors.email)}
-                        helperText={touched.email && errors.email}
-                        value={values.email}
-                        onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("email", e.target.value);
+              {!emailSent && (
+                <Formik
+                  initialValues={initialValues}
+                  validationSchema={validationSchema}
+                  onSubmit={handleSubmit}
+                  validateOnMount={true}
+                >
+                  {({
+                    handleSubmit,
+                    handleChange,
+                    setFieldValue,
+                    isValid,
+                    errors,
+                    touched,
+                    values,
+                  }) => (
+                    <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
+                      <Box marginBottom={theme.spacing(4)}>
+                        <Field
+                          name="email"
+                          component={Input}
+                          label="Correo electrónico"
+                          type="email"
+                          required
+                          error={touched.email && Boolean(errors.email)}
+                          helperText={touched.email && errors.email}
+                          value={values.email}
+                          onChange={(e: React.ChangeEvent<any>) => {
+                            setFieldValue("email", e.target.value);
+                          }}
+                        />
+                      </Box>
+                      <SubmitButtonWithCountdown
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        isValid={isValid}
+                        sx={{
+                          marginTop: theme.spacing(2),
+                          marginBottom: theme.spacing(6),
                         }}
-                      />
-                    </Box>
-                    <SubmitButtonWithCountdown
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      isValid={isValid}
-                      sx={{
-                        marginTop: theme.spacing(2),
-                        marginBottom: theme.spacing(6),
+                        fullWidth
+                        onSubmit={handleSubmit}
+                      >
+                        Enviar
+                      </SubmitButtonWithCountdown>
+                    </Form>
+                  )}
+                </Formik>
+              )}
+              {!!emailSent && (
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <Button
+                    color="primary"
+                    variant="contained"
+                    fullWidth
+                    sx={{ marginBottom: theme.spacing(6) }}
+                    onClick={() => navigate(ROUTES.LOGIN)}
+                  >
+                    Volver al login
+                  </Button>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      width: "100%",
+                    }}
+                  >
+                    Revisa tu bandeja de entrada, incluyendo la carpeta de spam.
+                  </Typography>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="h5">¿No te llegó?</Typography>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setEmailSent(false);
                       }}
-                      fullWidth
-                      onSubmit={handleSubmit}
                     >
-                      Recuperar contraseña
-                    </SubmitButtonWithCountdown>
-                  </Form>
-                )}
-              </Formik>
+                      Reenviar
+                    </Button>
+                  </Box>
+                </Box>
+              )}
             </Box>
           </Box>
         </Grid>

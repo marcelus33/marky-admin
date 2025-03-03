@@ -14,6 +14,8 @@ import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
 import { useNavigate } from "react-router-dom";
+import { register } from "../services/authService";
+import { displayFormikFormErrors, ShowNotification } from "../utils/utils";
 
 const AcceptTermsLabel = () => {
   return (
@@ -36,13 +38,13 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
   const [isGoogleSignup, setIsGoogleSignup] = useState(false);
   const [googleEmail, setGoogleEmail] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const initialValues = {
     businessName: "",
     email: "",
     phone: "",
     password: "",
-    acceptTerms: false,
   };
 
   const isRequiredMessage = "Este campo es requerido";
@@ -57,16 +59,34 @@ const Register: React.FC = () => {
       : Yup.string()
           .min(8, "Debe tener al menos 8 carácteres")
           .required(isRequiredMessage),
-    acceptTerms: Yup.boolean().oneOf(
-      [true],
-      "Debe aceptar los términos y condiciones"
-    ),
   });
 
-  const handleSubmit = (values: typeof initialValues) => {
-    console.log("Registering with:", values);
-    // TODO: connect w backend
-    navigate(`${ROUTES.VERIFY_EMAIL}`.replace(":token", "test"));
+  const handleSubmit = async (
+    values: typeof initialValues,
+    { setFieldError }: any
+  ) => {
+    setLoading(true);
+    try {
+      const response = await register({
+        email: values.email,
+        password: values.password,
+        business_name: values.businessName,
+        phone_number: values.phone,
+      });
+      const { verification_link } = response;
+      ShowNotification({ message: response.message, type: "success" });
+      setLoading(false);
+      navigate(ROUTES.VERIFY_EMAIL.replace(":token", verification_link), {
+        state: {
+          email: values.email,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      ShowNotification({ message: error.message, type: "error" });
+      setLoading(false);
+      displayFormikFormErrors(error, setFieldError);
+    }
   };
 
   const handleGoogleSuccess = (response: any) => {
@@ -185,13 +205,13 @@ const Register: React.FC = () => {
                 sx={{
                   width: "100%",
                   textAlign: "left",
-                  marginBottom: theme.spacing(6),
+                  marginBottom: theme.spacing(1),
                 }}
                 variant="h2"
               >
                 {isGoogleSignup ? "Cuenta comercial" : "Crea una cuenta"}
               </Typography>
-              {!isGoogleSignup ? (
+              {/* {!isGoogleSignup ? (
                 <Button
                   variant="contained"
                   sx={{
@@ -221,14 +241,14 @@ const Register: React.FC = () => {
                     disabled
                   />
                 </Box>
-              )}
-              {!isGoogleSignup && (
+              )} */}
+              {/* {!isGoogleSignup && (
                 <DividerWithText>
                   <Typography variant="h5" color="textDisabled">
                     O accede con tus datos
                   </Typography>
                 </DividerWithText>
-              )}
+              )} */}
               <Formik
                 initialValues={initialValues}
                 validationSchema={validationSchema}
@@ -241,6 +261,8 @@ const Register: React.FC = () => {
                   setFieldValue,
                   errors,
                   touched,
+                  isValid,
+                  dirty,
                 }) => (
                   <Form
                     onSubmit={handleSubmit}
@@ -259,6 +281,7 @@ const Register: React.FC = () => {
                         label="Nombre del comercio"
                         type="text"
                         required
+                        disabled={loading}
                         error={touched.email && Boolean(errors.email)}
                         helperText={touched.businessName && errors.businessName}
                         value={values.businessName}
@@ -276,6 +299,7 @@ const Register: React.FC = () => {
                             label="Correo electrónico"
                             type="email"
                             required
+                            disabled={loading}
                             error={touched.email && Boolean(errors.email)}
                             helperText={touched.email && errors.email}
                             value={values.email}
@@ -291,6 +315,7 @@ const Register: React.FC = () => {
                             label="Contraseña"
                             type="password"
                             required
+                            disabled={loading}
                             error={touched.password && Boolean(errors.password)}
                             helperText={touched.password && errors.password}
                             value={values.password}
@@ -305,6 +330,7 @@ const Register: React.FC = () => {
                       <Field
                         name="phone"
                         required
+                        disabled={loading}
                         component={FormikPhoneInput}
                         label="Número de teléfono"
                         placeholder="Ingrese su número de teléfono"
@@ -315,22 +341,13 @@ const Register: React.FC = () => {
                       alignItems="center"
                       sx={{ marginBottom: theme.spacing(4) }}
                     >
-                      <Field
-                        name="acceptTerms"
-                        required
-                        render={({ field, meta }: FieldProps) => (
-                          <CustomCheckboxWithLabel
-                            field={field}
-                            label={<AcceptTermsLabel />}
-                            meta={meta}
-                          />
-                        )}
-                      />
+                      <AcceptTermsLabel />
                     </Box>
                     <Button
                       type="submit"
                       fullWidth
                       variant="contained"
+                      disabled={!dirty || !isValid || loading}
                       sx={{
                         marginTop: theme.spacing(2),
                         marginBottom: theme.spacing(6),

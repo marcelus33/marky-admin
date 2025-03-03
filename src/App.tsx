@@ -1,34 +1,83 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 //import "./App.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NotFound from "./pages/NotFound";
 import { publicRoutes } from "./routes/publicRoutes";
 import { CustomThemeProvider } from "./themes/ThemeContext";
+import { protectedRoutes } from "./routes/protectedRoutes";
+import { useSessionStore } from "./stores/sessionStore";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ROUTES } from "./routes/paths";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 const App = () => {
-  return (
-    <CustomThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Loop over public routes */}
-          {publicRoutes.map(({ path, component: Component }) => (
-            <Route key={path} path={path} element={<Component />} />
-          ))}
+  const isAuthenticated = useSessionStore((state: any) =>
+    state.isAuthenticated()
+  );
+  const { user } = useSessionStore();
 
-          {/* Loop over private routes */}
-          {/* {privateRoutes.map(({ path, component: Component }) => (
-          <Route
-            key={path}
-            path={path}
-            element={isAuthenticated ? <Component /> : <Navigate to="/login" />}
-          />
-        ))} */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <ToastContainer />
-      </BrowserRouter>
-    </CustomThemeProvider>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CustomThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Loop over public routes */}
+            {publicRoutes.map(({ path, component: Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  isAuthenticated ? (
+                    !user.has_configuration && path !== ROUTES.CONFIGURATION ? (
+                      <Navigate to={`${ROUTES.CONFIGURATION}`} />
+                    ) : (
+                      <Navigate to="/home" />
+                    )
+                  ) : (
+                    <Component />
+                  )
+                }
+              />
+            ))}
+
+            {/* Loop over private routes */}
+
+            {protectedRoutes.map(({ path, component: Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  isAuthenticated ? (
+                    !user.has_configuration &&
+                    path !== ROUTES.CONFIGURATION &&
+                    path !== ROUTES.LOGOUT ? (
+                      <Navigate to={`${ROUTES.CONFIGURATION}`} />
+                    ) : user.has_configuration &&
+                      path === ROUTES.CONFIGURATION ? (
+                      <Navigate to="/home" />
+                    ) : (
+                      <Component />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+            ))}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <ToastContainer />
+        </BrowserRouter>
+      </CustomThemeProvider>
+    </QueryClientProvider>
   );
 };
 

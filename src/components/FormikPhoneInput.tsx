@@ -41,6 +41,7 @@ const FormikPhoneInput: React.FC<FormikPhoneInputProps & FieldProps> = ({
       </Typography>
       <PhoneInput
         country={country}
+        onlyCountries={["py", "ve"]}
         value={field.value}
         onChange={(phone) =>
           field.onChange({ target: { name: field.name, value: phone } })

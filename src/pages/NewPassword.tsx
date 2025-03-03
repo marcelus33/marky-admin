@@ -8,9 +8,14 @@ import { ReactComponent as ResetPasswordImage } from "../assets/images/reset_pas
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
+import { changePassword } from "../services/authService";
+import { ShowNotification } from "../utils/utils";
+import { useNavigate, useParams } from "react-router-dom";
 
 const NewPassword: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
+  const { uid = "", token = "" } = useParams();
 
   const initialValues = {
     newPassword: "",
@@ -26,9 +31,18 @@ const NewPassword: React.FC = () => {
       .required("Este campo es obligatorio"),
   });
 
-  const handleSubmit = (values: typeof initialValues) => {
-    // Aquí iría la lógica para cambiar la contraseña.
-    console.log("Updating password to:", values.newPassword);
+  const handleSubmit = async (values: typeof initialValues) => {
+    try {
+      const response = await changePassword({
+        new_password: values.newPassword,
+        uid: uid,
+        token: token,
+      });
+      ShowNotification({ message: response.message, type: "success" });
+      navigate(ROUTES.LOGIN);
+    } catch (error: any) {
+      ShowNotification({ message: error.message, type: "error" });
+    }
   };
 
   return (
@@ -149,7 +163,15 @@ const NewPassword: React.FC = () => {
                 onSubmit={handleSubmit}
                 validateOnMount={true}
               >
-                {({ handleSubmit, touched, errors, values, setFieldValue }) => (
+                {({
+                  handleSubmit,
+                  touched,
+                  dirty,
+                  errors,
+                  values,
+                  setFieldValue,
+                  isValid,
+                }) => (
                   <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
                     <Box marginBottom={theme.spacing(4)}>
                       <Field
@@ -160,9 +182,13 @@ const NewPassword: React.FC = () => {
                         required
                         placeholder="Ingrese su nueva contraseña"
                         error={
-                          touched.newPassword && Boolean(errors.newPassword)
+                          // touched.newPassword &&
+                          dirty && Boolean(errors.newPassword)
                         }
-                        helperText={touched.newPassword && errors.newPassword}
+                        helperText={
+                          // touched.newPassword &&
+                          dirty && errors.newPassword
+                        }
                         value={values.newPassword}
                         onChange={(e: React.ChangeEvent<any>) => {
                           setFieldValue("newPassword", e.target.value);
@@ -178,11 +204,12 @@ const NewPassword: React.FC = () => {
                         required
                         placeholder="Ingrese su nueva contraseña"
                         error={
-                          touched.confirmPassword &&
-                          Boolean(errors.confirmPassword)
+                          // touched.confirmPassword &&
+                          dirty && Boolean(errors.confirmPassword)
                         }
                         helperText={
-                          touched.confirmPassword && errors.confirmPassword
+                          // touched.confirmPassword &&
+                          dirty && errors.confirmPassword
                         }
                         value={values.confirmPassword}
                         onChange={(e: React.ChangeEvent<any>) => {
@@ -195,6 +222,7 @@ const NewPassword: React.FC = () => {
                       variant="contained"
                       color="primary"
                       fullWidth
+                      disabled={!isValid}
                     >
                       Cambiar contraseña
                     </Button>

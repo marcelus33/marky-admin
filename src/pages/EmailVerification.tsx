@@ -7,32 +7,66 @@ import { ROUTES } from "../routes/paths";
 import Link from "../components/Link";
 import { ReactComponent as VerifyEmail } from "../assets/images/verify_email.svg";
 import SubmitButtonWithCountdown from "../components/ButtonCountdown";
+import { ReactComponent as LoginImage } from "../assets/images/email_verification_send.svg";
 import VerificationCodeInput from "../components/VerificationCodeInput";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { resendVerification, verifyEmail } from "../services/authService";
+import { ShowNotification } from "../utils/utils";
+import { useSessionStore } from "../stores/sessionStore";
 
 const EmailVerification: React.FC = () => {
   const theme = useTheme();
-  const { token = "error" } = useParams();
+  const navigate = useNavigate();
+  const { token = "" } = useParams();
+  const location = useLocation();
+  const { email = "" } = location.state || {};
   const [verificationCode, setVerificationCode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serverMessage, setServerMessage] = useState<string | null>(null);
+  const { user } = useSessionStore();
 
   const handleCodeComplete = (code: string) => {
-    console.log("Código completo:", code);
+    setVerificationCode(code);
   };
 
   const handleCodeChange = (complete: boolean) => {
     setIsComplete(complete);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!verificationCode) {
       setError("Por favor, ingrese el código de verificación.");
-    } else {
-      // TODO: verify and redirect to onboarding
-      console.log("Código de verificación:", verificationCode);
-      setError(null);
+      return;
     }
+    try {
+      setError(null);
+      setServerMessage(null);
+
+      const response = await verifyEmail({
+        token,
+        verification_code: verificationCode,
+      });
+      ShowNotification({ message: response.message, type: "success" });
+      navigate(ROUTES.LOGIN);
+    } catch (error: any) {
+      ShowNotification({ message: error.message, type: "error" });
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      const userEmail = user.email;
+      const response = await resendVerification({ email: userEmail });
+      ShowNotification({ message: response.message, type: "success" });
+    } catch (error: any) {
+      ShowNotification({ message: error.message, type: "error" });
+    }
+    // navigate(ROUTES.VERIFY_EMAIL_SEND, {
+    //   state: {
+    //     isDisabledOnMount: false,
+    //   },
+    // });
   };
 
   return (
@@ -41,9 +75,50 @@ const EmailVerification: React.FC = () => {
         <Grid
           item
           xs={12}
-          //   md={8}
+          md={4}
           sx={{
-            // border: "2px solid red",
+            display: {
+              xs: "none",
+              md: "block",
+              backgroundColor: theme.palette.primary.main + "1A",
+            },
+            paddingLeft: { md: `${theme.spacing(15)} !important` },
+            paddingRight: { md: `${theme.spacing(15)} !important` },
+            paddingTop: { md: `${theme.spacing(12)} !important` },
+          }}
+        >
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            minHeight="100vh"
+            sx={{ padding: 2 }}
+          >
+            <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
+            <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
+              Tu seguridad e identidad{" "}
+              <span style={{ color: theme.palette.primary.main }}>
+                es lo más importante.
+              </span>
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+              Verifica tu correo electrónico y podrás iniciar sesión para
+              acceder a tu cuenta comercial.
+            </Typography>
+            <Box
+              display="flex"
+              justifyContent="center"
+              sx={{ marginTop: theme.spacing(24) }}
+            >
+              <LoginImage />
+            </Box>
+          </Box>
+        </Grid>
+        {/*  */}
+        <Grid
+          item
+          xs={12}
+          md={8}
+          sx={{
             paddingTop: { md: `${theme.spacing(6)} !important` },
             paddingRight: { md: theme.spacing(9) },
           }}
@@ -93,18 +168,10 @@ const EmailVerification: React.FC = () => {
               display="flex"
               flexDirection="column"
               alignItems="center"
-              justifyContent="flex-start"
-              minHeight="100vh"
+              justifyContent="center"
+              minHeight="75vh"
               padding={2}
-              //   sx={{ border: "2px solid blue" }}
             >
-              <Box
-                display="flex"
-                justifyContent="center"
-                sx={{ marginTop: theme.spacing(24) }}
-              >
-                <VerifyEmail />
-              </Box>
               <Typography
                 sx={{
                   width: "100%",
@@ -142,22 +209,47 @@ const EmailVerification: React.FC = () => {
                 sx={{ marginBottom: theme.spacing(3) }}
                 onClick={handleSubmit}
               >
-                Verificar correo
+                Verificar
               </Button>
 
-              <SubmitButtonWithCountdown
-                type="button"
-                variant="outlined"
-                color="primary"
-                isDisabledOnMount={false}
+              <Typography
+                variant="body2"
                 sx={{
                   width: "100%",
+                  textAlign: "center",
+                  marginBottom: theme.spacing(6),
+                  marginTop: theme.spacing(4),
                 }}
-                onSubmit={() => console.log("Submitting...")}
-                fullWidth
               >
-                Reenviar código
-              </SubmitButtonWithCountdown>
+                Revisa tu bandeja de entrada, incluyendo la carpeta de spam.
+              </Typography>
+
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Typography variant="h5">¿No te llegó?</Typography>
+                <Button size="small" onClick={handleResend}>
+                  Reenviar
+                </Button>
+              </Box>
+
+              {/* <Button
+                type="button"
+                variant="text"
+                color="primary"
+                disabled={!isComplete}
+                fullWidth
+                sx={{ marginBottom: theme.spacing(3), border: "none" }}
+                onClick={handleResend}
+              >
+                Reenviar
+              </Button> */}
             </Box>
           </Box>
         </Grid>

@@ -53,6 +53,39 @@ const VerificationCodeInput: React.FC<VerificationCodeInputProps> = ({
     }
   };
 
+  // Función para manejar el evento de pegar
+  const handlePaste = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    e.preventDefault(); // Evita la acción por defecto de pegar
+    const pasteData = e.clipboardData.getData("text");
+    // Extrae solo dígitos (puedes ajustar la expresión si quieres permitir otros caracteres)
+    const digits = pasteData.replace(/\D/g, "").split("");
+
+    if (digits.length > 0) {
+      const newValues = [...values];
+      // Asigna cada dígito a los inputs consecutivos, empezando desde el index actual
+      for (let i = 0; i < digits.length && index + i < length; i++) {
+        newValues[index + i] = digits[i];
+      }
+      setValues(newValues);
+
+      // Mueve el foco al siguiente input después de pegar
+      const nextIndex = Math.min(index + digits.length, length - 1);
+      inputsRef.current[nextIndex]?.focus();
+
+      // Verificar si el código está completo
+      const isComplete = newValues.every((val) => val !== "");
+      if (onChangeCode) {
+        onChangeCode(isComplete);
+      }
+      if (isComplete && onComplete) {
+        onComplete(newValues.join(""));
+      }
+    }
+  };
+
   return (
     <Box
       display="flex"
@@ -67,6 +100,8 @@ const VerificationCodeInput: React.FC<VerificationCodeInputProps> = ({
           inputRef={(el) => (inputsRef.current[index] = el)}
           onChange={(e) => handleChange(e.target.value, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
+          // @ts-ignore
+          onPaste={(e) => handlePaste(e, index)}
           inputProps={{
             maxLength: 1, // Limita cada input a un carácter
             style: {

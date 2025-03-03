@@ -1,7 +1,8 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Field, FieldProps, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { ReactComponent as GoogleIcon } from "../assets/icons/google.svg";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
@@ -11,9 +12,12 @@ import DividerWithText from "../components/DividerWithText";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
+import { login } from "../services/authService";
+import { ShowNotification } from "../utils/utils";
 
 const Login: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const initialValues = {
     email: "",
     password: "",
@@ -27,9 +31,31 @@ const Login: React.FC = () => {
     password: Yup.string().required("Este campo es obligatorio"),
   });
 
-  const handleSubmit = (values: typeof initialValues) => {
-    // Add your login logic here (e.g., API call)
-    console.log("Logging in with:", values);
+  const handleSubmit = async (values: typeof initialValues) => {
+    try {
+      const response = await login({
+        username: values.email,
+        password: values.password,
+      });
+      console.log("Login response:", response);
+      const { user } = response;
+      ShowNotification({ message: "Login con éxito", type: "success" });
+      if (!!user && user.has_configuration) {
+        navigate(ROUTES.HOME);
+      } else {
+        navigate(ROUTES.CONFIGURATION);
+      }
+      // TODO: navigate("/dashboard"); redirect a configuracion si aun le falta,
+      // se puede mandar un valor que se guarda en el store para saber y dependiendo de eso
+      // usar protected routes??
+    } catch (error: any) {
+      // Manejo de errores (mostrar mensaje, etc.)
+      console.error("Error logging in:", error);
+      ShowNotification({
+        message: error.message,
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -138,13 +164,12 @@ const Login: React.FC = () => {
                 sx={{
                   width: "100%",
                   textAlign: "left",
-                  marginBottom: theme.spacing(6),
                 }}
                 variant="h2"
               >
                 Inicia sesión
               </Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 sx={{
                   backgroundColor: theme.palette.grey[400],
@@ -161,7 +186,7 @@ const Login: React.FC = () => {
                 <Typography variant="h5" color="textDisabled">
                   o accede con tus datos registrados
                 </Typography>
-              </DividerWithText>
+              </DividerWithText> */}
               <Formik
                 initialValues={initialValues}
                 validationSchema={validationSchema}

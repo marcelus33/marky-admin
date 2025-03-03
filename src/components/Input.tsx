@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import FormHelperText from "@mui/material/FormHelperText";
-import { IconButton, InputAdornment } from "@mui/material";
+import { IconButton, InputAdornment, Typography } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface InputProps {
@@ -12,6 +12,7 @@ interface InputProps {
   type: string;
   required?: boolean;
   error?: boolean;
+  maxLength?: number;
   helperText?: string;
   disabled?: boolean;
   placeholder?: string;
@@ -26,6 +27,7 @@ const Input: React.FC<InputProps> = ({
   required = false,
   error = false,
   helperText,
+  maxLength,
   disabled = false,
   placeholder,
   value,
@@ -37,6 +39,29 @@ const Input: React.FC<InputProps> = ({
   const handleClickShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
+
+  const endAdornmentElements = (
+    <>
+      {type === "password" && (
+        <InputAdornment position="end">
+          <IconButton
+            aria-label="toggle password visibility"
+            onClick={handleClickShowPassword}
+            edge="end"
+          >
+            {showPassword ? <VisibilityOff /> : <Visibility />}
+          </IconButton>
+        </InputAdornment>
+      )}
+      {maxLength !== undefined && (
+        <InputAdornment position="end">
+          <Typography variant="caption" color="textSecondary">
+            {maxLength - (value?.length || 0)}
+          </Typography>
+        </InputAdornment>
+      )}
+    </>
+  );
 
   return (
     <FormControl fullWidth error={error} disabled={disabled}>
@@ -54,18 +79,10 @@ const Input: React.FC<InputProps> = ({
         disabled={disabled}
         fullWidth
         InputProps={{
-          endAdornment:
-            !!type && type === "password" ? (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ) : null,
+          endAdornment: endAdornmentElements,
+        }}
+        inputProps={{
+          ...(maxLength ? { maxLength } : {}),
         }}
       />
       {helperText && <FormHelperText>{helperText}</FormHelperText>}

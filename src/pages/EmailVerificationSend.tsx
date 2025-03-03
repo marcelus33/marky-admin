@@ -12,11 +12,16 @@ import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
 import SubmitButtonWithCountdown from "../components/ButtonCountdown";
+import { useLocation } from "react-router-dom";
+import { resendVerification } from "../services/authService";
+import { ShowNotification } from "../utils/utils";
 
 const EmailVerificationSend: React.FC = () => {
   const theme = useTheme();
+  const location = useLocation();
+  const { email = "", isDisabledOnMount } = location.state || {};
   const initialValues = {
-    email: "test@test.com",
+    email: email,
   };
 
   const validationSchema = Yup.object().shape({
@@ -25,9 +30,17 @@ const EmailVerificationSend: React.FC = () => {
       .required("Este campo es obligatorio"),
   });
 
+  const handleResend = async (userEmail: string) => {
+    try {
+      const response = await resendVerification({ email: userEmail });
+      ShowNotification({ message: response.message, type: "success" });
+    } catch (error: any) {
+      ShowNotification({ message: error.message, type: "error" });
+    }
+  };
+
   const handleSubmit = (values: typeof initialValues) => {
-    // Add your login logic here (e.g., API call)
-    console.log("Logging in with:", values);
+    handleResend(values.email);
   };
 
   return (
@@ -173,7 +186,7 @@ const EmailVerificationSend: React.FC = () => {
                         component={Input}
                         // label="Correo electrónico"
                         type="email"
-                        disabled
+                        // disabled
                         // required
                         error={touched.email && Boolean(errors.email)}
                         helperText={touched.email && errors.email}
@@ -201,12 +214,12 @@ const EmailVerificationSend: React.FC = () => {
                       type="submit"
                       variant="contained"
                       color="primary"
-                      isDisabledOnMount={true}
+                      isDisabledOnMount={isDisabledOnMount || true}
                       sx={{
                         marginBottom: theme.spacing(3),
                         width: "100%",
                       }}
-                      onSubmit={() => console.log("Submitting...")}
+                      onSubmit={handleSubmit}
                       fullWidth
                     >
                       Reenviar
