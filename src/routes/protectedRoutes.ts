@@ -1,5 +1,6 @@
 import Configuration from "../pages/Configuration";
-import Home from "../pages/Home";
+import Home from "../pages/home";
+
 import Logout from "../pages/Logout";
 import { ROUTES } from "./paths";
 

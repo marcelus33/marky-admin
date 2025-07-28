@@ -14,3 +14,10 @@ export interface DRFErrorResponse {
   // Estructura de errores más granular, si hay validación de campos
   errors?: Record<string, string[] | string> | null;
 }
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}

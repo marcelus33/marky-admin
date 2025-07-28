@@ -55,8 +55,9 @@ const FormikPhoneInput: React.FC<FormikPhoneInputProps & FieldProps> = ({
           fontWeight: theme.typography.body1.fontWeight,
           borderColor: error
             ? theme.palette.error.main
-            : theme.palette.grey[800],
+            : theme.palette.grey[500],
           borderRadius: theme.shape.borderRadius,
+          backgroundColor: "transparent",
         }}
         containerStyle={{
           width: "100%",

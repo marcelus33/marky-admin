@@ -58,3 +58,68 @@ export const validateBusinessName = async (business_id: string) => {
     throw error;
   }
 };
+
+// Interface for social media links
+export interface SocialMediaLinks {
+  facebook?: string;
+  instagram?: string;
+  whatsapp?: string;
+  website?: string;
+}
+
+// POST/PUT: Update social media links in bulk
+export async function updateSocialMediaLinks(
+  data: SocialMediaLinks
+): Promise<SocialMediaLinks> {
+  const response = await api.post(
+    `${baseURL}/social-media-links/bulk-update/`,
+    data
+  );
+  return response.data;
+}
+
+// Interface for social link
+export interface SocialLink {
+  id: number;
+  platform: "facebook" | "instagram" | "whatsapp" | "website";
+  platform_display: string;
+  url: string;
+}
+
+// Interface for category
+export interface Category {
+  id: number;
+  name: string;
+}
+
+// Interface for home page data
+export interface HomePageData {
+  business_name: string;
+  social_links: SocialLink[];
+  description: string | null;
+  categories: Category[];
+  profile_image: string;
+  headquarter_attributes: { id: number; name: string }[] | null;
+}
+
+// GET: Fetch home page data
+export async function getHomePageData(): Promise<HomePageData> {
+  const response = await api.get(`${baseURL}/home-page/`);
+  return response.data;
+}
+
+// Interface for business data to be updated
+export interface BusinessData {
+  business_name?: string;
+  description?: string;
+  profile_image?: string;
+  headquarter_attributes?: number[];
+}
+
+// PATCH: Update business data
+export const updateBusiness = async (
+  data: Partial<BusinessData>
+): Promise<BusinessData> => {
+  const response = await api.patch(`${baseURL}/update/`, data);
+  return response.data;
+};

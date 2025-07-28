@@ -19,6 +19,7 @@ interface InputProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // opcional
   onBlur?: () => void; // opcional
+  sx?: object;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -33,6 +34,7 @@ const Input: React.FC<InputProps> = ({
   value,
   onChange,
   onBlur,
+  sx,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -64,7 +66,7 @@ const Input: React.FC<InputProps> = ({
   );
 
   return (
-    <FormControl fullWidth error={error} disabled={disabled}>
+    <FormControl fullWidth error={error} disabled={disabled} sx={sx}>
       <FormLabel>
         {label} {required && <span style={{ color: "red" }}>*</span>}
       </FormLabel>
