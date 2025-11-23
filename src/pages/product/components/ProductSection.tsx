@@ -1,12 +1,12 @@
-import React from "react";
-import { Box, Typography, TextField, Grid } from "@mui/material";
-import { Field, FormikProps } from "formik";
-import NumberInput from "../../../components/NumberInput";
-import CategorySelector from "./CategorySelector";
-import { Category } from "../../../types/category";
-import ProductImageGallery from "./ProductImageGallery"; // Import the new component
-import { Product } from "../../../types/product";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Box, Typography } from "@mui/material";
+import { Field, FormikProps } from "formik";
+import Input from "../../../components/Input";
+import NumberInput from "../../../components/NumberInput";
+import { Category } from "../../../types/category";
+import { Product } from "../../../types/product";
+import CategorySelector from "./CategorySelector";
+import ProductImageGallery from "./ProductImageGallery"; // Import the new component
 
 interface ProductSectionProps {
   formik: FormikProps<Product>;
@@ -45,27 +45,31 @@ const ProductSection = ({
             Información
           </Typography>
         </Box>
-        <Field
-          as={TextField}
+        <Input
           name="name"
           label="Nombre del producto"
-          fullWidth
-          margin="normal"
+          placeholder="Nombre del producto"
+          value={values.name}
+          onChange={handleChange}
+          onBlur={handleBlur}
           required
+          sx={{ mt: 2 }}
           error={touched.name && Boolean(errors.name)}
-          helperText={touched.name && errors.name}
+          helperText={touched.name ? errors.name : undefined}
         />
-        <Field
-          as={TextField}
+        <Input
           name="description"
           label="Descripción"
-          fullWidth
-          margin="normal"
+          placeholder="Descripción"
+          value={values.description}
+          onChange={handleChange}
+          onBlur={handleBlur}
           multiline
           rows={4}
           required
+          sx={{ mt: 2 }}
           error={touched.description && Boolean(errors.description)}
-          helperText={touched.description && errors.description}
+          helperText={touched.description ? errors.description : undefined}
         />
         <Field
           name="price"

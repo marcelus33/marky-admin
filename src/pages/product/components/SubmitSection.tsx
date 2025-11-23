@@ -1,17 +1,18 @@
-import React from "react";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import {
   Box,
   Button,
   ButtonGroup,
   ClickAwayListener,
   Grow,
-  Paper,
-  Popper,
   MenuItem,
   MenuList,
+  Paper,
+  Popper,
   Typography,
 } from "@mui/material";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import React from "react";
+import Link from "../../../components/Link";
 
 const options = [
   "Producto",
@@ -55,28 +56,41 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({ onSectionSelect }) => {
     <Box
       sx={{
         p: 2,
-        borderTop: "1px solid #e0e0e0",
+        pt: 4,
+        borderTop: "1px solid",
+        borderColor: "grey.100",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         position: "fixed",
         bottom: 0,
-        left: { md: 240 },
+        left: { md: 330 },
         right: 0,
-        bgcolor: "background.paper",
+        bgcolor: "white",
+        width: {
+          xs: "100%",
+          md: `calc(100% - 240px)`,
+          lg: "74%",
+        },
       }}
     >
-      <Typography variant="body2" color="textSecondary">
-        Al hacer click en "Publicar", aceptas los Términos y Condiciones de
-        visualización de productos en Marky.
-      </Typography>
+      <Box display={"flex"} justifyContent={"center"} width={"100%"}>
+        <Typography variant="body2" color="textSecondary">
+          Al hacer click en "Publicar", aceptas los {/* @ts-ignore */}
+          <Link target={"_blank"}>Términos y Condiciones</Link> de visualización
+          de productos en Marky.
+        </Typography>
+      </Box>
       <Box>
         <ButtonGroup
           variant="contained"
           ref={anchorRef}
           aria-label="split button"
+          sx={{ display: "flex", gap: 0.5 }}
         >
-          <Button type="submit">Publicar</Button>
+          <Button type="submit" sx={{ px: 3 }}>
+            Publicar
+          </Button>
           <Button
             size="small"
             aria-controls={open ? "split-button-menu" : undefined}

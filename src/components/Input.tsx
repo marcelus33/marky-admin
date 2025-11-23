@@ -9,7 +9,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface InputProps {
   label: string;
-  type: string;
+  type?: string;
   required?: boolean;
   error?: boolean;
   maxLength?: number;
@@ -17,14 +17,18 @@ interface InputProps {
   disabled?: boolean;
   placeholder?: string;
   value?: string;
+  name?: string;
+  multiline?: boolean;
+  rows?: number;
+  maxRows?: number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // opcional
-  onBlur?: () => void; // opcional
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void; // opcional
   sx?: object;
 }
 
 const Input: React.FC<InputProps> = ({
   label,
-  type,
+  type = "text",
   required = false,
   error = false,
   helperText,
@@ -32,6 +36,10 @@ const Input: React.FC<InputProps> = ({
   disabled = false,
   placeholder,
   value,
+  name,
+  multiline,
+  rows,
+  maxRows,
   onChange,
   onBlur,
   sx,
@@ -71,6 +79,7 @@ const Input: React.FC<InputProps> = ({
         {label} {required && <span style={{ color: "red" }}>*</span>}
       </FormLabel>
       <TextField
+        name={name}
         value={value}
         onChange={onChange}
         onBlur={onBlur}
@@ -80,6 +89,9 @@ const Input: React.FC<InputProps> = ({
         error={error}
         disabled={disabled}
         fullWidth
+        multiline={multiline}
+        rows={rows}
+        maxRows={maxRows}
         InputProps={{
           endAdornment: endAdornmentElements,
         }}

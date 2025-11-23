@@ -1,11 +1,10 @@
-import React from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import CategoryIcon from "@mui/icons-material/Category";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import EditIcon from "@mui/icons-material/Edit";
-import { Category } from "../../../types/category";
+import { Box, IconButton, Typography } from "@mui/material";
 import categoryIcons from "../../../assets/icons/category/categoryIcons";
 import { ReactComponent as CrownIcon } from "../../../assets/icons/crown.svg";
-import CheckIcon from "@mui/icons-material/Check";
-import CategoryIcon from "@mui/icons-material/Category";
+import { Category } from "../../../types/category";
 
 interface CategorySelectorProps {
   selectedCategory: Category | null;
@@ -49,7 +48,7 @@ export const CategorySelector = ({
           </IconButton>
         </Box>
       </Box>
-      <Box></Box>
+
       <Typography variant="h5" color="textSecondary" sx={{ mb: 3 }}>
         Categoría de producto
       </Typography>
@@ -66,8 +65,8 @@ export const CategorySelector = ({
           <Box
             sx={{
               backgroundColor: "grey.600",
-              py: 4,
-              px: 3,
+              py: IconComponent ? 1 : 4,
+              px: IconComponent ? 1 : 3,
               borderRadius: 1,
               display: "flex",
               alignItems: "center",
@@ -88,14 +87,16 @@ export const CategorySelector = ({
               width: "100%",
               display: "flex",
               alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
             <Typography variant="body1">
               {selectedCategory?.name ?? "Sin categoría"}
             </Typography>
+            {/*  */}
+            {selectedCategory && <CheckCircleIcon fontSize="small" />}
           </Box>
         </Box>
-        {selectedCategory && <CheckIcon color="primary" />}
       </Box>
     </Box>
   );
