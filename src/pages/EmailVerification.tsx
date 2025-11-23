@@ -1,18 +1,16 @@
 // EmailVerification.tsx
-import React, { useState } from "react";
-import { Button, TextField, Typography, Box, Grid } from "@mui/material";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ROUTES } from "../routes/paths";
-import Link from "../components/Link";
-import { ReactComponent as VerifyEmail } from "../assets/images/verify_email.svg";
-import SubmitButtonWithCountdown from "../components/ButtonCountdown";
-import { ReactComponent as LoginImage } from "../assets/images/email_verification_send.svg";
-import VerificationCodeInput from "../components/VerificationCodeInput";
+import React, { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
+import { ReactComponent as LoginImage } from "../assets/images/email_verification_send.svg";
+import Link from "../components/Link";
+import VerificationCodeInput from "../components/VerificationCodeInput";
+import { ROUTES } from "../routes/paths";
 import { resendVerification, verifyEmail } from "../services/authService";
-import { ShowNotification } from "../utils/utils";
 import { useSessionStore } from "../stores/sessionStore";
+import { ShowNotification } from "../utils/utils";
 
 const EmailVerification: React.FC = () => {
   const theme = useTheme();

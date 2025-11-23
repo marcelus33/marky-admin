@@ -28,6 +28,7 @@ const colors = {
       600: "#E6E6E6", // Config buttons background (non-primary)
       400: "#EDEDED", // Hover color for grey-60 elements
       100: "#EDEDED", // Background for inputs with data
+      50: "#FAFAFA",
     },
     background: {
       default: "#FFFFFF", // App background (light theme)
@@ -61,6 +62,7 @@ const colors = {
       600: "#E6E6E6", // Config buttons background (non-primary)
       400: "#EDEDED", // Hover color for grey-60 elements
       100: "#EDEDED", // Background for inputs with data
+      50: "#FAFAFA",
     },
     background: {
       default: "#1c1e21", // App background (dark theme)

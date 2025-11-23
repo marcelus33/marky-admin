@@ -1,0 +1,263 @@
+import React from "react";
+import {
+  Box,
+  Typography,
+  FormControlLabel,
+  Switch,
+  Radio,
+  TextField,
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+} from "@mui/material";
+import { FormikProps, Field } from "formik";
+import Input from "../../../components/Input";
+
+const HighlightSection: React.FC<FormikProps<any>> = ({
+  values,
+  setFieldValue,
+  errors,
+  touched,
+}) => {
+  return (
+    <Box>
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        Producto destacado
+      </Typography>
+
+      <Typography variant="subtitle1" mb={1}>
+        Stopper
+      </Typography>
+      <FormControlLabel
+        control={
+          <Switch
+            name="stopper"
+            checked={!!values.stopper}
+            onChange={(e) =>
+              setFieldValue("stopper", e.target.checked ? "FAVORITE" : "")
+            }
+          />
+        }
+        label="Activar Stopper"
+      />
+      {!!values.stopper && (
+        <Box display="flex" flexDirection="column" ml={4}>
+          <FormControlLabel
+            control={
+              <Radio
+                name="stopper"
+                value="FAVORITE"
+                checked={values.stopper === "FAVORITE"}
+                onChange={() => setFieldValue("stopper", "FAVORITE")}
+              />
+            }
+            label="Favorito del mes"
+          />
+          <FormControlLabel
+            control={
+              <Radio
+                name="stopper"
+                value="RECOMMENDED"
+                checked={values.stopper === "RECOMMENDED"}
+                onChange={() => setFieldValue("stopper", "RECOMMENDED")}
+              />
+            }
+            label="Recomendado"
+          />
+        </Box>
+      )}
+
+      <Typography variant="subtitle1" mt={3} mb={1}>
+        Promoción
+      </Typography>
+      <FormControlLabel
+        control={
+          <Switch
+            name="isPromotionActive"
+            checked={values.isPromotionActive}
+            onChange={(e) =>
+              setFieldValue("isPromotionActive", e.target.checked)
+            }
+          />
+        }
+        label="Activar producto en promoción"
+      />
+      {values.isPromotionActive && (
+        <Box ml={4}>
+          <FormControlLabel
+            control={
+              <Radio
+                name="promotionOption"
+                value="descuento"
+                checked={values.promotionOption === "descuento"}
+                onChange={() => setFieldValue("promotionOption", "descuento")}
+              />
+            }
+            label="Descuento"
+          />
+          {values.promotionOption === "descuento" && (
+            <TextField
+              placeholder="Porcentaje de descuento (0-100)"
+              type="number"
+              name="discountPercentage"
+              variant="outlined"
+              size="small"
+              value={values.discountPercentage || ""}
+              onChange={(e) =>
+                setFieldValue("discountPercentage", Number(e.target.value))
+              }
+              inputProps={{
+                max: 100,
+                min: 0,
+                style: { padding: 12 },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Typography>%</Typography>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 2,
+                ml: 4,
+                width: { xs: "100%", md: "50%" },
+              }}
+            />
+          )}
+          <FormControlLabel
+            control={
+              <Radio
+                name="promotionOption"
+                value="oferta"
+                checked={values.promotionOption === "oferta"}
+                onChange={() => setFieldValue("promotionOption", "oferta")}
+              />
+            }
+            label="Oferta"
+          />
+          {values.promotionOption === "oferta" && (
+            <FormControl
+              size="small"
+              sx={{
+                mb: 2,
+                ml: 4,
+                width: { xs: "100%", md: "50%" },
+              }}
+            >
+              <Select
+                value={values.multibuyOption}
+                onChange={(e) =>
+                  setFieldValue("multibuyOption", e.target.value)
+                }
+              >
+                <MenuItem value="2x1">2x1</MenuItem>
+                <MenuItem value="3x2">3x2</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+        </Box>
+      )}
+
+      <Typography variant="subtitle1" mt={3} mb={1}>
+        Tiempo limitado
+      </Typography>
+      <FormControlLabel
+        control={
+          <Switch
+            name="countdownActive"
+            checked={values.countdownActive}
+            onChange={(e) => setFieldValue("countdownActive", e.target.checked)}
+          />
+        }
+        label="Activar cuenta regresiva"
+      />
+      {values.countdownActive && (
+        <Box
+          display="flex"
+          justifyContent={"space-between"}
+          flexDirection={"column"}
+          gap={2}
+        >
+          <Box display={"flex"} gap={2} flex={1}>
+            <Field
+              name="promotionStartDate"
+              component={Input}
+              label="Fecha Inicio"
+              type="date"
+              fullWidth
+              value={values.promotionStartDate}
+              onChange={(e: React.ChangeEvent<any>) => {
+                setFieldValue("promotionStartDate", e.target.value);
+              }}
+              error={
+                touched.promotionStartDate && Boolean(errors.promotionStartDate)
+              }
+              helperText={
+                touched.promotionStartDate &&
+                (errors.promotionStartDate as string)
+              }
+            />
+            <Field
+              name="promotionStartTime"
+              component={Input}
+              label="Hora inicio"
+              type="time"
+              fullWidth
+              value={values.promotionStartTime}
+              onChange={(e: React.ChangeEvent<any>) => {
+                setFieldValue("promotionStartTime", e.target.value);
+              }}
+              error={
+                touched.promotionStartTime && Boolean(errors.promotionStartTime)
+              }
+              helperText={
+                touched.promotionStartTime &&
+                (errors.promotionStartTime as string)
+              }
+            />
+          </Box>
+          <Box display={"flex"} gap={2} flex={1}>
+            <Field
+              name="promotionEndDate"
+              component={Input}
+              label="Fecha fin"
+              type="date"
+              fullWidth
+              value={values.promotionEndDate}
+              onChange={(e: React.ChangeEvent<any>) => {
+                setFieldValue("promotionEndDate", e.target.value);
+              }}
+              error={
+                touched.promotionEndDate && Boolean(errors.promotionEndDate)
+              }
+              helperText={
+                touched.promotionEndDate && (errors.promotionEndDate as string)
+              }
+            />
+            <Field
+              name="promotionEndTime"
+              component={Input}
+              label="Hora Fin"
+              type="time"
+              fullWidth
+              value={values.promotionEndTime}
+              onChange={(e: React.ChangeEvent<any>) => {
+                setFieldValue("promotionEndTime", e.target.value);
+              }}
+              error={
+                touched.promotionEndTime && Boolean(errors.promotionEndTime)
+              }
+              helperText={
+                touched.promotionEndTime && (errors.promotionEndTime as string)
+              }
+            />
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+export default HighlightSection;

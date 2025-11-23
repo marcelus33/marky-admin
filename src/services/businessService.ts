@@ -123,3 +123,14 @@ export const updateBusiness = async (
   const response = await api.patch(`${baseURL}/update/`, data);
   return response.data;
 };
+
+export const updateProfileImage = async (
+  image: FormData
+): Promise<{ profile_image: string }> => {
+  const response = await api.patch(`${baseURL}/profile-image/`, image, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};

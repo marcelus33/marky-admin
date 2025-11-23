@@ -34,6 +34,7 @@ const lightTheme = createTheme({
       600: colors.light.grey[600],
       400: colors.light.grey[400],
       100: colors.light.grey[100],
+      50: colors.light.grey[50],
     },
     background: {
       default: colors.light.background.default,

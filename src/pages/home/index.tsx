@@ -9,7 +9,7 @@ import AttributesModal from "./components/AttributesModal";
 import { BusinessInfo } from "./components/businessInfo";
 import { ChannelWizardModal } from "./components/ChannelWizardModal";
 import DescriptionModal from "./components/DescriptionModal";
-import { Header } from "./components/header";
+import { Header } from "../../components/Header";
 import PresentationModal from "./components/PresentationModal";
 import { ProductGrid } from "./components/productGrid";
 import ProfileActionsRow from "./components/ProfileActionsRow";
@@ -161,19 +161,26 @@ const Home = () => {
 
                 return (
                   <>
-                    <BusinessInfo
-                      values={values}
-                      homePageData={homePageData}
-                      openSocialMediaModal={() => setOpenSocialMediaModal(true)}
-                      openDescriptionModal={() => setOpenDescriptionModal(true)}
-                      openAttributesModal={() => setOpenAttributesModal(true)}
-                    />
-                    <ProfileActionsRow
-                      onEditProfile={() => setOpenPresentationModal(true)}
-                      onSettings={() => {
-                        console.log("Abrir configuración");
-                      }}
-                    />
+                    <Box sx={{ position: "sticky", top: "4.7rem" }}>
+                      <BusinessInfo
+                        values={values}
+                        homePageData={homePageData}
+                        setFieldValue={setFieldValue}
+                        openSocialMediaModal={() =>
+                          setOpenSocialMediaModal(true)
+                        }
+                        openDescriptionModal={() =>
+                          setOpenDescriptionModal(true)
+                        }
+                        openAttributesModal={() => setOpenAttributesModal(true)}
+                      />
+                      <ProfileActionsRow
+                        onEditProfile={() => setOpenPresentationModal(true)}
+                        onSettings={() => {
+                          console.log("Abrir configuración");
+                        }}
+                      />
+                    </Box>
 
                     <ChannelWizardModal
                       onBack={

@@ -1,28 +1,16 @@
-import React, { useState } from "react";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import {
   AppBar,
-  Toolbar,
-  Box,
-  Typography,
-  IconButton,
   Avatar,
+  Box,
+  IconButton,
   Menu,
   MenuItem,
-  Grid,
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  MenuItem as MuiMenuItem,
-  Link,
+  Toolbar,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import InstagramIcon from "@mui/icons-material/Instagram";
-import FacebookIcon from "@mui/icons-material/Facebook";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import TikTokIcon from "@mui/icons-material/MusicNote"; // Usa un icono representativo para TikTok
-import { ReactComponent as LogoMarkyBlack } from "../../../assets/icons/logo-marky-black.svg";
+import React, { useState } from "react";
+import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 
 export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -37,10 +25,13 @@ export const Header: React.FC = () => {
 
   return (
     <AppBar
-      position="static"
-      color="transparent"
+      position="sticky"
+      color="inherit"
       elevation={0}
-      sx={{ boxShadow: "0px 1px 0px 0px #E8E9EB" }}
+      sx={{
+        boxShadow: "0px 1px 0px 0px #E8E9EB",
+        backgroundColor: "white",
+      }}
     >
       <Toolbar>
         <Box display="flex" alignItems="center" flexGrow={1}>

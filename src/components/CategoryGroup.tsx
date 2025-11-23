@@ -18,6 +18,8 @@ import ProductCard from "./ProductCard";
 import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";
 import { useState } from "react";
 import { CategoryWithProducts } from "../types/categoryWithProducts";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../routes/paths";
 
 interface CategoryGroupProps {
   category: CategoryWithProducts;
@@ -34,6 +36,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isUnavailable, setIsUnavailable] = useState(false);
+  const navigate = useNavigate();
 
   const open = Boolean(anchorEl);
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -61,7 +64,19 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   return (
     <Box mb={6}>
       {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={5}>
+      <Box
+        display="flex"
+        alignItems="center"
+        gap={2}
+        mb={5}
+        sx={{
+          position: "sticky",
+          top: "4rem",
+          zIndex: 1,
+          backgroundColor: "white",
+          py: 2,
+        }}
+      >
         <Box display="flex" alignItems="center" gap={3}>
           {getIconComponent(category)}
           <Typography variant="subtitle1" fontWeight="bold">
@@ -147,7 +162,13 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         // gap={2}
       >
         {category.products.map((product, idx) => (
-          <ProductCard key={`product-${idx}`} product={product} />
+          <ProductCard
+            key={`product-${idx}`}
+            product={product}
+            onClick={() => {
+              navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));
+            }}
+          />
         ))}
       </Box>
     </Box>

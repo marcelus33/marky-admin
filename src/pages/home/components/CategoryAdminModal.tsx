@@ -1,86 +1,30 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import {
   Box,
-  Button,
   Dialog,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   IconButton,
-  InputAdornment,
-  Radio,
-  Switch,
-  TextField,
-  Typography,
 } from "@mui/material";
-import { Form, Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import categoryIcons from "../../../assets/icons/category/categoryIcons";
 import { ReactComponent as CrownIcon } from "../../../assets/icons/crown.svg";
-// import ConfirmationDialog from "../../../components/ConfirmationDialog";
-import Input from "../../../components/Input";
 import XButton from "../../../components/XButton";
+import useProductCategories from "../../../hooks/useProductCategories";
+import useUpdateProductCategoryOrder from "../../../hooks/useUpdateProductCategoryOrder";
+import { ProductCategory } from "../../../services/productService";
 import { Category } from "../../../types/category";
-import { splitISODateTime } from "../../../utils/utils";
 import { CreateEdit } from "./categoryAdminModalScreens/CreateEdit";
-import { Promotion } from "./categoryAdminModalScreens/Promotion";
 import { Main } from "./categoryAdminModalScreens/Main";
+import { Promotion } from "./categoryAdminModalScreens/Promotion";
 import { Welcome } from "./categoryAdminModalScreens/Welcome";
 import SortableCategoryList from "./SortableCategoryList";
-import { boolean } from "yup";
-import useProductCategories from "../../../hooks/useProductCategories";
-import {
-  ProductCategory,
-  ProductCategoryPayload,
-} from "../../../services/productService";
-import useUpdateProductCategoryOrder from "../../../hooks/useUpdateProductCategoryOrder";
-
-interface CategoryAdminFormValues {
-  // Pantalla principal
-  // categories: Category[]; // Lista de categorías creadas
-  search: string;
-  // Subpantalla 1: Crear/Editar categoría
-  newCategoryName: string;
-  newCategoryIcon: string;
-  editingCategoryId: string | number | null;
-  // Subpantalla 2: Promoción
-  promotionOption: "descuento" | "oferta" | "";
-  isPromotionActive: boolean;
-  discountPercentage: number | null;
-  countdownActive: boolean;
-  promotionDateStart: string;
-  promotionTimeStart: string;
-  promotionDateEnd: string;
-  promotionTimeEnd: string;
-}
-
-const initialValues: CategoryAdminFormValues = {
-  // categories: dummyCategories,
-  // categories: [],
-  search: "",
-  //
-  newCategoryName: "",
-  newCategoryIcon: "",
-  editingCategoryId: "",
-  // promotion
-  promotionOption: "",
-  isPromotionActive: false,
-  discountPercentage: null,
-  countdownActive: false,
-  promotionDateStart: "",
-  promotionTimeStart: "",
-  promotionDateEnd: "",
-  promotionTimeEnd: "",
-};
 
 type ActiveScreen = "welcome" | "main" | "sort" | "createEdit" | "promotion";
 
 interface CategoryAdminModalProps {
   open: boolean;
-  onClose: () => void;
+  onClose: (orderChanged: boolean) => void;
 }
 
 export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
@@ -95,24 +39,12 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
   );
   const updateProductCategoryOrder = useUpdateProductCategoryOrder();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [hasOrderChanged, setHasOrderChanged] = useState(false);
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>("main");
   const [categoryForm, setCategoryForm] = useState<Category | null>(null);
   const [selectedPromotionCategory, setSelectedPromotionCategory] =
     useState<Category>();
   const goBack = () => setActiveScreen("main");
-
-  const iconKeys = Object.keys(categoryIcons);
-
-  const getIconComponent = (cat: Category) => {
-    const IconComponent =
-      cat.icon && categoryIcons[cat.icon] ? categoryIcons[cat.icon] : null;
-
-    return IconComponent ? (
-      <IconComponent fontSize="small" />
-    ) : (
-      <CrownIcon fontSize="small" />
-    );
-  };
 
   const handleCreateEditSubmit = (
     cat: Partial<Category>,
@@ -187,8 +119,9 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
     <Dialog
       open={open}
       onClose={() => {
-        onClose();
+        onClose(hasOrderChanged);
         setActiveScreen("main");
+        setHasOrderChanged(false);
       }}
       fullWidth
       maxWidth="md"
@@ -218,8 +151,9 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
           <Box display={"flex"} sx={{ paddingY: 3 }}>
             <XButton
               onClick={() => {
-                onClose();
+                onClose(hasOrderChanged);
                 setActiveScreen("main");
+                setHasOrderChanged(false);
               }}
               sx={{ marginRight: 2 }}
             />
@@ -260,6 +194,7 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
                 updateProductCategoryOrder.mutate(payload, {
                   onSuccess: () => {
                     setCategories(orderedCategories);
+                    setHasOrderChanged(true);
                     setActiveScreen("main");
                   },
                 });

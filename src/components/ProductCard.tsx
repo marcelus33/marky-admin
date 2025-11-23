@@ -18,8 +18,13 @@ import { styled } from "@mui/material/styles";
 import { ProductGridItem } from "../types/product";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../routes/paths";
+import { formatPrice } from "../utils/format";
 
 interface ProductCardProps {
   product: ProductGridItem;
@@ -33,9 +38,12 @@ const LineClamp = styled(Typography)({
   overflow: "hidden",
 });
 
-const DropdownMenu = () => {
+const DropdownMenu: React.FC<{ product: ProductGridItem }> = ({ product }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isUnavailable, setIsUnavailable] = useState(false);
+  const navigate = useNavigate();
+
+  console.log("dproduct", product);
 
   const open = Boolean(anchorEl);
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -64,7 +72,7 @@ const DropdownMenu = () => {
     >
       <IconButton
         onClick={(e) => {
-          e.stopPropagation(); // 👈 prevents the card click
+          e.stopPropagation();
           handleOpen(e);
           // handleMenuOpen(product.id); // or open a menu
         }}
@@ -72,15 +80,33 @@ const DropdownMenu = () => {
         <MoreVertIcon fontSize="small" />
       </IconButton>
       {/*  */}
-      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        onClick={(e) => e.stopPropagation()}
+      >
         <MenuItem
-          onClick={() => {
+          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+            event.stopPropagation();
+            navigate(ROUTES.PRODUCT_EDIT.replace(":id", product.id + ""));
+          }}
+        >
+          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          Editar
+        </MenuItem>
+        <MenuItem
+          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
             // onPromotionClick?.();
             // handleClose();
           }}
         >
           <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} />
-          Categoría en promoción
+          Producto en promoción
+        </MenuItem>
+        <MenuItem>
+          <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+          Copiar URL
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -90,7 +116,7 @@ const DropdownMenu = () => {
           sx={{ color: "error.main" }}
         >
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Eliminar categoría
+          Eliminar
         </MenuItem>
         <Divider />
         <Box px={2} py={1}>
@@ -141,7 +167,13 @@ const styles = {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
   return (
-    <Card onClick={() => onClick?.()} sx={styles.cardContainer}>
+    <Card
+      onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+        onClick?.();
+      }}
+      sx={styles.cardContainer}
+    >
       {/* Image and discount tag */}
       <Box position="relative">
         <CardMedia
@@ -166,16 +198,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
         )}
       </Box>
 
-      <DropdownMenu />
+      <DropdownMenu product={product} />
 
       <CardContent sx={{ p: 2, backgroundColor: "transparent", mt: 2 }}>
         {/* Views */}
-        <Box display="flex" alignItems="center" gap={1} mb={1}>
-          <VisibilityIcon fontSize="small" />
-          <Typography variant="caption">
-            {product.views.toLocaleString()}
-          </Typography>
-        </Box>
+        {product.views !== undefined && (
+          <Box display="flex" alignItems="center" gap={1} mb={1}>
+            <VisibilityIcon fontSize="small" />
+            <Typography variant="caption">
+              {product.views.toLocaleString()}
+            </Typography>
+          </Box>
+        )}
 
         {/* Optional tag */}
         {product.isFavorite && (
@@ -231,11 +265,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
         {/* Prices */}
         <Box mt={1}>
           <Typography color="primary" fontWeight="bold">
-            {product.price}
+            {formatPrice(product.price)}
           </Typography>
           {product.priceAlt && (
             <Typography variant="body2" color="textSecondary">
-              {product.priceAlt}
+              {formatPrice(product.priceAlt)}
             </Typography>
           )}
         </Box>

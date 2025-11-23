@@ -1,8 +1,12 @@
 import { ProductGridItem } from "./product";
 
 export interface CategoryWithProducts {
-  id: string | number;
+  id: number;
   name: string;
-  icon: string; // Usás claves como "asado", "bebidas", etc.
+  icon: string;
+  multibuy_option: string | null;
+  discount_percentage: string;
+  promotion_starts_at: string | null;
+  promotion_ends_at: string | null;
   products: ProductGridItem[];
 }

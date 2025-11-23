@@ -1,17 +1,15 @@
 import { ArrowDropDown } from "@mui/icons-material";
 import {
-  Button,
+  Box,
   FormControl,
   FormHelperText,
   FormLabel,
-  Typography,
+  InputAdornment,
+  TextField,
 } from "@mui/material";
-import { useField } from "formik";
 import React from "react";
-import colors from "../themes/utils/colors";
 
 interface SelectButtonFieldProps {
-  name: string;
   label?: string;
   placeholder?: string;
   displayText?: string;
@@ -23,41 +21,48 @@ interface SelectButtonFieldProps {
 }
 
 const SelectButtonField: React.FC<SelectButtonFieldProps> = ({
-  name,
   label,
   displayText,
   placeholder = "Seleccione una opción",
   required = false,
   onClick,
   sx = {},
+  error,
   helperText,
 }) => {
-  const [field, meta] = useField(name);
-
   return (
-    <FormControl fullWidth error={meta.touched && Boolean(meta.error)}>
+    <FormControl fullWidth error={error}>
       {label && (
         <FormLabel>
           {label} {required && <span style={{ color: "red" }}>*</span>}
         </FormLabel>
       )}
-      <Button
-        onClick={onClick}
-        // variant="outlined"
-        fullWidth
-        sx={{
-          justifyContent: "space-between",
-          textTransform: "none",
-          border: "1px solid",
-          borderColor: "grey.800",
-          ...sx,
-        }}
-      >
-        <Typography color={displayText ? "black" : "grey"}>
-          {displayText || placeholder}
-        </Typography>
-        <ArrowDropDown sx={{ color: "black" }} />
-      </Button>
+      {/* By placing the onClick on a wrapping Box, we can capture clicks
+          even though the TextField itself is disabled. */}
+      <Box onClick={onClick} sx={{ cursor: "pointer", ...sx }}>
+        <TextField
+          variant="outlined"
+          fullWidth
+          // The disabled prop gives it the correct greyed-out styling
+          disabled
+          value={displayText || placeholder}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <ArrowDropDown />
+              </InputAdornment>
+            ),
+          }}
+          // Ensure the text color is not the disabled grey
+          sx={{
+            pointerEvents: "none",
+            "& .MuiInputBase-input.Mui-disabled": {
+              WebkitTextFillColor: displayText ? "black" : "grey",
+              color: displayText ? "black" : "grey",
+            },
+          }}
+        />
+      </Box>
       {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>
   );

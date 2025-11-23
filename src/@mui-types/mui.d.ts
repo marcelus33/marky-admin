@@ -6,3 +6,9 @@ declare module "@mui/material/Typography" {
     link: true;
   }
 }
+
+declare module "@mui/material/Button" {
+  interface ButtonPropsVariantOverrides {
+    grey1: true;
+  }
+}

@@ -1,28 +1,35 @@
-import React, { useState } from "react";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
-  TextField,
-  InputAdornment,
-  IconButton,
   Checkbox,
   FormControlLabel,
+  Grid,
+  IconButton,
+  InputAdornment,
+  TextField,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import { Field } from "formik";
+import React, { useEffect, useRef, useState } from "react";
 import SelectButtonField from "../../../components/SelectButtonField";
-import { useTheme, useMediaQuery } from "@mui/material";
-import { BorderClear } from "@mui/icons-material";
 
 // Create a separate component for the filters section
 const FilterSection: React.FC<{
   values: any;
-  handleChange: (e: React.ChangeEvent<any>) => void;
+  onFilterChange: (newFilters: any) => void;
   setOpenCategoryModal: () => void;
-}> = ({ values, handleChange, setOpenCategoryModal }) => {
+}> = ({ values, onFilterChange, setOpenCategoryModal }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [showFilters, setShowFilters] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [values.search]);
 
   const handleToggleFilters = () => {
     setShowFilters((prev) => !prev);
@@ -38,7 +45,7 @@ const FilterSection: React.FC<{
             variant="outlined"
             size="small"
             value={values.search}
-            onChange={handleChange}
+            onChange={(e) => onFilterChange({ search: e.target.value })}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -70,84 +77,79 @@ const FilterSection: React.FC<{
         </Box>
         {showFilters && (
           <Box display="flex" flexDirection="column" gap={2} mb={2}>
-            <Field
-              name="categories"
-              component={SelectButtonField}
+            <SelectButtonField
               placeholder="Categorías: Todas"
               displayText={
                 values.categories?.length > 0
                   ? `Categorías: ${values.categories?.length} seleccionadas`
-                  : null
+                  : undefined
               }
               onClick={setOpenCategoryModal}
               sx={{ padding: 2.5 }}
             />
-            <Field name="offer">
-              {({ field }: any) => (
-                <FormControlLabel
-                  sx={{ whiteSpace: "nowrap" }}
-                  control={<Checkbox {...field} color="primary" />}
-                  label="En promoción"
+            <FormControlLabel
+              sx={{ whiteSpace: "nowrap" }}
+              control={
+                <Checkbox
+                  checked={values.offer}
+                  onChange={(e) => onFilterChange({ offer: e.target.checked })}
+                  color="primary"
                 />
-              )}
-            </Field>
+              }
+              label="En promoción"
+            />
           </Box>
         )}
       </>
     );
   } else {
     return (
-      <Box
-        display="flex"
-        gap={3}
-        mb={2}
-        alignItems="center"
-        justifyContent="space-between"
-      >
-        <TextField
-          placeholder="Buscar por texto o SKU del producto"
-          name="search"
-          variant="outlined"
-          size="small"
-          value={values.search}
-          onChange={handleChange}
-          fullWidth
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            sx: {
-              paddingY: 1.5,
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "grey.800",
-              },
-            },
-          }}
-        />
-        <Field
-          name="categories"
-          component={SelectButtonField}
-          placeholder="Categorías: Todas"
-          displayText={
-            values.categories?.length > 0
-              ? `Categorías: ${values.categories?.length} seleccionadas`
-              : null
-          }
-          onClick={setOpenCategoryModal}
-          sx={{ padding: 3, borderColor: "grey.800" }}
-        />
-        <Field name="offer">
-          {({ field }: any) => (
-            <FormControlLabel
-              sx={{ whiteSpace: "nowrap" }}
-              control={<Checkbox {...field} color="primary" />}
-              label="En promoción"
-            />
-          )}
-        </Field>
-      </Box>
+      <Grid container spacing={4} alignItems="center">
+        <Grid item xs={12} md={6}>
+          <TextField
+            inputRef={searchInputRef}
+            placeholder="Buscar por texto o SKU del producto"
+            name="search"
+            variant="outlined"
+            size="small"
+            value={values.search}
+            onChange={(e) => onFilterChange({ search: e.target.value })}
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              sx: { paddingY: 2 },
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <SelectButtonField
+            placeholder="Categorías: Todas"
+            displayText={
+              values.categories?.length > 0
+                ? `Categorías: ${values.categories?.length} seleccionadas`
+                : undefined
+            }
+            onClick={setOpenCategoryModal}
+          />
+        </Grid>
+        <Grid item xs={12} md={2}>
+          <FormControlLabel
+            sx={{ whiteSpace: "nowrap" }}
+            control={
+              <Checkbox
+                checked={values.offer}
+                onChange={(e) => onFilterChange({ offer: e.target.checked })}
+                color="primary"
+              />
+            }
+            label="En promoción"
+          />
+        </Grid>
+      </Grid>
     );
   }
 };

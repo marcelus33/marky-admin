@@ -21,3 +21,8 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+
+export interface PaginatedProductCategoriesResponse<T>
+  extends PaginatedResponse<T> {
+  products_count: number;
+}

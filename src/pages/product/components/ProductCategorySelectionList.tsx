@@ -2,14 +2,10 @@ import React, { useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { useTheme } from "@mui/material/styles";
-import { ReactComponent as ParaguayFlagIcon } from "../assets/icons/flag-paraguay.svg";
-import { ReactComponent as VenezuelaFlagIcon } from "../assets/icons/flag-venezuela.svg";
+import { ReactComponent as ParaguayFlagIcon } from "../../../assets/icons/flag-paraguay.svg";
+import { ReactComponent as VenezuelaFlagIcon } from "../../../assets/icons/flag-venezuela.svg";
 
-export interface Category {
-  id: string | number;
-  name: string;
-  code?: string;
-}
+import { Category } from "../../../types/category";
 
 interface CategorySelectionListProps {
   /** Lista de categorías disponibles */
@@ -25,7 +21,7 @@ interface CategorySelectionListProps {
   setSelected?: (args: any) => void;
 }
 
-const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
+const ProductCategorySelectionList: React.FC<CategorySelectionListProps> = ({
   categories,
   maxSelectable,
   selected = [],
@@ -33,7 +29,7 @@ const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
 }) => {
   const theme = useTheme();
 
-  const toggleCategory = (cat: Category) => {
+  const toggleCategory = (cat: any) => {
     const isSelected = selected.some((item) => item.id === cat.id);
     if (maxSelectable === 1) {
       setSelected(isSelected ? [] : [cat]);
@@ -85,11 +81,6 @@ const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
               <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                 {cat.name === "Paraguay" ? <ParaguayFlagIcon /> : null}
                 {cat.name === "Venezuela" ? <VenezuelaFlagIcon /> : null}
-                {cat.code && (
-                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                    {cat.code} -
-                  </Typography>
-                )}
                 <Typography variant="body2">{cat.name}</Typography>
               </Box>
               {isSelected && (
@@ -119,4 +110,4 @@ const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
   );
 };
 
-export default CategorySelectionList;
+export default ProductCategorySelectionList;

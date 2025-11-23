@@ -1,10 +1,14 @@
 import AppsIcon from "@mui/icons-material/Apps";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import { Box, Button, Typography } from "@mui/material";
-import { Form, Formik, FormikProps } from "formik";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../routes/paths";
 import CategoryGroup from "../../../components/CategoryGroup";
-import { dummyCategoriesWithProducts } from "../../../utils/dummyCategoryWithProducts";
+import LoadingSpinner from "../../../components/LoadingSpinner";
+import useDebounce from "../../../hooks/useDebounce";
+import useProductCategoriesWithProducts from "../../../hooks/useProductCategoriesWithProducts";
 import CategoryAdminModal from "./CategoryAdminModal";
 import CategoryFilterModal, { Category } from "./CategoryFilterModal";
 import FilterSection from "./FilterSection";
@@ -12,23 +16,57 @@ import FilterSection from "./FilterSection";
 interface FilterValues {
   search: string;
   categories: Category[];
-  offer: string;
+  offer: boolean;
 }
 
 export const ProductGrid: React.FC = () => {
-  const initialValues: FilterValues = {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const initialFilters: FilterValues = {
     search: "",
     categories: [],
-    offer: "",
+    offer: false,
   };
 
-  const handleSubmit = (values: FilterValues) => {
-    console.log("Filter values:", values);
-    // Aquí llamarías a la API para filtrar productos o actualizar la grilla
-  };
+  const [filters, setFilters] = useState<FilterValues>(initialFilters);
+  const [hasFiltered, setHasFiltered] = useState(false);
+
+  const debouncedSearch = useDebounce(filters.search, 500);
+
+  const {
+    data: categoriesWithProducts,
+    isLoading,
+    error,
+  } = useProductCategoriesWithProducts({
+    name: debouncedSearch,
+    has_promotion: filters.offer,
+    ids: filters.categories.map((c) => c.id).join(","),
+  });
+
+  const productCount = categoriesWithProducts?.products_count || 0;
 
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openCategoryAdminModal, setOpenCategoryAdminModal] = useState(false);
+
+  const handleFilterChange = (newFilters: Partial<FilterValues>) => {
+    setFilters((prev) => {
+      const updatedFilters = { ...prev, ...newFilters };
+      const isFiltering =
+        updatedFilters.search !== "" ||
+        updatedFilters.categories.length > 0 ||
+        updatedFilters.offer;
+      setHasFiltered(isFiltering);
+      return updatedFilters;
+    });
+  };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return <Typography>Error loading products.</Typography>;
+  }
 
   return (
     <Box p={2}>
@@ -55,12 +93,10 @@ export const ProductGrid: React.FC = () => {
         >
           <Button
             onClick={() => setOpenCategoryAdminModal(true)}
-            variant="contained"
-            color="secondary"
+            variant="grey1"
             sx={{
               width: { xs: "100%", md: "auto" },
               padding: "8px 12px 8px 12px",
-              backgroundColor: "#EDEDED",
               color: "#4B4B4B",
               boxShadow: 0,
             }}
@@ -72,6 +108,7 @@ export const ProductGrid: React.FC = () => {
             startIcon={<LocalCafeIcon />}
             variant="contained"
             color="primary"
+            onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
             sx={{
               width: { xs: "100%", md: "auto" },
               padding: "8px 12px 8px 12px",
@@ -83,47 +120,51 @@ export const ProductGrid: React.FC = () => {
         </Box>
       </Box>
       {/* Filtros: Search y selects */}
-      <Box
-        mb={2}
-        display="flex"
-        flexWrap="wrap"
-        gap={2}
-        // sx={{ border: "2px solid red" }}
-      >
-        <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-          {({
-            values,
-            handleChange,
-            setFieldValue,
-          }: FormikProps<FilterValues>) => (
-            <Form style={{ width: "100%" }}>
-              <FilterSection
-                values={values}
-                handleChange={handleChange}
-                setOpenCategoryModal={() => setOpenCategoryModal(true)}
-              />
-
-              {/* Modal de filtrado de categorías */}
-              <CategoryFilterModal
-                open={openCategoryModal}
-                onClose={() => setOpenCategoryModal(false)}
-                initialSelectedCategories={values.categories}
-                onSubmit={(categories: Category[]) => {
-                  // Actualiza el campo de categoría en Formik
-                  setFieldValue("categories", categories);
-                }}
-              />
-              {/*  */}
-              <CategoryAdminModal
-                open={openCategoryAdminModal}
-                onClose={() => setOpenCategoryAdminModal(false)}
-              />
-            </Form>
-          )}
-        </Formik>
+      <Box mb={4}>
+        <FilterSection
+          values={filters}
+          onFilterChange={handleFilterChange}
+          setOpenCategoryModal={() => setOpenCategoryModal(true)}
+        />
+        {hasFiltered && (
+          <Typography
+            variant="body2"
+            sx={{
+              display: { xs: "none", md: "block" },
+              mt: 2,
+              textAlign: "left",
+            }}
+          >
+            {productCount === 0
+              ? "No se han encontrado productos"
+              : `Encontramos ${productCount} productos`}
+          </Typography>
+        )}
+      </Box>
+      {/* Modal de filtrado de categorías */}
+      <Box>
+        <CategoryFilterModal
+          open={openCategoryModal}
+          onClose={() => setOpenCategoryModal(false)}
+          initialSelectedCategories={filters.categories}
+          onSubmit={(categories: Category[]) => {
+            handleFilterChange({ categories });
+          }}
+        />
+        <CategoryAdminModal
+          open={openCategoryAdminModal}
+          onClose={(orderChanged) => {
+            setOpenCategoryAdminModal(false);
+            if (orderChanged) {
+              queryClient.invalidateQueries({
+                queryKey: ["productCategoriesWithProducts"],
+              });
+            }
+          }}
+        />
       </Box>
       {/* Cuadrícula de productos */}
-      {dummyCategoriesWithProducts.map((cat) => (
+      {categoriesWithProducts?.results.map((cat) => (
         <CategoryGroup
           key={cat.id}
           category={cat}

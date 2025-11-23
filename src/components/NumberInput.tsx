@@ -95,8 +95,13 @@ const NumberInput: React.FC<
         InputProps={{
           ...InputProps,
         }}
+        error={Boolean(form.touched[field.name] && form.errors[field.name])}
+        helperText={
+          form.touched[field.name] && form.errors[field.name]
+            ? String(form.errors[field.name])
+            : helperText
+        }
       />
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>
   );
 };

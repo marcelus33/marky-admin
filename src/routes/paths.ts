@@ -10,4 +10,7 @@ export const ROUTES = {
   // protected routes
   CONFIGURATION: "/configuration",
   HOME: "/home",
+  PRODUCT_DETAIL: "/product/:id",
+  PRODUCT_EDIT: "/product/edit/:id",
+  PRODUCT_CREATE: "/product/create",
 };

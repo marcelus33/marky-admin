@@ -3,6 +3,19 @@ import typography from "./typography";
 
 const components = {
   MuiButton: {
+    variants: [
+      {
+        props: { variant: "grey1" },
+        style: {
+          backgroundColor: "#EDEDED",
+          color: "#4B4B4B",
+          boxShadow: "none",
+          "&:hover": {
+            backgroundColor: "#dcdcdc",
+          },
+        },
+      },
+    ],
     styleOverrides: {
       root: {
         textTransform: "none",

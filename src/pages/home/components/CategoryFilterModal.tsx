@@ -20,23 +20,15 @@ import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import XButton from "../../../components/XButton";
 import CancelButton from "../../../components/CancelButton";
+import useProductCategories from "../../../hooks/useProductCategories";
+import LoadingSpinner from "../../../components/LoadingSpinner";
+import { ProductCategory } from "../../../services/productService";
 
 // Define un tipo para las categorías
 export interface Category {
-  id: string;
-  label: string;
+  id: number;
+  name: string;
 }
-
-// Datos dummy para las categorías disponibles
-const dummyCategories: Category[] = [
-  { id: "cat1", label: "Categoría 1" },
-  { id: "cat2", label: "Categoría 2" },
-  { id: "cat3", label: "Categoría 3" },
-  { id: "cat4", label: "Categoría 4" },
-  { id: "cat5", label: "Categoría 5" },
-  { id: "cat6", label: "Categoría 6" },
-  { id: "cat7", label: "Categoría 7" },
-];
 
 interface CategoryFilterModalProps {
   open: boolean;
@@ -52,11 +44,24 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({
   onSubmit,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const {
+    data: categoriesData,
+    isLoading,
+    error,
+  } = useProductCategories(
+    {
+      page_size: 100,
+    },
+    {
+      enabled: open,
+    }
+  );
 
   // Filtra las categorías disponibles según el término de búsqueda
-  const filteredCategories = dummyCategories.filter((cat) =>
-    cat.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCategories =
+    categoriesData?.results.filter((cat) =>
+      cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -80,9 +85,9 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({
           selectedCategories: initialSelectedCategories,
         }}
         validationSchema={Yup.object({
-          selectedCategories: Yup.array()
-            .min(1, "Debes seleccionar al menos una categoría")
-            .required("Debes seleccionar al menos una categoría"),
+          selectedCategories: Yup.array().required(
+            "Debes seleccionar al menos una categoría"
+          ),
         })}
         onSubmit={(values) => {
           onSubmit(values.selectedCategories);
@@ -129,39 +134,45 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({
                       gap: 1, // Espaciado entre items
                     }}
                   >
-                    {filteredCategories.map((cat) => {
-                      const isChecked = values.selectedCategories.some(
-                        (c: Category) => c.id === cat.id
-                      );
-                      return (
-                        <FormControlLabel
-                          key={cat.id}
-                          control={
-                            <Checkbox
-                              checked={isChecked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  // Agrega la categoría si no está presente
-                                  setFieldValue("selectedCategories", [
-                                    ...values.selectedCategories,
-                                    cat,
-                                  ]);
-                                } else {
-                                  // Remueve la categoría
-                                  setFieldValue(
-                                    "selectedCategories",
-                                    values.selectedCategories.filter(
-                                      (c: Category) => c.id !== cat.id
-                                    )
-                                  );
-                                }
-                              }}
-                            />
-                          }
-                          label={cat.label}
-                        />
-                      );
-                    })}
+                    {isLoading ? (
+                      <LoadingSpinner />
+                    ) : error ? (
+                      <Typography>Error loading categories</Typography>
+                    ) : (
+                      filteredCategories.map((cat: ProductCategory) => {
+                        const isChecked = values.selectedCategories.some(
+                          (c: Category) => c.id === cat.id
+                        );
+                        return (
+                          <FormControlLabel
+                            key={cat.id}
+                            control={
+                              <Checkbox
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    // Agrega la categoría si no está presente
+                                    setFieldValue("selectedCategories", [
+                                      ...values.selectedCategories,
+                                      cat,
+                                    ]);
+                                  } else {
+                                    // Remueve la categoría
+                                    setFieldValue(
+                                      "selectedCategories",
+                                      values.selectedCategories.filter(
+                                        (c: Category) => c.id !== cat.id
+                                      )
+                                    );
+                                  }
+                                }}
+                              />
+                            }
+                            label={cat.name}
+                          />
+                        );
+                      })
+                    )}
                   </Box>
                 </Box>
 
@@ -210,7 +221,7 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({
                               "&:last-child": { borderBottom: "none" },
                             }}
                           >
-                            <Typography>{cat.label}</Typography>
+                            <Typography>{cat.name}</Typography>
                             <IconButton
                               onClick={() =>
                                 setFieldValue(

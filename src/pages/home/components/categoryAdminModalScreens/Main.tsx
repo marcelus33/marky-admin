@@ -87,6 +87,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
       sx={{
         borderBottom: "1px solid #e0e0e0",
         borderRadius: 1,
+        width: "100%",
       }}
     >
       <Box display="flex" alignItems="center" gap={1}>
@@ -195,6 +196,7 @@ interface MainProps {
   setCategoryForm: (cat: Category | null) => void;
   onDeleteCategory: (cat: Category) => void;
   setSelectedPromotionCategory: (cat: Category) => void;
+  onSelectCategory?: (category: Category) => void;
 }
 
 export const Main: React.FC<MainProps> = ({
@@ -204,6 +206,7 @@ export const Main: React.FC<MainProps> = ({
   setCategoryForm,
   onDeleteCategory,
   setSelectedPromotionCategory,
+  onSelectCategory,
 }) => {
   const deleteProductCategory = useDeleteProductCategory();
   const [openDeleteCategoryDialog, setOpenDeleteCategoryDialog] =
@@ -280,15 +283,26 @@ export const Main: React.FC<MainProps> = ({
           <CircularProgress />
         ) : categories && categories.length > 0 ? (
           categories.map((cat: Category) => (
-            <CategoryItem
-              key={cat.id}
-              cat={cat}
-              setCategoryForm={setCategoryForm}
-              setActiveScreen={setActiveScreen}
-              setOpenDeleteCategoryDialog={setOpenDeleteCategoryDialog}
-              setSelectedCategoryDelete={setSelectedCategoryDelete}
-              setSelectedPromotionCategory={setSelectedPromotionCategory}
-            />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <CategoryItem
+                key={cat.id}
+                cat={cat}
+                setCategoryForm={setCategoryForm}
+                setActiveScreen={setActiveScreen}
+                setOpenDeleteCategoryDialog={setOpenDeleteCategoryDialog}
+                setSelectedCategoryDelete={setSelectedCategoryDelete}
+                setSelectedPromotionCategory={setSelectedPromotionCategory}
+              />
+              {onSelectCategory && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => onSelectCategory(cat)}
+                >
+                  Seleccionar
+                </Button>
+              )}
+            </Box>
           ))
         ) : (
           <Typography variant="body2" color="textSecondary">
