@@ -8,5 +8,6 @@ export interface CategoryWithProducts {
   discount_percentage: string;
   promotion_starts_at: string | null;
   promotion_ends_at: string | null;
+  is_available: boolean;
   products: ProductGridItem[];
 }

@@ -4,7 +4,6 @@ import {
   Typography,
   Switch,
   FormControlLabel,
-  TextField,
   Button,
   Grid,
   IconButton,
@@ -14,6 +13,9 @@ import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
 import { useImageCropper } from "../../../hooks/useImageCropper";
 import ImageCropModal from "../../../components/ImageCropModal";
+import Input from "../../../components/Input";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import { ReactComponent as AddVariationImageIcon } from "../../../assets/icons/product-form/add-variation-picture.svg";
 
 interface VariationsSectionProps extends FormikProps<any> {
   maxItems?: number;
@@ -24,6 +26,8 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
   errors,
   touched,
   setFieldValue,
+  handleChange,
+  handleBlur,
   maxItems = 10,
 }) => {
   const [multiPresentation, setMultiPresentation] = useState(true);
@@ -67,7 +71,14 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        border: "1px solid",
+        borderColor: "grey.100",
+        borderRadius: 2,
+        p: 4,
+      }}
+    >
       <ImageCropModal
         open={!!croppingMedia}
         onClose={handleCloseCropModal}
@@ -87,9 +98,18 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
         style={{ display: "none" }}
         accept="image/*"
       />
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Variaciones del producto base
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <LocalOfferIcon />
+        <Typography variant="h6" fontWeight="bold">
+          Variaciones del producto base
+        </Typography>
+      </Box>
       <FormControlLabel
         control={
           <Switch
@@ -107,105 +127,164 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                 <Box
                   key={index}
                   sx={{
-                    border: "1px solid #e0e0e0",
+                    border: "1px solid",
+                    borderColor: "grey.100",
                     borderRadius: 1,
-                    p: 2,
+                    p: 3,
                     mb: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 3,
+                    backgroundColor: "grey.50",
                   }}
                 >
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item>
-                      <Box
-                        sx={{
-                          border: "1px dashed grey",
-                          borderRadius: 1,
-                          width: 80,
-                          height: 80,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          overflow: "hidden",
-                        }}
-                        onClick={() => handleIconClick(index)}
-                      >
-                        {variant.image ? (
-                          <img
-                            src={
-                              typeof variant.image === "string"
-                                ? variant.image
-                                : URL.createObjectURL(variant.image)
-                            }
-                            alt="Variant"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <IconButton>
-                            <PhotoCamera />
-                          </IconButton>
-                        )}
-                      </Box>
-                    </Grid>
-                    <Grid item xs>
-                      <Field
-                        as={TextField}
-                        name={`variants[${index}].name`}
-                        label="Nombre de presentación"
-                        fullWidth
-                        margin="normal"
-                        required
-                        error={
-                          getIn(touched, `variants[${index}].name`) &&
-                          Boolean(getIn(errors, `variants[${index}].name`))
-                        }
-                        helperText={
-                          getIn(touched, `variants[${index}].name`) &&
-                          getIn(errors, `variants[${index}].name`)
-                        }
-                      />
-                      <Field
-                        as={TextField}
-                        name={`variants[${index}].description`}
-                        label="Descripción"
-                        fullWidth
-                        margin="normal"
-                      />
-                      <Field
-                        name={`variants[${index}].price`}
-                        component={NumberInput}
-                        label="Precio"
-                        required
-                        fullWidth
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item>
-                      <IconButton onClick={() => remove(index)}>
-                        <Delete />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
+                  {/* IMAGE */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        border: "2px dashed",
+                        borderColor: "primary.main",
+                        borderRadius: 1,
+                        width: 80,
+                        height: 80,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        overflow: "hidden",
+                      }}
+                      onClick={() => handleIconClick(index)}
+                    >
+                      {variant.image ? (
+                        <img
+                          src={
+                            typeof variant.image === "string"
+                              ? variant.image
+                              : URL.createObjectURL(variant.image)
+                          }
+                          alt="Variant"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <IconButton>
+                          <AddVariationImageIcon />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </Box>
+                  {/* INPUTS  */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      flex: 1,
+                      gap: 2,
+                    }}
+                  >
+                    <Input
+                      name={`variants[${index}].name`}
+                      label="Nombre de presentación"
+                      placeholder="Nombre de presentación"
+                      value={variant.name}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      required
+                      error={
+                        getIn(touched, `variants[${index}].name`) &&
+                        Boolean(getIn(errors, `variants[${index}].name`))
+                      }
+                      helperText={
+                        getIn(touched, `variants[${index}].name`)
+                          ? getIn(errors, `variants[${index}].name`)
+                          : undefined
+                      }
+                      InputProps={{
+                        sx: {
+                          backgroundColor: "white",
+                        },
+                      }}
+                    />
+
+                    <Input
+                      name={`variants[${index}].description`}
+                      label="Descripción"
+                      placeholder="Descripción"
+                      value={variant.description}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      InputProps={{
+                        sx: {
+                          backgroundColor: "white",
+                        },
+                      }}
+                    />
+
+                    <Field
+                      name={`variants[${index}].price`}
+                      component={NumberInput}
+                      label="Precio"
+                      required
+                      fullWidth
+                      margin="normal"
+                      InputProps={{
+                        sx: {
+                          backgroundColor: "white",
+                        },
+                      }}
+                    />
+                  </Box>
+                  {/* DELETE BUTTON */}
+                  <Box
+                    sx={{
+                      backgroundColor: "grey.400",
+                      justifyItems: "center",
+                      borderRadius: 2,
+                      mt: 5,
+                      p: 1,
+                    }}
+                  >
+                    <IconButton onClick={() => remove(index)}>
+                      <Delete />
+                    </IconButton>
+                  </Box>
                 </Box>
               ))}
-              <Button
-                startIcon={<Add />}
-                onClick={() =>
-                  push({
-                    id: Date.now(),
-                    name: "",
-                    description: "",
-                    price: "",
-                    image: null,
-                  })
-                }
-                disabled={values.variants.length >= maxItems}
-              >
-                Añadir otra presentación
-              </Button>
+              <Box sx={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    backgroundColor: "#DBE9F9",
+                    borderRadius: 2,
+                    mr: 2,
+                  }}
+                >
+                  <Add fontSize="large" color="primary" sx={{ mt: 1 }} />
+                </Box>
+                <Button
+                  onClick={() =>
+                    push({
+                      id: Date.now(),
+                      name: "",
+                      description: "",
+                      price: "",
+                      image: null,
+                    })
+                  }
+                  disabled={values.variants.length >= maxItems}
+                >
+                  Añadir otra presentación
+                </Button>
+              </Box>
             </Box>
           )}
         </FieldArray>

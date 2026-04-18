@@ -18,7 +18,9 @@ interface AssignCategoryModalProps {
   open: boolean;
   onClose: () => void;
   selectedCategory: Category | null;
-  onSelectCategory: (category: Category) => void;
+  // Accept null to keep the API flexible, but the modal will only call
+  // this when the user explicitly assigns a category using the button.
+  onSelectCategory: (category: Category | null) => void;
 }
 
 export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
@@ -31,21 +33,36 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
     {
       include_products: false,
     },
-    { enabled: open }
+    { enabled: open },
   );
   const [categories, setCategories] = useState<Category[]>([]);
   // const [selectedCategory, setSelectedCategory] = useState<Category | null>(
   //   null
   // );
   const [searchTerm, setSearchTerm] = useState("");
+  // Local temporary selection: clicking items updates this local state
+  // and does NOT immediately propagate to the parent. Only when the
+  // user clicks "Asignar categoría" will we call onSelectCategory.
+  const [tempSelectedCategory, setTempSelectedCategory] =
+    useState<Category | null>(selectedCategory ?? null);
+
+  // Initialize temp selection whenever modal is opened or the parent
+  // selectedCategory changes (useful when editing an existing product).
+  useEffect(() => {
+    if (open) {
+      setTempSelectedCategory(selectedCategory ?? null);
+    }
+  }, [open, selectedCategory]);
 
   const filteredCategories = categories.filter((category) =>
-    category.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    category.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleAssignCategory = () => {
-    if (selectedCategory) {
-      onSelectCategory(selectedCategory);
+    // Only assign when there's a temporary selection. The parent will
+    // take care of updating its state and closing the modal.
+    if (tempSelectedCategory) {
+      onSelectCategory(tempSelectedCategory);
     }
   };
 
@@ -57,7 +74,7 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
           name: cat.name,
           icon: cat.icon,
           order: 0,
-        })
+        }),
       );
       setCategories(mappedCategories);
     }
@@ -74,7 +91,7 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
           borderBottom: "1px solid #e0e0e0",
         }}
       >
-        <DialogTitle sx={{ p: 0 }}>Asignar categoría</DialogTitle>
+        <DialogTitle sx={{ px: 2, py: 0 }}>Asignar categoría</DialogTitle>
         <XButton onClick={onClose} />
       </Box>
       <DialogContent>
@@ -93,10 +110,11 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
             <ProductCategorySelectionList
               categories={filteredCategories}
               maxSelectable={1}
-              selected={selectedCategory ? [selectedCategory] : []}
+              // show the local temporary selection inside the modal
+              selected={tempSelectedCategory ? [tempSelectedCategory] : []}
+              // update only local state when user toggles options
               setSelected={(cats: Category[]) =>
-                // setSelectedCategory(cats[0] || null)
-                onSelectCategory(cats[0] || null)
+                setTempSelectedCategory(cats[0] || null)
               }
             />
           </Box>
@@ -111,13 +129,14 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
           borderTop: "1px solid #e0e0e0",
         }}
       >
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant="outlined" sx={{ px: 3 }}>
           Cancelar
         </Button>
         <Button
           onClick={handleAssignCategory}
           variant="contained"
-          disabled={!selectedCategory}
+          disabled={!tempSelectedCategory}
+          sx={{ px: 3 }}
         >
           Asignar categoría
         </Button>

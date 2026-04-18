@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import { FormikProps, Field } from "formik";
 import Input from "../../../components/Input";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import CustomRadioLabel from "../../../components/CustomRadioLabel";
 
 const HighlightSection: React.FC<FormikProps<any>> = ({
   values,
@@ -21,12 +23,28 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
   touched,
 }) => {
   return (
-    <Box>
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Producto destacado
-      </Typography>
+    <Box
+      sx={{
+        border: "1px solid",
+        borderColor: "grey.100",
+        borderRadius: 2,
+        p: 4,
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <LocalOfferIcon />
+        <Typography variant="h6" fontWeight="bold">
+          Producto destacado
+        </Typography>
+      </Box>
 
-      <Typography variant="subtitle1" mb={1}>
+      <Typography variant="subtitle1" mb={1} mt={2}>
         Stopper
       </Typography>
       <FormControlLabel
@@ -41,8 +59,12 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
         }
         label="Activar Stopper"
       />
+      <Typography variant="body1" color="textDisabled">
+        Puede destacar con un stopper solo 2 productos por categoría.
+      </Typography>
+
       {!!values.stopper && (
-        <Box display="flex" flexDirection="column" ml={4}>
+        <Box display="flex" flexDirection="column" ml={4} mt={2}>
           <FormControlLabel
             control={
               <Radio
@@ -52,7 +74,7 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
                 onChange={() => setFieldValue("stopper", "FAVORITE")}
               />
             }
-            label="Favorito del mes"
+            label={<CustomRadioLabel label="Favorito del mes" />}
           />
           <FormControlLabel
             control={
@@ -63,7 +85,13 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
                 onChange={() => setFieldValue("stopper", "RECOMMENDED")}
               />
             }
-            label="Recomendado"
+            label={
+              <CustomRadioLabel
+                label="Recomendado"
+                backgroundColor="primary.main"
+                fontColor="white"
+              />
+            }
           />
         </Box>
       )}
@@ -85,78 +113,82 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
       />
       {values.isPromotionActive && (
         <Box ml={4}>
-          <FormControlLabel
-            control={
-              <Radio
-                name="promotionOption"
-                value="descuento"
-                checked={values.promotionOption === "descuento"}
-                onChange={() => setFieldValue("promotionOption", "descuento")}
-              />
-            }
-            label="Descuento"
-          />
-          {values.promotionOption === "descuento" && (
-            <TextField
-              placeholder="Porcentaje de descuento (0-100)"
-              type="number"
-              name="discountPercentage"
-              variant="outlined"
-              size="small"
-              value={values.discountPercentage || ""}
-              onChange={(e) =>
-                setFieldValue("discountPercentage", Number(e.target.value))
+          <Box display={"flex"} flexDirection={"column"}>
+            <FormControlLabel
+              control={
+                <Radio
+                  name="promotionOption"
+                  value="descuento"
+                  checked={values.promotionOption === "descuento"}
+                  onChange={() => setFieldValue("promotionOption", "descuento")}
+                />
               }
-              inputProps={{
-                max: 100,
-                min: 0,
-                style: { padding: 12 },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Typography>%</Typography>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                mb: 2,
-                ml: 4,
-                width: { xs: "100%", md: "50%" },
-              }}
+              label="Descuento"
             />
-          )}
-          <FormControlLabel
-            control={
-              <Radio
-                name="promotionOption"
-                value="oferta"
-                checked={values.promotionOption === "oferta"}
-                onChange={() => setFieldValue("promotionOption", "oferta")}
-              />
-            }
-            label="Oferta"
-          />
-          {values.promotionOption === "oferta" && (
-            <FormControl
-              size="small"
-              sx={{
-                mb: 2,
-                ml: 4,
-                width: { xs: "100%", md: "50%" },
-              }}
-            >
-              <Select
-                value={values.multibuyOption}
+            {values.promotionOption === "descuento" && (
+              <TextField
+                placeholder="Porcentaje de descuento (0-100)"
+                type="number"
+                name="discountPercentage"
+                variant="outlined"
+                size="small"
+                value={values.discountPercentage || ""}
                 onChange={(e) =>
-                  setFieldValue("multibuyOption", e.target.value)
+                  setFieldValue("discountPercentage", Number(e.target.value))
                 }
+                inputProps={{
+                  max: 100,
+                  min: 0,
+                  style: { padding: 12 },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography>%</Typography>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  mb: 2,
+                  ml: 8,
+                  width: { xs: "100%", md: "50%" },
+                }}
+              />
+            )}
+          </Box>
+          <Box display={"flex"} flexDirection={"column"}>
+            <FormControlLabel
+              control={
+                <Radio
+                  name="promotionOption"
+                  value="oferta"
+                  checked={values.promotionOption === "oferta"}
+                  onChange={() => setFieldValue("promotionOption", "oferta")}
+                />
+              }
+              label="Oferta"
+            />
+            {values.promotionOption === "oferta" && (
+              <FormControl
+                size="small"
+                sx={{
+                  mb: 2,
+                  ml: 8,
+                  width: { xs: "100%", md: "50%" },
+                }}
               >
-                <MenuItem value="2x1">2x1</MenuItem>
-                <MenuItem value="3x2">3x2</MenuItem>
-              </Select>
-            </FormControl>
-          )}
+                <Select
+                  value={values.multibuyOption}
+                  onChange={(e) =>
+                    setFieldValue("multibuyOption", e.target.value)
+                  }
+                >
+                  <MenuItem value="2x1">2x1</MenuItem>
+                  <MenuItem value="3x2">3x2</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+          </Box>
         </Box>
       )}
 

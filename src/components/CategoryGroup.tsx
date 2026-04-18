@@ -1,31 +1,30 @@
+import DeleteIcon from "@mui/icons-material/Delete";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Box,
-  Grid,
+  Checkbox,
+  Divider,
+  FormControlLabel,
   IconButton,
   Menu,
   MenuItem,
   Typography,
-  Checkbox,
-  FormControlLabel,
-  Divider,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import DeleteIcon from "@mui/icons-material/Delete";
-import categoryIcons from "../assets/icons/category/categoryIcons";
-// import categoryIcons from "../../../../assets/icons/category/categoryIcons";
-import ProductCard from "./ProductCard";
-import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";
-import { useState } from "react";
-import { CategoryWithProducts } from "../types/categoryWithProducts";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import categoryIcons from "../assets/icons/category/categoryIcons";
+import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";
 import { ROUTES } from "../routes/paths";
+import { CategoryWithProducts } from "../types/categoryWithProducts";
+import ProductCard from "./ProductCard";
 
 interface CategoryGroupProps {
   category: CategoryWithProducts;
-  onPromotionClick?: () => void;
+  onPromotionClick?: (category: CategoryWithProducts) => void;
   onDeleteCategory?: () => void;
   onToggleAvailability?: (checked: boolean) => void;
+  onProductPromotionClick?: (product: any) => void;
 }
 
 const CategoryGroup: React.FC<CategoryGroupProps> = ({
@@ -33,10 +32,121 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   onPromotionClick,
   onDeleteCategory,
   onToggleAvailability,
+  onProductPromotionClick,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [isUnavailable, setIsUnavailable] = useState(false);
+  // no local-only state: rely on query cache optimistic updates
+  const isUnavailable = !(category as any).is_available;
   const navigate = useNavigate();
+
+  // Helper to format a remaining duration (ms) into a detailed Spanish string
+  // Example: "10 días : 11 horas : 30 min"
+  const formatRemainingDetailed = (ms: number) => {
+    if (ms <= 0) return "0 min";
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    const daysPart = `${days} ${days === 1 ? "día" : "días"}`;
+    const hoursPart = `${hours} ${hours === 1 ? "hora" : "horas"}`;
+    const minutesPart = `${minutes} min`;
+
+    return `${daysPart} : ${hoursPart} : ${minutesPart}`;
+  };
+
+  const renderPromotionBadge = () => {
+    const {
+      promotion_starts_at,
+      promotion_ends_at,
+      multibuy_option,
+      discount_percentage,
+    } = category as any;
+    if (!promotion_ends_at) return null;
+
+    const now = new Date();
+    const starts = promotion_starts_at ? new Date(promotion_starts_at) : null;
+    const ends = new Date(promotion_ends_at);
+
+    // decide badge color based on promotion type
+    const hasDiscount =
+      !!discount_percentage && parseFloat(discount_percentage as string) > 0;
+    const hasMultibuy = !!multibuy_option;
+    const badgeColor = hasDiscount
+      ? "error.main"
+      : hasMultibuy
+        ? "primary.main"
+        : "primary.main";
+
+    // If promotion hasn't started yet
+    if (starts && now < starts) {
+      const diff = starts.getTime() - now.getTime();
+      return (
+        <Box
+          sx={{
+            backgroundColor: badgeColor,
+            color: "white",
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 3,
+            fontSize: 14,
+            display: "flex",
+            alignItems: "center",
+            ml: 2,
+          }}
+        >
+          Empieza en {formatRemainingDetailed(diff)}
+        </Box>
+      );
+    }
+
+    // If promotion already ended
+    if (now >= ends) return null;
+
+    // Promotion active
+    const diff = ends.getTime() - now.getTime();
+    return (
+      <Box
+        sx={{
+          backgroundColor: badgeColor,
+          color: "white",
+          px: 2,
+          py: 0.5,
+          borderRadius: 1,
+          fontSize: 14,
+          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          ml: 2,
+        }}
+      >
+        Finaliza en {formatRemainingDetailed(diff)}
+      </Box>
+    );
+  };
+
+  const renderAvailabilityBadge = () => {
+    if ((category as any).is_available) return null;
+    return (
+      <Box
+        sx={{
+          backgroundColor: "grey.500",
+          color: "white",
+          px: 2,
+          py: 1,
+          borderRadius: 1,
+          fontSize: 14,
+          display: "flex",
+          alignItems: "center",
+          ml: 2,
+        }}
+      >
+        <Typography color="white" fontWeight={500}>
+          No disponible
+        </Typography>
+      </Box>
+    );
+  };
 
   const open = Boolean(anchorEl);
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -83,6 +193,8 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
             {category.name}
           </Typography>
         </Box>
+        {renderPromotionBadge()}
+        {renderAvailabilityBadge()}
         <IconButton
           onClick={handleOpen}
           sx={{ backgroundColor: "grey.200", borderRadius: 2, p: 2.5 }}
@@ -96,7 +208,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
           PaperProps={{
             sx: {
               marginTop: 2,
-              backgroundColor: "white", // light custom background
+              backgroundColor: "white",
               p: 1.5, // inner padding
               maxWidth: 320, // optional, for spacing
             },
@@ -104,23 +216,33 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         >
           <MenuItem
             onClick={() => {
-              onPromotionClick?.();
+              onPromotionClick?.(category);
               handleClose();
             }}
-            sx={{ marginBottom: 2 }}
+            sx={{
+              borderRadius: 2,
+              p: 3,
+              display: "flex",
+              gap: 4,
+            }}
           >
-            <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} />
-            Categoría en promoción
+            <LocalOfferIcon fontSize="medium" />
+            <Typography>Categoría en promoción</Typography>
           </MenuItem>
           <MenuItem
             onClick={() => {
               onDeleteCategory?.();
               handleClose();
             }}
-            sx={{ color: "error.main" }}
+            sx={{
+              borderRadius: 2,
+              p: 3,
+              display: "flex",
+              gap: 4,
+            }}
           >
-            <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-            Eliminar categoría
+            <DeleteIcon fontSize="medium" />
+            <Typography color="error">Eliminar categoría</Typography>
           </MenuItem>
           <Divider />
           <Box px={2} py={1}>
@@ -129,22 +251,25 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
                 <Checkbox
                   checked={isUnavailable}
                   onChange={(e) => {
-                    setIsUnavailable(e.target.checked);
-                    onToggleAvailability?.(e.target.checked);
+                    const checked = e.target.checked;
+                    onToggleAvailability?.(checked);
                   }}
                 />
               }
-              label={
-                <Box>
-                  <Typography>No disponible</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Al marcar esta opción, todos los productos continuarán
-                    mostrándose pero con el estado "No disponible"
-                  </Typography>
-                </Box>
-              }
-              sx={{ alignItems: "start" }}
+              label={<Typography variant="body2">No disponible</Typography>}
+              sx={{
+                "& .MuiSvgIcon-root": {
+                  fontSize: 28, // Bigger checkbox
+                  borderRadius: 6, // Rounded corners (not fully circular)
+                },
+              }}
             />
+            <Box>
+              <Typography variant="caption" color="textDisabled">
+                Al marcar esta opción, todos los productos continuarán
+                mostrándose pero con el estado "No disponible"
+              </Typography>
+            </Box>
           </Box>
         </Menu>
       </Box>
@@ -168,6 +293,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
             onClick={() => {
               navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));
             }}
+            onPromotionClick={onProductPromotionClick}
           />
         ))}
       </Box>

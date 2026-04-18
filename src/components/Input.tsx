@@ -24,6 +24,7 @@ interface InputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // opcional
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void; // opcional
   sx?: object;
+  InputProps?: object; // New prop for TextField's InputProps
 }
 
 const Input: React.FC<InputProps> = ({
@@ -43,6 +44,7 @@ const Input: React.FC<InputProps> = ({
   onChange,
   onBlur,
   sx,
+  InputProps: customInputProps, // Destructure InputProps
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -94,6 +96,7 @@ const Input: React.FC<InputProps> = ({
         maxRows={maxRows}
         InputProps={{
           endAdornment: endAdornmentElements,
+          ...customInputProps, // Spread customInputProps here
         }}
         inputProps={{
           ...(maxLength ? { maxLength } : {}),

@@ -35,7 +35,7 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
     {
       include_products: false,
     },
-    { enabled: open }
+    { enabled: open },
   );
   const updateProductCategoryOrder = useUpdateProductCategoryOrder();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -48,7 +48,7 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
 
   const handleCreateEditSubmit = (
     cat: Partial<Category>,
-    backScreen: boolean = true
+    backScreen: boolean = true,
   ) => {
     console.log("handleCreateEditSubmit", cat);
 
@@ -91,7 +91,7 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
           discountPercentage: parseFloat(cat.discount_percentage),
           promotionStartsAt: cat.promotion_starts_at ?? undefined,
           promotionEndsAt: cat.promotion_ends_at ?? undefined,
-        })
+        }),
       );
       setCategories(mappedCategories);
     }

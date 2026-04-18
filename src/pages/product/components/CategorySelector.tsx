@@ -3,6 +3,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import { Box, IconButton, Typography } from "@mui/material";
 import categoryIcons from "../../../assets/icons/category/categoryIcons";
+import useProductCategories from "../../../hooks/useProductCategories";
 import { ReactComponent as CrownIcon } from "../../../assets/icons/crown.svg";
 import { Category } from "../../../types/category";
 
@@ -15,9 +16,37 @@ export const CategorySelector = ({
   selectedCategory,
   onOpenModal,
 }: CategorySelectorProps) => {
+  // Try to resolve the full category info when parent only provides an id
+  // (this happens on the "duplicate product" flow where we only pass the id).
+  const { data: categoriesData } = useProductCategories(
+    { include_products: false },
+    { enabled: true },
+  );
+
+  const categories =
+    categoriesData?.results?.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+      order: 0,
+    })) ?? [];
+
+  const resolvedCategory: typeof selectedCategory | null = (() => {
+    if (!selectedCategory) return null;
+    const hasName = Boolean(selectedCategory.name);
+    const hasIcon = Boolean(selectedCategory.icon);
+    // If the prop already has the needed fields, use it as-is
+    if (hasName && hasIcon) return selectedCategory;
+    // Otherwise try to find a matching category from the fetched list
+    const found = categories.find(
+      (c) => String(c.id) === String(selectedCategory.id),
+    );
+    return found ?? selectedCategory;
+  })();
+
   const IconComponent =
-    selectedCategory?.icon && categoryIcons[selectedCategory.icon]
-      ? categoryIcons[selectedCategory.icon]
+    resolvedCategory?.icon && categoryIcons[resolvedCategory.icon]
+      ? categoryIcons[resolvedCategory.icon]
       : null;
 
   return (
@@ -91,10 +120,14 @@ export const CategorySelector = ({
             }}
           >
             <Typography variant="body1">
-              {selectedCategory?.name ?? "Sin categoría"}
+              {resolvedCategory?.name ??
+                selectedCategory?.name ??
+                "Sin categoría"}
             </Typography>
             {/*  */}
-            {selectedCategory && <CheckCircleIcon fontSize="small" />}
+            {(resolvedCategory || selectedCategory) && (
+              <CheckCircleIcon fontSize="small" />
+            )}
           </Box>
         </Box>
       </Box>

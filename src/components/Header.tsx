@@ -11,6 +11,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
+import defaultUserAvatar from "../assets/images/user_default.png";
 
 export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -43,7 +44,7 @@ export const Header: React.FC = () => {
           <NotificationsIcon sx={{ color: "#9E9EA6" }} />
         </IconButton>
         <IconButton color="inherit" onClick={handleProfileClick}>
-          <Avatar src="https://via.placeholder.com/40" />
+          <Avatar src={defaultUserAvatar} />
         </IconButton>
         <Menu
           anchorEl={anchorEl}

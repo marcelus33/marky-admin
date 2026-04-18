@@ -166,10 +166,14 @@ export const SortableImageItem = ({
       <ListItemText
         primary={item.name}
         sx={{
+          flex: 1,
+          minWidth: 0,
+          pr: "96px", // reserve space so text doesn't go under the secondary action buttons
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
         }}
+        primaryTypographyProps={{ noWrap: true }}
       />
     </ListItem>
   );

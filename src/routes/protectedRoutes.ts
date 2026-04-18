@@ -9,6 +9,10 @@ import { ROUTES } from "./paths";
 export const protectedRoutes = [
   { path: ROUTES.LOGOUT, component: Logout },
   { path: ROUTES.CONFIGURATION, component: Configuration },
+  {
+    path: ROUTES.ACCOUNT_CONFIGURATION,
+    component: require("../pages/account/AccountConfigurationPage").default,
+  },
   { path: ROUTES.HOME, component: Home },
   { path: ROUTES.PRODUCT_DETAIL, component: ProductDetailPage },
   { path: ROUTES.PRODUCT_EDIT, component: ProductFormPage },

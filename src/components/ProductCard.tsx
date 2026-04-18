@@ -4,6 +4,7 @@ import {
   CardContent,
   CardMedia,
   Typography,
+  Tooltip,
   Chip,
   IconButton,
   Checkbox,
@@ -25,10 +26,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import { formatPrice } from "../utils/format";
+import { useUpdateProductAvailability } from "../hooks/useProductMutations";
 
 interface ProductCardProps {
   product: ProductGridItem;
   onClick?: () => void;
+  onPromotionClick?: (product: ProductGridItem) => void;
 }
 
 const LineClamp = styled(Typography)({
@@ -38,9 +41,18 @@ const LineClamp = styled(Typography)({
   overflow: "hidden",
 });
 
-const DropdownMenu: React.FC<{ product: ProductGridItem }> = ({ product }) => {
+const DropdownMenu: React.FC<{
+  product: ProductGridItem;
+  onPromotionClick?: (product: ProductGridItem) => void;
+}> = ({ product, onPromotionClick }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [isUnavailable, setIsUnavailable] = useState(false);
+  const updateAvailability = useUpdateProductAvailability();
+
+  // derive initial availability from product payload (may be snake_case or camelCase)
+  const initialIsAvailable = Boolean(
+    (product as any).is_available ?? (product as any).is_active ?? true,
+  );
+  const [isUnavailable, setIsUnavailable] = useState(!initialIsAvailable);
   const navigate = useNavigate();
 
   console.log("dproduct", product);
@@ -85,27 +97,38 @@ const DropdownMenu: React.FC<{ product: ProductGridItem }> = ({ product }) => {
         open={open}
         onClose={handleClose}
         onClick={(e) => e.stopPropagation()}
+        PaperProps={{
+          sx: {
+            marginTop: 2,
+            backgroundColor: "white",
+            p: 1.5, // inner padding
+            maxWidth: 320, // optional, for spacing
+          },
+        }}
       >
         <MenuItem
           onClick={(event: React.MouseEvent<HTMLLIElement>) => {
             event.stopPropagation();
             navigate(ROUTES.PRODUCT_EDIT.replace(":id", product.id + ""));
           }}
+          sx={{ py: 4, borderRadius: 2 }}
         >
-          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          <EditIcon fontSize="small" sx={{ mr: 4 }} />
           Editar
         </MenuItem>
         <MenuItem
           onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-            // onPromotionClick?.();
-            // handleClose();
+            event.stopPropagation();
+            onPromotionClick?.(product);
+            handleClose();
           }}
+          sx={{ py: 4, borderRadius: 2 }}
         >
-          <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} />
+          <LocalOfferIcon fontSize="small" sx={{ mr: 4 }} />
           Producto en promoción
         </MenuItem>
-        <MenuItem>
-          <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+        <MenuItem sx={{ py: 4, borderRadius: 2 }}>
+          <ContentCopyIcon fontSize="small" sx={{ mr: 4 }} />
           Copiar URL
         </MenuItem>
         <MenuItem
@@ -113,9 +136,9 @@ const DropdownMenu: React.FC<{ product: ProductGridItem }> = ({ product }) => {
             // onDeleteCategory?.();
             // handleClose();
           }}
-          sx={{ color: "error.main" }}
+          sx={{ color: "error.main", py: 4, borderRadius: 2 }}
         >
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+          <DeleteIcon fontSize="small" sx={{ mr: 4 }} />
           Eliminar
         </MenuItem>
         <Divider />
@@ -124,23 +147,50 @@ const DropdownMenu: React.FC<{ product: ProductGridItem }> = ({ product }) => {
             control={
               <Checkbox
                 checked={isUnavailable}
-                onChange={(e) => {
-                  // setIsUnavailable(e.target.checked);
-                  // onToggleAvailability?.(e.target.checked);
+                disabled={(updateAvailability as any).isLoading}
+                onChange={async (e) => {
+                  const checked = e.target.checked; // checked === true means "No disponible"
+                  const previous = isUnavailable;
+
+                  // optimistic update
+                  setIsUnavailable(checked);
+
+                  const id = (product as any).id;
+                  if (id) {
+                    const fd = new FormData();
+                    // persist only the is_available field on the backend
+                    const newIsAvailable = !checked;
+                    fd.append(
+                      "is_available",
+                      newIsAvailable ? "true" : "false",
+                    );
+                    try {
+                      await updateAvailability.mutateAsync({
+                        id: Number(id),
+                        product: fd,
+                      });
+                      // close the dropdown menu after successful update
+                      handleClose();
+                    } catch (err) {
+                      // revert optimistic update on error
+                      setIsUnavailable(previous);
+                    }
+                  }
                 }}
               />
             }
             label={
               <Box>
                 <Typography>No disponible</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Al marcar esta opción, todos los productos continuarán
-                  mostrándose pero con el estado "No disponible"
-                </Typography>
               </Box>
             }
-            sx={{ alignItems: "start" }}
           />
+          <Box>
+            <Typography variant="caption" color="textDisabled">
+              Al marcar esta opción, el producto continuará mostrándose pero con
+              el estado "No disponible"
+            </Typography>
+          </Box>
         </Box>
       </Menu>
     </Box>
@@ -165,7 +215,137 @@ const styles = {
   },
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onClick,
+  onPromotionClick,
+}) => {
+  const discountNumber = Number(product.discountPercent ?? 0);
+  const showDiscount = !isNaN(discountNumber) && discountNumber > 0;
+  const discountLabel = showDiscount
+    ? discountNumber % 1 === 0
+      ? String(discountNumber)
+      : String(discountNumber)
+    : null;
+  const hasMultibuy = !!product.multibuyOption;
+
+  // Helper to format a remaining duration (ms) into a detailed Spanish string
+  // Example: "10 días : 11 horas : 30 min"
+  const formatRemainingDetailed = (ms: number) => {
+    if (ms <= 0) return "0 min";
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    const daysPart = `${days} ${days === 1 ? "día" : "días"}`;
+    const hoursPart = `${hours} ${hours === 1 ? "hora" : "horas"}`;
+    const minutesPart = `${minutes} min`;
+
+    return `${daysPart} : ${hoursPart} : ${minutesPart}`;
+  };
+
+  const renderPromotionBadge = () => {
+    // Prefer mapped camelCase fields from the product mapper, but fall back to
+    // original snake_case if needed.
+    const promotionStarts =
+      (product as any).promotionStartsAt ??
+      (product as any).promotion_starts_at;
+    const promotionEnds =
+      (product as any).promotionEndsAt ?? (product as any).promotion_ends_at;
+
+    if (!promotionEnds) return null;
+
+    const now = new Date();
+    const starts = promotionStarts ? new Date(promotionStarts) : null;
+    const ends = new Date(promotionEnds);
+
+    const hasDiscount = !!discountNumber && discountNumber > 0;
+    const hasMultibuyLocal = !!product.multibuyOption;
+    const badgeColor = hasDiscount
+      ? "error.main"
+      : hasMultibuyLocal
+        ? "primary.main"
+        : "primary.main";
+
+    // If promotion hasn't started yet (empieza en)
+    if (starts && now < starts) {
+      const diff = starts.getTime() - now.getTime();
+      return (
+        <Box
+          sx={{
+            backgroundColor: badgeColor,
+            color: "white",
+            px: 2,
+            py: 0.5,
+            borderRadius: 1,
+            fontSize: 14,
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            mt: 1,
+            width: "fit-content",
+          }}
+        >
+          {formatRemainingDetailed(diff)}
+        </Box>
+      );
+    }
+
+    // If promotion already ended
+    if (now >= ends) return null;
+
+    // Promotion active (finaliza en)
+    const diff = ends.getTime() - now.getTime();
+    return (
+      <Box
+        sx={{
+          backgroundColor: badgeColor,
+          color: "white",
+          px: 2,
+          py: 0.5,
+          borderRadius: 1,
+          fontSize: 14,
+          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          mt: 1,
+          width: "fit-content",
+        }}
+      >
+        {formatRemainingDetailed(diff)}
+      </Box>
+    );
+  };
+
+  const renderAvailabilityBadge = (product: ProductGridItem) => {
+    const isAvailable = product.is_available ?? product.is_active ?? true;
+    if (isAvailable) return null;
+
+    return (
+      <Box
+        sx={{
+          backgroundColor: "grey.500",
+          color: "white",
+          px: 2,
+          py: 1,
+          borderRadius: 1,
+          fontSize: 14,
+          display: "flex",
+          alignItems: "center",
+          mt: 1,
+          width: "fit-content",
+        }}
+      >
+        <Typography color="white" fontWeight={500}>
+          No disponible
+        </Typography>
+      </Box>
+    );
+  };
+
+  console.log("product ===>", product);
+
   return (
     <Card
       onClick={(event: React.MouseEvent<HTMLDivElement>) => {
@@ -188,17 +368,85 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
             objectFit: "cover",
           }}
         />
-        {product.discountPercent && (
-          <Chip
-            label={`-${product.discountPercent}%`}
-            color="error"
-            size="small"
-            sx={{ position: "absolute", top: 8, left: 8 }}
-          />
-        )}
+        {/* Badges container (top-left) */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 15,
+            left: 15,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            zIndex: 0,
+          }}
+        >
+          {(() => {
+            const isAvailable =
+              product.is_available ?? product.is_active ?? true;
+            if (!isAvailable) {
+              return renderAvailabilityBadge(product);
+            }
+
+            return (
+              <>
+                {showDiscount && (
+                  <Box
+                    component="span"
+                    sx={(theme) => ({
+                      bgcolor: "error.main",
+                      color: theme.palette.common.white,
+                      px: 2,
+                      py: 1.5,
+                      borderRadius: 1,
+                      display: "inline-block",
+                    })}
+                  >
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{
+                        fontWeight: 500,
+                        fontSize: 14,
+                        color: (theme) => theme.palette.common.white,
+                      }}
+                    >
+                      -{discountLabel}%
+                    </Typography>
+                  </Box>
+                )}
+
+                {hasMultibuy && (
+                  <Box
+                    component="span"
+                    sx={(theme) => ({
+                      bgcolor: "primary.main",
+                      color: theme.palette.common.white,
+                      px: 2,
+                      py: 1.5,
+                      borderRadius: 1,
+                      display: "inline-block",
+                    })}
+                  >
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{
+                        fontWeight: 500,
+                        fontSize: 14,
+                        color: (theme) => theme.palette.common.white,
+                      }}
+                    >
+                      {product.multibuyOption}
+                    </Typography>
+                  </Box>
+                )}
+              </>
+            );
+          })()}
+        </Box>
       </Box>
 
-      <DropdownMenu product={product} />
+      <DropdownMenu product={product} onPromotionClick={onPromotionClick} />
 
       <CardContent sx={{ p: 2, backgroundColor: "transparent", mt: 2 }}>
         {/* Views */}
@@ -211,66 +459,60 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
           </Box>
         )}
 
-        {/* Optional tag */}
-        {product.isFavorite && (
-          <Box
-            sx={{
-              width: "fit-content",
-              // height: 32,
-              backgroundColor: "#FFD600",
-              color: "#333",
-              fontWeight: "500",
-              fontSize: "0.875rem",
-              lineHeight: "32px",
-              // textAlign: "center",
-              position: "relative",
-              borderRight: "20px solid transparent",
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-              pl: 2,
-              mb: 2,
-              clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 100%, 0% 100%)",
-            }}
-          >
-            Favorito del mes
-          </Box>
-        )}
-        {product.isRecommended && !product.isFavorite && (
-          <Box
-            sx={{
-              width: "fit-content",
-              // height: 32,
-              backgroundColor: "primary.main",
-              color: "#FFF",
-              fontWeight: "500",
-              fontSize: "0.875rem",
-              lineHeight: "32px",
-              // textAlign: "center",
-              position: "relative",
-              borderRight: "20px solid transparent",
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-              pl: 2,
-              mb: 2,
-              clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 100%, 0% 100%)",
-            }}
-          >
-            Recomendado
-          </Box>
-        )}
+        {/* Optional tag (now using reusable stopper) */}
+        {(() => {
+          const stopper = product.isFavorite
+            ? "FAVORITE"
+            : product.isRecommended
+              ? "RECOMMENDED"
+              : undefined;
+          // Dynamically import to avoid circular deps at top-level
+          const ProductStopperTag = require("./ProductStopperTag").default;
+          return <ProductStopperTag stopper={stopper} />;
+        })()}
 
         {/* Product name */}
-        <LineClamp variant="body2">{product.name}</LineClamp>
+        <LineClamp variant="subtitle1">{product.name}</LineClamp>
 
-        {/* Prices */}
+        {/* Promotion badge: above the description but below the optional tags */}
+        {renderPromotionBadge()}
+        {/* Description (clamped to 3 lines) */}
+        {product.description && (
+          <Tooltip title={product.description} arrow>
+            <LineClamp
+              variant="body2"
+              sx={{ mt: 1, mb: 1, color: "text.secondary" }}
+            >
+              {product.description}
+            </LineClamp>
+          </Tooltip>
+        )}
+
+        {/* Prices: prefer formatted labels from backend (primaryPrice / secondaryPrice)
+            otherwise fall back to numeric price / priceAlt formatted with formatPrice */}
         <Box mt={1}>
-          <Typography color="primary" fontWeight="bold">
-            {formatPrice(product.price)}
-          </Typography>
-          {product.priceAlt && (
-            <Typography variant="body2" color="textSecondary">
-              {formatPrice(product.priceAlt)}
-            </Typography>
+          {product.primaryPrice ? (
+            <>
+              <Typography color="primary" fontWeight="bold">
+                {product.primaryPrice}
+              </Typography>
+              {product.secondaryPrice && (
+                <Typography variant="body2" color="grey.500">
+                  {product.secondaryPrice}
+                </Typography>
+              )}
+            </>
+          ) : (
+            <>
+              <Typography color="primary" fontWeight="bold">
+                {formatPrice(product.price)}
+              </Typography>
+              {product.priceAlt && (
+                <Typography variant="body2" color="textSecondary">
+                  {formatPrice(product.priceAlt)}
+                </Typography>
+              )}
+            </>
           )}
         </Box>
       </CardContent>

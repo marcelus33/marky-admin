@@ -13,6 +13,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import CancelButton from "../../../components/CancelButton";
+import CustomPopupMenu from "../../../components/CustomPopupMenu";
 
 interface ProfileActionsRowProps {
   onEditProfile: () => void; // Abre el PresentationModal
@@ -32,6 +33,16 @@ const ProfileActionsRow: React.FC<ProfileActionsRowProps> = ({
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
+
+  const menuItems = [
+    { icon: ShareIcon, text: "Compartir perfil", onClick: handleCloseMenu },
+    {
+      icon: ContentCopyIcon,
+      text: "Copiar URL del perfil",
+      onClick: handleCloseMenu,
+    },
+    { icon: QrCodeIcon, text: "Código QR", onClick: handleCloseMenu },
+  ];
 
   return (
     <Box display="flex" alignItems="center" gap={4} p={2}>
@@ -58,56 +69,12 @@ const ProfileActionsRow: React.FC<ProfileActionsRowProps> = ({
       >
         <MoreVertIcon />
       </IconButton>
-      <Menu
+      <CustomPopupMenu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleCloseMenu}
-        anchorOrigin={{
-          vertical: "top", // se ancla en la parte superior del elemento
-          horizontal: "left",
-        }}
-        transformOrigin={{
-          vertical: "bottom", // el menú se posiciona de modo que su parte inferior se alinee con el anchor
-          horizontal: "center",
-        }}
-        PaperProps={{
-          sx: {
-            "& .MuiMenuItem-root": {
-              mb: 4,
-              mt: 1,
-            },
-          },
-        }}
-        sx={{
-          "& .MuiPaper-root": {
-            backgroundColor: "background.default", // color de fondo personalizado
-            borderRadius: 2,
-            // boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
-            minWidth: 200,
-          },
-          "& .MuiMenuItem-root": {
-            fontSize: "0.9rem",
-            paddingY: 1,
-            "&:hover": {
-              backgroundColor: "#e0e0e0",
-            },
-          },
-        }}
-      >
-        <MenuItem onClick={handleCloseMenu}>
-          <ShareIcon fontSize="small" sx={{ mr: 3 }} />
-          Compartir perfil
-        </MenuItem>
-        <MenuItem onClick={handleCloseMenu}>
-          <ContentCopyIcon fontSize="small" sx={{ mr: 3 }} />
-          Copiar URL del perfil
-        </MenuItem>
-        <MenuItem onClick={handleCloseMenu}>
-          <QrCodeIcon fontSize="small" sx={{ mr: 3 }} />
-          Código QR
-        </MenuItem>
-      </Menu>
+        menuItems={menuItems}
+      />
     </Box>
   );
 };

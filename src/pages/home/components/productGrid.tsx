@@ -1,15 +1,21 @@
 import AppsIcon from "@mui/icons-material/Apps";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import { Box, Button, Typography } from "@mui/material";
+import ConfirmationDialog from "../../../components/ConfirmationDialog";
+import WarningIcon from "@mui/icons-material/Warning";
+import useDeleteProductCategory from "../../../hooks/useDeleteProductCategory";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/paths";
 import CategoryGroup from "../../../components/CategoryGroup";
+import useUpdateProductCategoryAvailability from "../../../hooks/useUpdateProductCategoryAvailability";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import useDebounce from "../../../hooks/useDebounce";
 import useProductCategoriesWithProducts from "../../../hooks/useProductCategoriesWithProducts";
 import CategoryAdminModal from "./CategoryAdminModal";
+import CategoryPromotionModal from "../../../components/CategoryPromotionModal";
+import ProductPromotionModal from "../../../components/ProductPromotionModal";
 import CategoryFilterModal, { Category } from "./CategoryFilterModal";
 import FilterSection from "./FilterSection";
 
@@ -47,6 +53,22 @@ export const ProductGrid: React.FC = () => {
 
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openCategoryAdminModal, setOpenCategoryAdminModal] = useState(false);
+  const [openPromotionModal, setOpenPromotionModal] = useState(false);
+  const [selectedPromotionCategory, setSelectedPromotionCategory] =
+    useState<any>(null);
+  const [openProductPromotionModal, setOpenProductPromotionModal] =
+    useState(false);
+  const [selectedPromotionProduct, setSelectedPromotionProduct] =
+    useState<any>(null);
+  const deleteCategoryMutation = useDeleteProductCategory();
+  const updateCategoryAvailability = useUpdateProductCategoryAvailability();
+  const [openDeleteCategoryDialog, setOpenDeleteCategoryDialog] =
+    useState(false);
+  const [selectedCategoryToDelete, setSelectedCategoryToDelete] =
+    useState<any>(null);
+  const isDeletingCategory =
+    (deleteCategoryMutation as any).isLoading ||
+    (deleteCategoryMutation as any).status === "loading";
 
   const handleFilterChange = (newFilters: Partial<FilterValues>) => {
     setFilters((prev) => {
@@ -168,13 +190,85 @@ export const ProductGrid: React.FC = () => {
         <CategoryGroup
           key={cat.id}
           category={cat}
-          onPromotionClick={() => console.log("Promo clicked:", cat.name)}
-          onDeleteCategory={() => console.log("Delete:", cat.name)}
-          onToggleAvailability={(checked) =>
-            console.log("Unavailable toggle:", checked, cat.name)
-          }
+          onPromotionClick={(c) => {
+            setSelectedPromotionCategory(c);
+            setOpenPromotionModal(true);
+          }}
+          onDeleteCategory={() => {
+            setSelectedCategoryToDelete(cat);
+            setOpenDeleteCategoryDialog(true);
+          }}
+          onToggleAvailability={(checked) => {
+            const newIsAvailable = !checked; // checked === true means "No disponible" => is_available = false
+
+            // Optimistic local update handled inside CategoryGroup; trigger backend update
+            updateCategoryAvailability.mutate({
+              id: cat.id,
+              is_available: newIsAvailable,
+            });
+          }}
+          onProductPromotionClick={(product) => {
+            setSelectedPromotionProduct(product);
+            setOpenProductPromotionModal(true);
+          }}
         />
       ))}
+      <ConfirmationDialog
+        open={Boolean(openDeleteCategoryDialog)}
+        title={"Eliminar categoría"}
+        content={
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"center"}
+            gap={4}
+          >
+            <WarningIcon color="warning" fontSize="large" />
+            <Typography variant="body2" fontSize={"medium"}>
+              ¿Deseas eliminar la categoría
+              {selectedCategoryToDelete
+                ? ` "${selectedCategoryToDelete.name}"`
+                : ""}
+              ? Esta acción no se puede deshacer.
+            </Typography>
+          </Box>
+        }
+        onClose={() => {
+          if (!isDeletingCategory) {
+            setOpenDeleteCategoryDialog(false);
+            setSelectedCategoryToDelete(null);
+          }
+        }}
+        onConfirm={() => {
+          if (!selectedCategoryToDelete) return;
+          deleteCategoryMutation.mutate(selectedCategoryToDelete.id, {
+            onSuccess: () => {
+              setOpenDeleteCategoryDialog(false);
+              setSelectedCategoryToDelete(null);
+            },
+            onError: () => {
+              setOpenDeleteCategoryDialog(false);
+            },
+          });
+        }}
+        isLoading={Boolean(isDeletingCategory)}
+      />
+      <CategoryPromotionModal
+        open={openPromotionModal}
+        category={selectedPromotionCategory}
+        onClose={() => {
+          setOpenPromotionModal(false);
+          setSelectedPromotionCategory(null);
+        }}
+      />
+      <ProductPromotionModal
+        open={openProductPromotionModal}
+        product={selectedPromotionProduct}
+        onClose={() => {
+          setOpenProductPromotionModal(false);
+          setSelectedPromotionProduct(null);
+        }}
+      />
     </Box>
   );
 };

@@ -19,7 +19,15 @@ import {
 } from "@mui/material";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+  // unstable hook used to block in-app navigation when the form is dirty.
+  // This exists in react-router v6 as an unstable API and is commonly
+  // re-exported by react-router-dom. We cast to any where necessary to
+  // avoid type issues.
+} from "react-router-dom";
 import * as Yup from "yup";
 import { Header } from "../../components/Header";
 import {
@@ -35,9 +43,23 @@ import AssignCategoryModal from "./components/AssignCategoryModal";
 import ExtrasSection from "./components/ExtrasSection";
 import HighlightSection from "./components/HighlightSection";
 import ProductFormHeader from "./components/ProductFormHeader";
+import ConfirmationDialog from "../../components/ConfirmationDialog";
+import useDeleteProduct from "../../hooks/useDeleteProduct";
 import ProductSection from "./components/ProductSection";
 import SubmitSection from "./components/SubmitSection";
 import VariationsSection from "./components/VariationsSection";
+import { ReactComponent as ProductoMenuIcon } from "../../assets/icons/product-form/producto-menu.svg";
+import { ReactComponent as VariacionesMenuIcon } from "../../assets/icons/product-form/variaciones-menu.svg";
+import { ReactComponent as AdicionalesProductoMenuIcon } from "../../assets/icons/product-form/adicionales-menu.svg";
+import { ReactComponent as DestacarMenuIcon } from "../../assets/icons/product-form/destacar-menu.svg";
+
+// unstable_useBlocker is exported from react-router (not react-router-dom) in
+// some versions. Import it dynamically and cast to any to avoid type errors
+// when typings are not present.
+// NOTE: We intentionally avoid react-router's unstable useBlocker here
+// because it's not available in all versions and caused runtime errors.
+// We'll implement a local navigation guard (pendingNavigationRef +
+// document click / popstate interception) instead.
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required("El nombre del producto es requerido"),
@@ -53,7 +75,7 @@ const validationSchema = Yup.object().shape({
       price: Yup.number()
         .required("El precio es requerido")
         .positive("El precio debe ser un número positivo"),
-    })
+    }),
   ),
   addons: Yup.array().of(
     Yup.object().shape({
@@ -61,7 +83,7 @@ const validationSchema = Yup.object().shape({
       price: Yup.number()
         .required("El precio es requerido")
         .positive("El precio debe ser un número positivo"),
-    })
+    }),
   ),
   stopper: Yup.string(),
   isPromotionActive: Yup.boolean(),
@@ -110,14 +132,22 @@ const ProductFormPage = () => {
   const [selectedSection, setSelectedSection] = useState("Producto");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
+    null,
   );
+
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const deleteMutation = useDeleteProduct();
+  const isDeleting =
+    (deleteMutation as any).isLoading ||
+    (deleteMutation as any).status === "loading";
+
   const [initialValues, setInitialValues] = useState<Product>({
     name: "",
     description: "",
     price: 0,
     category: null,
     is_active: true,
+    is_available: true,
     variants: [],
     addons: [],
     stopper: "",
@@ -134,6 +164,32 @@ const ProductFormPage = () => {
   });
 
   const formikRef = useRef<FormikProps<Product>>(null);
+  const location = useLocation();
+  // track a lightweight "dirty" flag for the page. We'll set this to true
+  // whenever the form DOM changes (via <Form onChange>), and reset on
+  // successful submit. This is intentionally simple and covers the common
+  // cases (input changes, selects, file inputs triggering change events).
+  const [isFormDirty, setIsFormDirty] = useState(false);
+
+  // Dialog state for the "leave with unsaved changes" confirmation.
+  const [openExitDialog, setOpenExitDialog] = useState(false);
+
+  // pendingNavigationRef holds a function that, when executed, performs the
+  // navigation the user attempted (clicking a link, navigating programmatically,
+  // or using the back button). We set it when we intercept a navigation and
+  // call it if the user confirms they want to leave.
+  const pendingNavigationRef = useRef<(() => void) | null>(null);
+
+  // Attempt a navigation action; if the form is dirty, store the action and
+  // show the confirmation dialog. Otherwise execute immediately.
+  const attemptNavigate = (action: () => void) => {
+    if (isFormDirty) {
+      pendingNavigationRef.current = action;
+      setOpenExitDialog(true);
+    } else {
+      action();
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -158,8 +214,8 @@ const ProductFormPage = () => {
           const promotionOption = multibuyOption
             ? "oferta"
             : discountPercentage
-            ? "descuento"
-            : "";
+              ? "descuento"
+              : "";
           const { category, ...productTemp } = product;
           //
           const mappedMedia =
@@ -184,6 +240,9 @@ const ProductFormPage = () => {
           //
           const initialValues: Product = {
             ...productTemp,
+            // map backend availability to both fields for compatibility
+            is_available:
+              (product as any).is_available ?? productTemp.is_active,
             //
             media: mappedMedia,
             variants: mappedVariants,
@@ -221,7 +280,53 @@ const ProductFormPage = () => {
       };
       fetchProduct();
     }
+    // if there's a duplicated product passed via navigation state (create from duplicate)
+    if (!id && (location.state as any)?.duplicatedProduct) {
+      const dp = (location.state as any).duplicatedProduct as Product;
+      setInitialValues(dp);
+      if (dp.category) {
+        // dp.category may be a number or an object; normalize to id
+        const categoryId =
+          typeof dp.category === "object"
+            ? (dp.category as any).id
+            : (dp.category as unknown as number);
+        if (categoryId) {
+          setSelectedCategory({
+            id: categoryId,
+            label: "",
+            name: "",
+            order: 0,
+          });
+        }
+      }
+    }
   }, [id]);
+
+  // Reset dirty state when initial values are loaded/changed (e.g. after
+  // fetching existing product or duplicating). This prevents showing the
+  // prompt immediately after the form is initialized.
+  useEffect(() => {
+    setIsFormDirty(false);
+  }, [initialValues]);
+
+  // We handle in-app navigation prompts by using attemptNavigate helper
+  // below which sets pendingNavigationRef and opens the dialog when the
+  // form is dirty. No unstable react-router hooks required.
+
+  // Browser-level refresh / tab close: show native confirmation when dirty.
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isFormDirty) return;
+      // Standard way to trigger browser confirmation dialog
+      e.preventDefault();
+      // Some browsers require setting returnValue to a non-empty string
+      e.returnValue = "";
+      return "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isFormDirty]);
 
   const handleMenuClick = () => {
     setMobileOpen(true);
@@ -241,7 +346,7 @@ const ProductFormPage = () => {
   const sections = [
     {
       name: "Producto",
-      icon: <InfoOutlinedIcon />,
+      icon: <ProductoMenuIcon />,
       component: (props: any) => (
         <ProductSection
           formik={props}
@@ -252,23 +357,23 @@ const ProductFormPage = () => {
     },
     {
       name: "Variaciones",
-      icon: <TuneIcon />,
+      icon: <VariacionesMenuIcon />,
       component: (props: any) => <VariationsSection {...props} />,
     },
     {
       name: "Adicionales o extras",
-      icon: <AddCircleOutlineIcon />,
+      icon: <AdicionalesProductoMenuIcon />,
       component: (props: any) => <ExtrasSection {...props} />,
     },
     {
       name: "Destacar producto",
-      icon: <StarBorderIcon />,
+      icon: <DestacarMenuIcon />,
       component: (props: any) => <HighlightSection {...props} />,
     },
   ];
 
   const selectedComponent = sections.find(
-    (section) => section.name === selectedSection
+    (section) => section.name === selectedSection,
   )?.component;
 
   return (
@@ -279,7 +384,7 @@ const ProductFormPage = () => {
       validationSchema={validationSchema}
       onSubmit={async (
         values: Product,
-        { setSubmitting }: FormikHelpers<Product>
+        { setSubmitting }: FormikHelpers<Product>,
       ) => {
         console.log("submitting.....", values);
 
@@ -294,7 +399,7 @@ const ProductFormPage = () => {
         const promotionStartsAt =
           promotionStartDate && promotionStartTime
             ? new Date(
-                `${promotionStartDate}T${promotionStartTime}`
+                `${promotionStartDate}T${promotionStartTime}`,
               ).toISOString()
             : null;
         const promotionEndsAt =
@@ -314,8 +419,8 @@ const ProductFormPage = () => {
           }),
           category:
             values.category && typeof values.category === "object"
-              ? (values.category as any).id ?? null
-              : values.category ?? null,
+              ? ((values.category as any).id ?? null)
+              : (values.category ?? null),
           promotion_starts_at: promotionStartsAt,
           promotion_ends_at: promotionEndsAt,
           // coerce discount safely
@@ -330,8 +435,8 @@ const ProductFormPage = () => {
             values.multibuyOption.length > 0
               ? String(values.multibuyOption[0])
               : values.multibuyOption
-              ? String(values.multibuyOption)
-              : "",
+                ? String(values.multibuyOption)
+                : "",
         };
 
         // 3) Prevent duplicate camelCase + snake_case fields being sent:
@@ -358,7 +463,7 @@ const ProductFormPage = () => {
               // if variant had no id (new) and image was string, ignore the image;
               // typically new variants will provide File objects anyway.
               return rest;
-            }
+            },
           );
         }
 
@@ -410,13 +515,15 @@ const ProductFormPage = () => {
         // 7) submit using your existing mutations
         const handleSuccess = () => {
           setSubmitting(false);
+          // clear dirty flag after successful submit
+          setIsFormDirty(false);
           navigate(ROUTES.HOME);
         };
 
         if (id) {
           updateProductMutation.mutate(
             { id: Number(id), product: formData },
-            { onSuccess: handleSuccess, onError: () => setSubmitting(false) }
+            { onSuccess: handleSuccess, onError: () => setSubmitting(false) },
           );
         } else {
           createProductMutation.mutate(formData, {
@@ -432,15 +539,59 @@ const ProductFormPage = () => {
         return (
           <>
             <Header />
-            <Form>
+            <Form
+              // Capture DOM change events to set the dirty flag. This is a
+              // simple heuristic that works for most input types. We also
+              // mark the form pristine when Formik reports not dirty.
+              onChange={() => {
+                // If Formik says the form is dirty, trust it; otherwise set
+                // based on DOM changes.
+                if (!formikProps.dirty) {
+                  setIsFormDirty(true);
+                }
+              }}
+            >
               <AssignCategoryModal
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 selectedCategory={selectedCategory}
-                onSelectCategory={(category: Category) => {
+                onSelectCategory={(category: Category | null) => {
+                  // Update local selected category and formik field only when
+                  // the user confirms the selection via the modal button.
                   setSelectedCategory(category);
-                  formikProps.setFieldValue("category", category.id);
+                  formikProps.setFieldValue(
+                    "category",
+                    category ? category.id : null,
+                  );
                   setIsModalOpen(false);
+                }}
+              />
+              {/* Exit confirmation dialog (unsaved changes) */}
+              <ConfirmationDialog
+                open={Boolean(openExitDialog)}
+                title={"Salir sin guardar"}
+                content={
+                  "Tienes cambios sin guardar. ¿Estás seguro que quieres salir y perder los cambios?"
+                }
+                onClose={() => {
+                  setOpenExitDialog(false);
+                  pendingNavigationRef.current = null;
+                }}
+                onConfirm={() => {
+                  setOpenExitDialog(false);
+                  setIsFormDirty(false);
+                  const next = pendingNavigationRef.current;
+                  pendingNavigationRef.current = null;
+                  try {
+                    if (next) next();
+                  } catch (e) {
+                    // as a last resort try history.back()
+                    try {
+                      window.history.back();
+                    } catch (_e) {
+                      // ignore
+                    }
+                  }
                 }}
               />
               <Box
@@ -449,27 +600,51 @@ const ProductFormPage = () => {
                   flexDirection: "column",
                 }}
               >
-                <ProductFormHeader formik={formikProps} />
+                <ProductFormHeader
+                  formik={formikProps}
+                  onDeleteClick={() => setOpenDeleteDialog(true)}
+                  onDuplicateClick={() => {
+                    // build duplicated product from current form values
+                    const values = formikProps.values as any;
+                    const duplicated: Product = {
+                      ...values,
+                      // clear top-level id if present
+                      id: undefined as any,
+                      // set name with suffix
+                      name: `${values.name} (copia)`,
+                      // remove media entirely to avoid URL/file complications
+                      media: [],
+                      // duplicates should not keep DB ids for variants/addons
+                      variants: (values.variants || []).map((v: any) => ({
+                        name: v.name,
+                        description: v.description,
+                        price: Number(v.price) || 0,
+                        image: undefined,
+                      })),
+                      addons: (values.addons || []).map((a: any) => ({
+                        name: a.name,
+                        price: Number(a.price) || 0,
+                      })),
+                    };
+
+                    // ensure category is an id (it might be object)
+                    if (
+                      duplicated.category &&
+                      typeof duplicated.category === "object"
+                    ) {
+                      duplicated.category = (duplicated.category as any).id;
+                    }
+
+                    attemptNavigate(() =>
+                      navigate(ROUTES.PRODUCT_CREATE, {
+                        state: { duplicatedProduct: duplicated },
+                      }),
+                    );
+                  }}
+                  onBack={() => attemptNavigate(() => navigate(-1))}
+                />
                 {/*  */}
                 <Box sx={{ display: "flex" }}>
-                  {isMobile ? (
-                    <AppBar position="fixed">
-                      <Toolbar>
-                        <IconButton
-                          color="inherit"
-                          aria-label="open drawer"
-                          edge="start"
-                          onClick={handleMenuClick}
-                          sx={{ mr: 2 }}
-                        >
-                          <MenuIcon />
-                        </IconButton>
-                        <Typography variant="h6" noWrap component="div">
-                          {id ? "Edit Product" : "Create Product"}
-                        </Typography>
-                      </Toolbar>
-                    </AppBar>
-                  ) : null}
                   {isMobile ? (
                     <Drawer
                       variant="temporary"
@@ -569,6 +744,26 @@ const ProductFormPage = () => {
                   <SubmitSection onSectionSelect={handleSectionSelect} />
                 </Box>
               </Box>
+
+              {/* confirmation dialog for deleting product */}
+              <ConfirmationDialog
+                open={Boolean(openDeleteDialog)}
+                title={"Eliminar producto"}
+                content={
+                  "¿Estás seguro que deseas eliminar este producto? Esta acción no se puede deshacer."
+                }
+                onClose={() => setOpenDeleteDialog(false)}
+                onConfirm={() => {
+                  if (id) {
+                    deleteMutation.mutate(Number(id), {
+                      onSuccess: () => setOpenDeleteDialog(false),
+                      onError: () => setOpenDeleteDialog(false),
+                    });
+                    // keep dialog open while deleting; ConfirmationDialog will be disabled via isLoading
+                  }
+                }}
+                isLoading={isDeleting}
+              />
             </Form>
           </>
         );

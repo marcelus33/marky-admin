@@ -9,6 +9,7 @@ export const ROUTES = {
   NEW_PASSWORD: "/reset-password/:uid/:token",
   // protected routes
   CONFIGURATION: "/configuration",
+  ACCOUNT_CONFIGURATION: "/account/configuration",
   HOME: "/home",
   PRODUCT_DETAIL: "/product/:id",
   PRODUCT_EDIT: "/product/edit/:id",

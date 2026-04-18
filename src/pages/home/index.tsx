@@ -155,7 +155,7 @@ const Home = () => {
                 const initialChannels = Object.entries(values.socialMedia)
                   .filter(
                     ([key, url]) =>
-                      url && typeof url === "string" && url.trim() !== ""
+                      url && typeof url === "string" && url.trim() !== "",
                   )
                   .map(([type, url]) => ({ type, url }));
 

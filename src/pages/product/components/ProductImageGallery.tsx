@@ -29,21 +29,21 @@ const ProductImageGallery = () => {
   const { values, setFieldValue } = useFormikContext<Product>();
   const { media = [] } = values;
   const [selectedItem, setSelectedItem] = useState<MediaItemLocal | null>(
-    media[0]
+    media[0],
   );
   const [videoThumbnail, setVideoThumbnail] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [activeMediaId, setActiveMediaId] = useState<string | number | null>(
-    null
+    null,
   );
 
   const {
@@ -107,7 +107,7 @@ const ProductImageGallery = () => {
 
     // If selected item was removed/marked deleted, pick first active item
     const stillActive = activeMedia.find(
-      (item: any) => item.id === selectedItem.id
+      (item: any) => item.id === selectedItem.id,
     );
     if (!stillActive) {
       setSelectedItem(activeMedia[0] || null);
@@ -184,10 +184,10 @@ const ProductImageGallery = () => {
       if (!over) return;
       if (active.id !== over.id) {
         const oldIndex = media.findIndex(
-          (item: any) => item.id.toString() === String(active.id)
+          (item: any) => item.id.toString() === String(active.id),
         );
         const newIndex = media.findIndex(
-          (item: any) => item.id.toString() === String(over.id)
+          (item: any) => item.id.toString() === String(over.id),
         );
         if (oldIndex === -1 || newIndex === -1) return;
         const newItems = arrayMove(media, oldIndex, newIndex);
@@ -196,7 +196,7 @@ const ProductImageGallery = () => {
           newItems.map((item: any, index: number) => ({
             ...item,
             order: index,
-          }))
+          })),
         );
       }
     } catch (error) {
@@ -237,7 +237,7 @@ const ProductImageGallery = () => {
 
   const handleOpenCropModalWithId = (id: string | number) => {
     const mediaToCrop = media.find(
-      (item: any) => item.id.toString() === id.toString()
+      (item: any) => item.id.toString() === id.toString(),
     );
     if (mediaToCrop) {
       setActiveMediaId(id);
@@ -278,8 +278,8 @@ const ProductImageGallery = () => {
           (isFile
             ? (file as File).name
             : typeof file === "string"
-            ? file
-            : "Sin nombre");
+              ? file
+              : "Sin nombre");
 
         return {
           id: item.id.toString(),
@@ -308,12 +308,21 @@ const ProductImageGallery = () => {
       <Box
         sx={{
           display: "flex",
+          // border: "1px solid",
+          flexDirection: { xs: "column", md: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { md: "center" },
           mb: 2,
+          gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
           <CollectionsIcon />
           <Typography variant="h6" fontWeight="bold">
             Galería de tu producto
@@ -387,15 +396,23 @@ const ProductImageGallery = () => {
       {!!selectedItem && (
         <Grid container spacing={2} mt={2}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: "flex" }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                gap: { xs: 4, md: 0 },
+              }}
+            >
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: "column",
+                  flexDirection: { xs: "row", md: "column" },
+                  justifyContent: { xs: "center", md: "start" },
                   alignContent: "space-around",
                   gap: 4,
                   alignItems: "flex-start",
                   paddingX: 2,
+                  order: { xs: 2, md: 1 },
                 }}
               >
                 {media
@@ -417,6 +434,7 @@ const ProductImageGallery = () => {
                   overflow: "hidden",
                   height: "350px",
                   width: "100%",
+                  order: { xs: 1, md: 2 },
                 }}
               >
                 <Box
