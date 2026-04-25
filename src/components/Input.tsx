@@ -11,6 +11,7 @@ interface InputProps {
   label: string;
   type?: string;
   required?: boolean;
+  // explicit error flag (overrides formik error if provided)
   error?: boolean;
   maxLength?: number;
   helperText?: string;
@@ -25,32 +26,54 @@ interface InputProps {
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void; // opcional
   sx?: object;
   InputProps?: object; // New prop for TextField's InputProps
+  // Formik field props (optional) - when Field passes component={Input}
+  field?: any;
+  form?: any;
+  meta?: any;
 }
 
 const Input: React.FC<InputProps> = ({
   label,
   type = "text",
   required = false,
-  error = false,
-  helperText,
+  error: errorProp = false,
+  helperText: helperTextProp,
   maxLength,
   disabled = false,
   placeholder,
-  value,
-  name,
+  value: valueProp,
+  name: nameProp,
   multiline,
   rows,
   maxRows,
-  onChange,
-  onBlur,
+  onChange: onChangeProp,
+  onBlur: onBlurProp,
   sx,
   InputProps: customInputProps, // Destructure InputProps
+  field,
+  form,
+  meta,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
+
+  // Determine current value and handlers: prefer Formik's field if provided
+  const currentValue =
+    field && field.value !== undefined ? field.value : valueProp;
+  const currentOnChange =
+    field && field.onChange ? field.onChange : onChangeProp;
+  const currentOnBlur = field && field.onBlur ? field.onBlur : onBlurProp;
+  const inputName = (field && field.name) || nameProp;
+
+  const touched = form && inputName ? form.touched?.[inputName] : undefined;
+  const fieldError = form && inputName ? form.errors?.[inputName] : undefined;
+
+  const error = errorProp ?? (touched && Boolean(fieldError));
+  const helperText =
+    helperTextProp ?? (touched && fieldError ? String(fieldError) : undefined);
 
   const endAdornmentElements = (
     <>
@@ -68,7 +91,7 @@ const Input: React.FC<InputProps> = ({
       {maxLength !== undefined && (
         <InputAdornment position="end">
           <Typography variant="caption" color="textSecondary">
-            {maxLength - (value?.length || 0)}
+            {maxLength - (currentValue?.length || 0)}
           </Typography>
         </InputAdornment>
       )}
@@ -81,10 +104,10 @@ const Input: React.FC<InputProps> = ({
         {label} {required && <span style={{ color: "red" }}>*</span>}
       </FormLabel>
       <TextField
-        name={name}
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
+        name={inputName}
+        value={currentValue}
+        onChange={currentOnChange}
+        onBlur={currentOnBlur}
         type={showPassword ? "text" : type}
         variant="outlined"
         placeholder={placeholder}
@@ -94,6 +117,12 @@ const Input: React.FC<InputProps> = ({
         multiline={multiline}
         rows={rows}
         maxRows={maxRows}
+        sx={(theme) => ({
+          mt: 0.5,
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: theme.palette.grey[100],
+          },
+        })}
         InputProps={{
           endAdornment: endAdornmentElements,
           ...customInputProps, // Spread customInputProps here

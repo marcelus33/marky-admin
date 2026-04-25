@@ -40,7 +40,7 @@ const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
     } else {
       if (isSelected) {
         setSelected((prev: any) =>
-          prev.filter((item: any) => item.id !== cat.id)
+          prev.filter((item: any) => item.id !== cat.id),
         );
       } else {
         if (selected.length < maxSelectable) {

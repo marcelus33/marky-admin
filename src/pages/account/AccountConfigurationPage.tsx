@@ -6,31 +6,45 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import {
   Avatar,
   Box,
   Button,
   Chip,
+  FormControlLabel,
   IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Menu,
   MenuItem,
   Paper,
+  Switch,
+  TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React, { useState } from "react";
+import { Field, Form, Formik } from "formik";
+import React, { useEffect, useState } from "react";
+import * as Yup from "yup";
+import BusinessTypeSelectorField from "../../components/BusinessTypeSelectorField";
+import CategorySelectionList from "../../components/CategorySelectionList";
+import FormikPhoneInput from "../../components/FormikPhoneInput";
 import { Header } from "../../components/Header";
+import Input from "../../components/Input";
+import CustomModal from "../../components/Modal";
+import NumberInput from "../../components/NumberInput";
+import { useBusinessAccountInfo } from "../../hooks/useBusinessAccountInfo";
+import { useUpdateBusinessAccountInfo } from "../../hooks/useBusinessMutations";
+import { useCategories } from "../../hooks/useCategories";
+import { useCities } from "../../hooks/useCities";
+import { useCountries } from "../../hooks/useCountries";
+import { useCurrencies } from "../../hooks/useCurrencies";
+import { displayFormikFormErrors } from "../../utils/utils";
 
-// Small reusable card for the settings sections
 const SettingsCard: React.FC<{
   title: string;
   icon?: React.ReactNode;
@@ -38,7 +52,17 @@ const SettingsCard: React.FC<{
   children?: React.ReactNode;
 }> = ({ title, icon, onEdit, children }) => {
   return (
-    <Paper sx={{ borderRadius: 2, p: 3, mb: 3 }} elevation={0}>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 2,
+        p: 4,
+        mb: 3,
+        bgcolor: "white",
+        border: "1px solid",
+        borderColor: "divider",
+      }}
+    >
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box display="flex" alignItems="center" gap={2}>
           {icon}
@@ -61,20 +85,56 @@ const AccountConfigurationPage: React.FC = () => {
   const [selectedSection, setSelectedSection] = useState<
     "configuration" | "security"
   >("configuration");
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchor(e.currentTarget);
-  };
-  const handleMenuClose = () => setMenuAnchor(null);
+  const { data, isLoading, error } = useBusinessAccountInfo();
+  const updateAccountInfo = useUpdateBusinessAccountInfo();
+
+  const { categories: allCategories } = useCategories();
+  const { countries } = useCountries();
+  const { currencies } = useCurrencies();
+
+  const [openModal, setOpenModal] = useState<
+    | null
+    | "id"
+    | "categories"
+    | "location"
+    | "business_type"
+    | "money"
+    | "access"
+  >(null);
+  const [selectedCountryForModal, setSelectedCountryForModal] = useState<
+    number | null
+  >(null);
+
+  useEffect(() => {
+    if (data?.country_id && selectedCountryForModal === null) {
+      setSelectedCountryForModal(data.country_id);
+    }
+  }, [data?.country_id, selectedCountryForModal]);
+
+  const { cities, isLoading: isLoadingCities } = useCities(
+    selectedCountryForModal ? String(selectedCountryForModal) : null,
+  );
+
+  const exchangeFromCode = data?.is_primary_to_secondary
+    ? data?.primary_currency_code
+    : data?.secondary_currency_code;
+  const exchangeToCode = data?.is_primary_to_secondary
+    ? data?.secondary_currency_code
+    : data?.primary_currency_code;
 
   return (
     <Box>
       <Header />
       <Box sx={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
-        {/* Sidebar */}
         {!isMobile && (
-          <Box sx={{ width: 280, p: 4, borderRight: "1px solid #F0F0F0" }}>
+          <Box
+            sx={{
+              width: 280,
+              p: 4,
+              borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+            }}
+          >
             <Box
               display="flex"
               flexDirection="column"
@@ -82,12 +142,13 @@ const AccountConfigurationPage: React.FC = () => {
               mb={3}
             >
               <Avatar sx={{ width: 90, height: 90, mb: 2 }} />
-              <Typography variant="h6">Nombre del Comercio</Typography>
+              <Typography variant="h6">
+                {data?.business_name ?? "Nombre del Comercio"}
+              </Typography>
               <Typography variant="caption" color="text.secondary">
                 Usuario
               </Typography>
             </Box>
-
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Tu cuenta
             </Typography>
@@ -112,23 +173,10 @@ const AccountConfigurationPage: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText primary="Seguridad" />
               </ListItemButton>
-              <ListItemButton disabled sx={{ borderRadius: 2, mb: 1 }}>
-                <ListItemIcon>
-                  <CategoryOutlinedIcon />
-                </ListItemIcon>
-                <ListItemText primary="Suscripción" />
-              </ListItemButton>
-              <ListItemButton disabled sx={{ borderRadius: 2, mb: 1 }}>
-                <ListItemIcon>
-                  <BadgeOutlinedIcon />
-                </ListItemIcon>
-                <ListItemText primary="Facturación" />
-              </ListItemButton>
             </List>
           </Box>
         )}
 
-        {/* Content area */}
         <Box sx={{ flex: 1, p: { xs: 2, md: 6 } }}>
           <Box
             display="flex"
@@ -143,149 +191,83 @@ const AccountConfigurationPage: React.FC = () => {
                   : "Seguridad"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                @nombre_empresa_gastronómica
+                @{data?.business_id ?? "nombre_empresa"}
               </Typography>
             </Box>
             <Box>
-              {/* date pill */}
               <Button variant="outlined" size="small">
                 Creada el 17/07/2025
               </Button>
             </Box>
           </Box>
 
-          {isMobile && (
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              mb={2}
-            >
-              <Typography variant="h6">
-                {selectedSection === "configuration"
-                  ? "Configuración"
-                  : "Seguridad"}
-              </Typography>
-              <IconButton onClick={handleMenuOpen}>
-                <MoreVertIcon />
-              </IconButton>
-              <Menu
-                anchorEl={menuAnchor}
-                open={Boolean(menuAnchor)}
-                onClose={handleMenuClose}
-              >
-                <MenuItem
-                  onClick={() => {
-                    setSelectedSection("configuration");
-                    handleMenuClose();
-                  }}
-                >
-                  Configuración
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    setSelectedSection("security");
-                    handleMenuClose();
-                  }}
-                >
-                  Seguridad
-                </MenuItem>
-              </Menu>
-            </Box>
-          )}
-
-          {/* Sections */}
-          {selectedSection === "configuration" ? (
+          {isLoading ? (
+            // FIX 1: was missing the loading state JSX — now shows a proper loading message
+            <Typography>Cargando...</Typography>
+          ) : selectedSection === "configuration" ? (
+            // FIX 2: was rendering configuration content under "security" branch and vice versa
             <Box>
-              <Box display={{ xs: "block", md: "flex" }} gap={3} mb={3}>
-                <Box flex={1}>
-                  <SettingsCard
-                    title="ID del comercio"
-                    icon={<BadgeOutlinedIcon />}
-                    onEdit={() => {}}
-                  >
-                    <Box
-                      display="flex"
-                      gap={2}
-                      flexDirection={{ xs: "column", md: "row" }}
-                    >
-                      <Box flex={1}>
-                        <Typography variant="caption">Nombre</Typography>
-                        <Box
-                          mt={1}
-                          p={1}
-                          sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
-                        >
-                          Café de Acá
-                        </Box>
-                      </Box>
-                      <Box flex={1}>
-                        <Typography variant="caption">Usuario</Typography>
-                        <Box
-                          mt={1}
-                          p={1}
-                          sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
-                        >
-                          cafedeaca
-                        </Box>
-                      </Box>
-                    </Box>
-                    <Box mt={2} display="flex" gap={2} alignItems="center">
-                      <Box
-                        flex={1}
-                        sx={{
-                          backgroundColor: "#F7F7F8",
-                          p: 1,
-                          borderRadius: 1,
-                        }}
-                      >
-                        marky.me/cafedeaca
-                      </Box>
-                      <Button variant="outlined">Copiar enlace</Button>
-                    </Box>
-                  </SettingsCard>
-                </Box>
-
-                <Box sx={{ width: 320 }}>
-                  {/* placeholder for QR block omitted as requested */}
-                  <Paper
-                    sx={{ borderRadius: 2, p: 3, backgroundColor: "#F0F8FF" }}
-                    elevation={0}
-                  >
-                    <Typography variant="subtitle1" align="center">
-                      QR de tu comercio
-                    </Typography>
-                    <Typography variant="body2" align="center" sx={{ mb: 2 }}>
-                      Comparte tu propuesta gastronómica. Tus clientes podrán
-                      escanearlo desde su celular y acceder a tu perfil
-                      fácilmente.
-                    </Typography>
-                    <Button fullWidth variant="contained">
-                      Descargar QR
-                    </Button>
-                  </Paper>
-                </Box>
-              </Box>
-
+              {/* ID del comercio */}
               <SettingsCard
-                title="Categoría comercial"
-                icon={<CategoryOutlinedIcon />}
-                onEdit={() => {}}
+                title="ID del comercio"
+                icon={<BadgeOutlinedIcon />}
+                onEdit={() => data && setOpenModal("id")}
               >
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Ayudará a las personas a encontrar comercios como el tuyo.
-                  Puedes cambiar esta opción cuando quieras.
-                </Typography>
-                <Box display="flex" gap={1}>
-                  <Chip label="Panadería" color="primary" />
-                  <Chip label="Pastelería" color="primary" />
+                <Box mb={2.5}>
+                  <Typography variant="caption">Nombre</Typography>
+                  <Box
+                    mt={1}
+                    p={3}
+                    sx={{
+                      backgroundColor: (theme) => theme.palette.grey[100],
+                      borderRadius: 1,
+                    }}
+                  >
+                    {data?.business_name ?? "-"}
+                  </Box>
+                </Box>
+
+                <Box mb={2.5}>
+                  <Typography variant="caption">Usuario</Typography>
+                  {/* FIX 3: removed orphaned JSX block that duplicated business_id outside SettingsCard */}
+                  <Box
+                    mt={1}
+                    p={3}
+                    sx={{
+                      backgroundColor: (theme) => theme.palette.grey[100],
+                      borderRadius: 1,
+                    }}
+                  >
+                    {data?.business_id ?? "-"}
+                  </Box>
                 </Box>
               </SettingsCard>
 
+              {/* Categorías */}
+              <SettingsCard
+                title="Categoría comercial"
+                icon={<CategoryOutlinedIcon />}
+                onEdit={() => setOpenModal("categories")}
+              >
+                <Box display="flex" gap={1}>
+                  {(data?.categories ?? []).length ? (
+                    data!.categories.map((c) => (
+                      <Chip key={c.id} label={c.name} color="primary" />
+                    ))
+                  ) : (
+                    <Chip label="Sin categoría" />
+                  )}
+                </Box>
+              </SettingsCard>
+
+              {/* Ubicación */}
               <SettingsCard
                 title="Ubicación geográfica"
                 icon={<LocationOnOutlinedIcon />}
-                onEdit={() => {}}
+                onEdit={() => {
+                  setSelectedCountryForModal(data?.country_id ?? null);
+                  setOpenModal("location");
+                }}
               >
                 <Box
                   display="flex"
@@ -296,54 +278,52 @@ const AccountConfigurationPage: React.FC = () => {
                     <Typography variant="caption">País</Typography>
                     <Box
                       mt={1}
-                      p={1}
+                      p={3}
                       sx={{
-                        backgroundColor: "#F7F7F8",
+                        backgroundColor: (theme) => theme.palette.grey[100],
                         borderRadius: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
                       }}
                     >
-                      <img
-                        src={require("../../assets/icons/flag-paraguay.svg")}
-                        alt="py"
-                        style={{ width: 24 }}
-                      />
-                      <span>Paraguay</span>
+                      {data?.country_name ?? "-"}
                     </Box>
                   </Box>
                   <Box flex={1}>
                     <Typography variant="caption">Ciudad</Typography>
                     <Box
                       mt={1}
-                      p={1}
-                      sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
+                      p={3}
+                      sx={{
+                        backgroundColor: (theme) => theme.palette.grey[100],
+                        borderRadius: 1,
+                      }}
                     >
-                      Asunción
+                      {data?.city_name ?? "-"}
                     </Box>
                   </Box>
                 </Box>
               </SettingsCard>
 
+              {/* Tipo de negocio */}
               <SettingsCard
                 title="Tipo de negocio"
                 icon={<StorefrontOutlinedIcon />}
-                onEdit={() => {}}
+                onEdit={() => setOpenModal("business_type")}
               >
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Chip label="Comercial" color="primary" />
-                  <Typography variant="body2">
-                    Tu negocio dispone de sucursal para recibir clientes o
-                    comensales
-                  </Typography>
-                </Box>
+                <Chip
+                  label={
+                    data?.business_type === "commercial"
+                      ? "Comercial"
+                      : (data?.business_type ?? "-")
+                  }
+                  color="primary"
+                />
               </SettingsCard>
 
+              {/* Expresión monetaria */}
               <SettingsCard
                 title="Expresión monetaria"
                 icon={<AttachMoneyOutlinedIcon />}
-                onEdit={() => {}}
+                onEdit={() => setOpenModal("money")}
               >
                 <Box
                   display="flex"
@@ -354,20 +334,28 @@ const AccountConfigurationPage: React.FC = () => {
                     <Typography variant="caption">Moneda de uso</Typography>
                     <Box
                       mt={1}
-                      p={1}
-                      sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
+                      p={3}
+                      sx={{
+                        backgroundColor: (theme) => theme.palette.grey[100],
+                        borderRadius: 1,
+                      }}
                     >
-                      Gs. - Guaraní
+                      {data?.primary_currency_code} -{" "}
+                      {data?.primary_currency_name}
                     </Box>
                   </Box>
                   <Box flex={1}>
-                    <Typography variant="caption">Moneda Secundaria</Typography>
+                    <Typography variant="caption">Moneda secundaria</Typography>
                     <Box
                       mt={1}
-                      p={1}
-                      sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
+                      p={3}
+                      sx={{
+                        backgroundColor: (theme) => theme.palette.grey[100],
+                        borderRadius: 1,
+                      }}
                     >
-                      USD $ - Dólar Americano
+                      {data?.secondary_currency_code} -{" "}
+                      {data?.secondary_currency_name}
                     </Box>
                   </Box>
                 </Box>
@@ -380,26 +368,22 @@ const AccountConfigurationPage: React.FC = () => {
                   </Typography>
                   <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Box
-                      sx={{
-                        backgroundColor: "#FFF4E8",
+                      sx={(theme) => ({
+                        backgroundColor: theme.palette.warning.light,
                         px: 2,
                         py: 1,
                         borderRadius: 1,
-                      }}
-                    >
-                      1 Gs.
-                    </Box>
+                      })}
+                    >{`1 ${exchangeFromCode ?? ""}`}</Box>
                     <Box>es igual a:</Box>
                     <Box
                       sx={{
-                        backgroundColor: "#F7F7F8",
+                        backgroundColor: (theme) => theme.palette.grey[100],
                         px: 2,
                         py: 1,
                         borderRadius: 1,
                       }}
-                    >
-                      0.00013 USD $
-                    </Box>
+                    >{`${data?.exchange_rate} ${exchangeToCode ?? ""}`}</Box>
                     <IconButton>
                       <CachedIcon />
                     </IconButton>
@@ -408,11 +392,12 @@ const AccountConfigurationPage: React.FC = () => {
               </SettingsCard>
             </Box>
           ) : (
+            // Security section
             <Box>
               <SettingsCard
                 title="Datos de acceso"
                 icon={<MailOutlineIcon />}
-                onEdit={() => {}}
+                onEdit={() => setOpenModal("access")}
               >
                 <Box
                   display="flex"
@@ -423,43 +408,522 @@ const AccountConfigurationPage: React.FC = () => {
                     <Typography variant="caption">Email</Typography>
                     <Box
                       mt={1}
-                      p={1}
-                      sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
+                      p={3}
+                      sx={{
+                        backgroundColor: (theme) => theme.palette.grey[100],
+                        borderRadius: 1,
+                      }}
                     >
-                      nombre@correo.com
+                      {data?.email ?? "-"}
                     </Box>
                   </Box>
                   <Box flex={1}>
                     <Typography variant="caption">Teléfono</Typography>
                     <Box
                       mt={1}
-                      p={1}
-                      sx={{ backgroundColor: "#F7F7F8", borderRadius: 1 }}
+                      p={3}
+                      sx={{
+                        backgroundColor: (theme) => theme.palette.grey[100],
+                        borderRadius: 1,
+                      }}
                     >
-                      +584143125454
+                      {data?.phone_number ?? "-"}
                     </Box>
                   </Box>
-                </Box>
-              </SettingsCard>
-
-              <SettingsCard
-                title="Contraseña"
-                icon={<VpnKeyOutlinedIcon />}
-                onEdit={() => {}}
-              >
-                <Typography variant="body2">
-                  Cambia tu contraseña en cualquier momento.
-                </Typography>
-                <Box mt={2}>
-                  <Button variant="text" color="primary">
-                    Cambiar contraseña
-                  </Button>
                 </Box>
               </SettingsCard>
             </Box>
           )}
         </Box>
       </Box>
+
+      {/* MODALS */}
+      <CustomModal
+        open={openModal === "id"}
+        onClose={() => setOpenModal(null)}
+        title="Editar identidad del comercio"
+        sx={{ width: 520 }}
+        hideFooter
+      >
+        {!data ? (
+          <Box p={4}>
+            <Typography>Cargando...</Typography>
+          </Box>
+        ) : (
+          <Formik
+            enableReinitialize
+            initialValues={{
+              business_name: data.business_name ?? "",
+              business_id: data.business_id ?? "",
+            }}
+            validationSchema={Yup.object({
+              business_name: Yup.string().required("Requerido"),
+              business_id: Yup.string()
+                .required("Requerido")
+                .matches(/^[a-z0-9\-_]+$/, "Solo minúsculas, - y _")
+                .min(4)
+                .max(22),
+            })}
+            onSubmit={async (values, { setSubmitting, setFieldError }) => {
+              try {
+                setSubmitting(true);
+                await updateAccountInfo.mutateAsync({
+                  business_name: values.business_name,
+                  business_id: values.business_id,
+                });
+                setOpenModal(null);
+              } catch (err: any) {
+                displayFormikFormErrors(err, setFieldError);
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            {({ isSubmitting }) => (
+              <Form>
+                <Field
+                  name="business_name"
+                  component={Input}
+                  label="Nombre del comercio"
+                />
+                <Field
+                  name="business_id"
+                  component={Input}
+                  label="Usuario (slug)"
+                />
+                <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                  <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                  >
+                    Guardar
+                  </Button>
+                </Box>
+              </Form>
+            )}
+          </Formik>
+        )}
+      </CustomModal>
+
+      <CustomModal
+        open={openModal === "access"}
+        onClose={() => setOpenModal(null)}
+        title="Editar datos de acceso"
+        sx={{ width: 520 }}
+        hideFooter
+      >
+        <Formik
+          enableReinitialize
+          initialValues={{
+            email: data?.email ?? "",
+            phone_number: data?.phone_number ?? "",
+          }}
+          validationSchema={Yup.object({
+            email: Yup.string().email("Email inválido").required("Requerido"),
+          })}
+          onSubmit={async (values, { setSubmitting, setFieldError }) => {
+            try {
+              setSubmitting(true);
+              await updateAccountInfo.mutateAsync({
+                email: values.email,
+                phone_number: values.phone_number,
+              });
+              setOpenModal(null);
+            } catch (err: any) {
+              displayFormikFormErrors(err, setFieldError);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <Field name="email" component={Input} label="Email" />
+              <Field
+                name="phone_number"
+                component={FormikPhoneInput}
+                label="Teléfono"
+              />
+              <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isSubmitting}
+                >
+                  Guardar
+                </Button>
+              </Box>
+            </Form>
+          )}
+        </Formik>
+      </CustomModal>
+
+      <CustomModal
+        open={openModal === "categories"}
+        onClose={() => setOpenModal(null)}
+        title="Editar categorías"
+        sx={{ width: 720 }}
+        hideFooter
+      >
+        <Formik
+          enableReinitialize
+          initialValues={{ categories: data?.categories ?? [] }}
+          validationSchema={Yup.object({
+            categories: Yup.array().min(1, "Selecciona al menos una categoría"),
+          })}
+          onSubmit={async (values, { setSubmitting, setFieldError }) => {
+            try {
+              setSubmitting(true);
+              const ids = values.categories.map((c: any) => Number(c.id));
+              await updateAccountInfo.mutateAsync({ categories: ids });
+              setOpenModal(null);
+            } catch (err: any) {
+              displayFormikFormErrors(err, setFieldError);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ values, setFieldValue, isSubmitting }) => {
+            // Wrapper compatible con el uso interno de CategorySelectionList.
+            // CategorySelectionList puede llamar a `setSelected` con
+            // - un array (nuevo valor), o
+            // - una función (prev => next) como hace un setter de useState.
+            // Al usar Formik debemos soportar ambos casos y resolver la función
+            // aplicándola al valor actual antes de guardar en Formik.
+            const handleSelectedChange = (next: any) => {
+              const current = values.categories || [];
+              const nextValue =
+                typeof next === "function" ? next(current) : next;
+              setFieldValue("categories", nextValue);
+            };
+
+            return (
+              <Form>
+                <Box sx={{ maxHeight: 360, overflowY: "auto" }}>
+                  {/* @ts-ignore */}
+                  <CategorySelectionList
+                    categories={allCategories || []}
+                    maxSelectable={3}
+                    selected={values.categories || []}
+                    setSelected={handleSelectedChange}
+                  />
+                </Box>
+                <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                  <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                  >
+                    Guardar
+                  </Button>
+                </Box>
+              </Form>
+            );
+          }}
+        </Formik>
+      </CustomModal>
+
+      <CustomModal
+        open={openModal === "location"}
+        onClose={() => setOpenModal(null)}
+        title="Editar ubicación"
+        sx={{ width: 520 }}
+        hideFooter
+      >
+        {!data ? (
+          <Box p={4}>
+            <Typography>Cargando...</Typography>
+          </Box>
+        ) : (
+          <Formik
+            enableReinitialize
+            initialValues={{
+              country: data?.country_id ? String(data.country_id) : "",
+              city: data?.city_id ? String(data.city_id) : "",
+            }}
+            validationSchema={Yup.object({
+              city: Yup.string().required("Selecciona una ciudad"),
+            })}
+            onSubmit={async (values, { setSubmitting, setFieldError }) => {
+              try {
+                setSubmitting(true);
+                const cityId = values.city ? Number(values.city) : undefined;
+                if (cityId) {
+                  await updateAccountInfo.mutateAsync({ city: cityId });
+                }
+                setOpenModal(null);
+              } catch (err: any) {
+                displayFormikFormErrors(err, setFieldError);
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            {({ values, setFieldValue, isSubmitting }) => (
+              <Form>
+                <TextField
+                  select
+                  fullWidth
+                  label="País"
+                  value={values.country}
+                  onChange={(e) => {
+                    const countryId = e.target.value as any;
+                    setFieldValue("country", countryId);
+                    setSelectedCountryForModal(
+                      countryId ? Number(countryId) : null,
+                    );
+                    setFieldValue("city", "");
+                  }}
+                  margin="normal"
+                  sx={(theme) => ({
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: theme.palette.grey[100],
+                    },
+                  })}
+                >
+                  {(countries || []).map((c: any) => (
+                    <MenuItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  fullWidth
+                  label="Ciudad"
+                  value={values.city}
+                  onChange={(e) => setFieldValue("city", e.target.value)}
+                  margin="normal"
+                  disabled={!values.country || isLoadingCities}
+                  sx={(theme) => ({
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: theme.palette.grey[100],
+                    },
+                  })}
+                >
+                  {isLoadingCities && values.country ? (
+                    <MenuItem value="">Cargando ciudades...</MenuItem>
+                  ) : (
+                    (cities || []).map((c: any) => (
+                      <MenuItem key={c.id} value={String(c.id)}>
+                        {c.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </TextField>
+                <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                  <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                  >
+                    Guardar
+                  </Button>
+                </Box>
+              </Form>
+            )}
+          </Formik>
+        )}
+      </CustomModal>
+
+      <CustomModal
+        open={openModal === "business_type"}
+        onClose={() => setOpenModal(null)}
+        title="Tipo de negocio"
+        sx={{ width: 520 }}
+        hideFooter
+      >
+        <Formik
+          enableReinitialize
+          initialValues={{ business_type: data?.business_type ?? "" }}
+          validationSchema={Yup.object({
+            business_type: Yup.string().required("Requerido"),
+          })}
+          onSubmit={async (values, { setSubmitting, setFieldError }) => {
+            try {
+              setSubmitting(true);
+              await updateAccountInfo.mutateAsync({
+                business_type: values.business_type,
+              });
+              setOpenModal(null);
+            } catch (err: any) {
+              displayFormikFormErrors(err, setFieldError);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <Field
+                name="business_type"
+                component={BusinessTypeSelectorField}
+                options={[
+                  {
+                    value: "commercial",
+                    label: "Comercial",
+                    description:
+                      "Tu negocio dispone de sucursal para recibir clientes o comensales",
+                  },
+                  {
+                    value: "entrepreneur",
+                    label: "Emprendedor",
+                    description:
+                      "Tu negocio aun no cuenta con sucursal. Opera desde un centro de producción.",
+                  },
+                ]}
+              />
+              <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isSubmitting}
+                >
+                  Guardar
+                </Button>
+              </Box>
+            </Form>
+          )}
+        </Formik>
+      </CustomModal>
+
+      <CustomModal
+        open={openModal === "money"}
+        onClose={() => setOpenModal(null)}
+        title="Expresión monetaria"
+        sx={{ width: 720 }}
+        hideFooter
+      >
+        <Formik
+          enableReinitialize
+          initialValues={{
+            primary_currency: data?.primary_currency_id ?? "",
+            secondary_currency: data?.secondary_currency_id ?? "",
+            exchange_rate: data?.exchange_rate ?? "",
+            is_primary_to_secondary: data?.is_primary_to_secondary ?? true,
+            enable_exchange_rate: Boolean(data?.secondary_currency_id),
+          }}
+          validationSchema={Yup.object({
+            primary_currency: Yup.string().required("Requerido"),
+          })}
+          onSubmit={async (values, { setSubmitting, setFieldError }) => {
+            try {
+              setSubmitting(true);
+              const payload: any = {
+                primary_currency: values.primary_currency
+                  ? Number(values.primary_currency)
+                  : undefined,
+                is_primary_to_secondary: values.is_primary_to_secondary,
+              };
+              if (values.enable_exchange_rate) {
+                payload.secondary_currency = values.secondary_currency
+                  ? Number(values.secondary_currency)
+                  : null;
+                payload.exchange_rate = values.exchange_rate || null;
+              } else {
+                payload.secondary_currency = null;
+                payload.exchange_rate = null;
+              }
+              await updateAccountInfo.mutateAsync(payload);
+              setOpenModal(null);
+            } catch (err: any) {
+              displayFormikFormErrors(err, setFieldError);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ values, setFieldValue, isSubmitting }) => (
+            <Form>
+              <TextField
+                select
+                fullWidth
+                label="Moneda principal"
+                value={values.primary_currency}
+                onChange={(e) =>
+                  setFieldValue("primary_currency", e.target.value)
+                }
+                margin="normal"
+                sx={(theme) => ({
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: theme.palette.grey[100],
+                  },
+                })}
+              >
+                {(currencies || []).map((c: any) => (
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.code} - {c.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={values.enable_exchange_rate}
+                    onChange={(e) =>
+                      setFieldValue("enable_exchange_rate", e.target.checked)
+                    }
+                  />
+                }
+                label="Precios con tasa de cambio"
+              />
+              {values.enable_exchange_rate && (
+                <>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Moneda secundaria"
+                    value={values.secondary_currency}
+                    onChange={(e) =>
+                      setFieldValue("secondary_currency", e.target.value)
+                    }
+                    margin="normal"
+                    sx={(theme) => ({
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: theme.palette.grey[100],
+                      },
+                    })}
+                  >
+                    {(currencies || [])
+                      .filter(
+                        (curr: any) =>
+                          String(curr.id) !== String(values.primary_currency),
+                      )
+                      .map((c: any) => (
+                        <MenuItem key={c.id} value={c.id}>
+                          {c.code} - {c.name}
+                        </MenuItem>
+                      ))}
+                  </TextField>
+                  <Field
+                    component={NumberInput}
+                    name="exchange_rate"
+                    label="Tasa de cambio"
+                    description="Formato LATAM"
+                  />
+                </>
+              )}
+              <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isSubmitting}
+                >
+                  Guardar
+                </Button>
+              </Box>
+            </Form>
+          )}
+        </Formik>
+      </CustomModal>
     </Box>
   );
 };

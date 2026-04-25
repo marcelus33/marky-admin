@@ -187,10 +187,14 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
               isSortable={true}
               isEditable={false}
               onOrderChange={(orderedCategories) => {
-                const payload = orderedCategories.map((cat) => ({
+                // Ensure `order` is always a number when sending to the API.
+                // `Category.order` is optional in the type definitions, so
+                // fall back to the current index if it's undefined.
+                const payload = orderedCategories.map((cat, index) => ({
                   id: cat.id as number,
-                  order: cat.order,
+                  order: (cat.order ?? index) as number,
                 }));
+
                 updateProductCategoryOrder.mutate(payload, {
                   onSuccess: () => {
                     setCategories(orderedCategories);

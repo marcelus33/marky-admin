@@ -14,6 +14,8 @@ interface CustomModalProps {
   primaryActionParams?: object;
   // Opcional: permite sobreescribir o extender los estilos por defecto
   sx?: object;
+  // Oculta el footer predeterminado (útil cuando el contenido ya maneja botones)
+  hideFooter?: boolean;
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({
@@ -27,6 +29,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
   children,
   primaryActionParams,
   sx,
+  hideFooter = false,
 }) => {
   return (
     <Modal
@@ -75,30 +78,34 @@ const CustomModal: React.FC<CustomModalProps> = ({
             gap: 4,
           }}
         >
-          <Button
-            onClick={secondaryAction ? secondaryAction : onClose}
-            type="button"
-            variant="contained"
-            sx={{
-              backgroundColor: colors.light.grey[600],
-              color: colors.light.text.secondary,
-              paddingX: "1rem",
-            }}
-          >
-            {secondaryActionLabel}
-          </Button>
-          {primaryAction && (
-            <Button
-              onClick={() => primaryAction(primaryActionParams)}
-              type="button"
-              variant="contained"
-              color="primary"
-              sx={{
-                paddingX: "1rem",
-              }}
-            >
-              {primaryActionLabel}
-            </Button>
+          {!hideFooter && (
+            <>
+              <Button
+                onClick={secondaryAction ? secondaryAction : onClose}
+                type="button"
+                variant="contained"
+                sx={{
+                  backgroundColor: colors.light.grey[600],
+                  color: colors.light.text.secondary,
+                  paddingX: "1rem",
+                }}
+              >
+                {secondaryActionLabel}
+              </Button>
+              {primaryAction && (
+                <Button
+                  onClick={() => primaryAction(primaryActionParams)}
+                  type="button"
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    paddingX: "1rem",
+                  }}
+                >
+                  {primaryActionLabel}
+                </Button>
+              )}
+            </>
           )}
         </Box>
       </Box>

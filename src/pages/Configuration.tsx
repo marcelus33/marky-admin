@@ -100,7 +100,7 @@ const Configuration = () => {
         .required("Este campo es obligatorio")
         .matches(
           /^[a-z0-9\-_]+$/,
-          "Solo se permiten letras minúsculas, guiones (-) y guiones bajos (_)"
+          "Solo se permiten letras minúsculas, guiones (-) y guiones bajos (_)",
         )
         .min(4, "No puede tener menos de 4 caracteres")
         .max(22, "No puede tener más de 22 caracteres")
@@ -118,12 +118,12 @@ const Configuration = () => {
                 message: "Error al validar el nombre",
               });
             }
-          }
+          },
         ),
     }),
     Yup.object({
       categories: Yup.array().required(
-        "Debe seleccionar al menos una categoría"
+        "Debe seleccionar al menos una categoría",
       ),
     }),
     Yup.object({
@@ -132,7 +132,7 @@ const Configuration = () => {
           Yup.object({
             id: Yup.string().required("El id es obligatorio"),
             name: Yup.string().required("El nombre es obligatorio"),
-          })
+          }),
         )
         .min(1, "Debes seleccionar al menos un país")
         .required("Este campo es obligatorio"),
@@ -141,14 +141,14 @@ const Configuration = () => {
           Yup.object({
             id: Yup.string().required("El id es obligatorio"),
             name: Yup.string().required("El nombre es obligatorio"),
-          })
+          }),
         )
         .min(1, "Debes seleccionar al menos una ciudad")
         .required("Este campo es obligatorio"),
       business_type: Yup.string()
         .oneOf(
           ["commercial", "entrepreneur"],
-          "Tipo de negocio inválido. Las opciones válidas son Comercial o Emprendedor."
+          "Tipo de negocio inválido. Las opciones válidas son Comercial o Emprendedor.",
         )
         .required("Este campo es obligatorio"),
     }),
@@ -265,7 +265,7 @@ const Configuration = () => {
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [selectedPrimaryCurrencies, setSelectedPrimaryCurrencies] = useState(
-    []
+    [],
   );
   const [selectedSecondaryCurrencies, setSelectedSecondaryCurrencies] =
     useState([]);
@@ -297,7 +297,7 @@ const Configuration = () => {
     console.log("primaryCurrency", primaryCurrency);
     if (primaryCurrency && currencies)
       setLocalSecondaryCurrencies(
-        currencies.filter((curr: any) => curr.id !== primaryCurrency.id)
+        currencies.filter((curr: any) => curr.id !== primaryCurrency.id),
       );
     //@ts-ignore
   }, [formikRef.current?.values?.primary_currency, currencies]);
@@ -350,8 +350,8 @@ const Configuration = () => {
         !!selectedPrimaryCurrency
           ? //@ts-ignore
             currency.id !== selectedPrimaryCurrency.id
-          : currencies
-      )
+          : currencies,
+      ),
     );
     //@ts-ignore
   }, [currencies, formikRef.current?.values?.primary_currency]);
@@ -798,7 +798,7 @@ const Configuration = () => {
                                     const checkedValue = e.target.checked;
                                     setFieldValue(
                                       "enable_exchange_rate",
-                                      checkedValue
+                                      checkedValue,
                                     );
                                     if (!checkedValue) {
                                       setFieldValue("secondary_currency", "");
@@ -833,7 +833,7 @@ const Configuration = () => {
                                     ?.filter(
                                       (curr: any) =>
                                         //@ts-ignore
-                                        curr.id !== values.primary_currency?.id
+                                        curr.id !== values.primary_currency?.id,
                                     )
                                     .map((cat: any) => ({
                                       value: cat.id,
@@ -931,7 +931,7 @@ const Configuration = () => {
                                         onClick={() => {
                                           setFieldValue(
                                             "is_primary_to_secondary",
-                                            !values.is_primary_to_secondary
+                                            !values.is_primary_to_secondary,
                                           );
                                           setFieldValue("exchange_rate", 0);
                                         }}
@@ -1025,7 +1025,7 @@ const Configuration = () => {
           onChange={(event: any) => {
             const searchTerm = event.target.value;
             const filteredCategories = categories.filter((cat: any) =>
-              cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+              cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalCategories(filteredCategories);
           }}
@@ -1042,7 +1042,6 @@ const Configuration = () => {
         <CategorySelectionList
           categories={localCategories}
           maxSelectable={3}
-          initialSelected={[]}
           selected={selected}
           setSelected={setSelected}
         />
@@ -1077,7 +1076,7 @@ const Configuration = () => {
           onChange={(event: any) => {
             const searchTerm = event.target.value;
             const filteredIems = countries.filter((cat: any) =>
-              cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+              cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalCountries(filteredIems);
           }}
@@ -1090,7 +1089,6 @@ const Configuration = () => {
           <CategorySelectionList
             categories={localCountries}
             maxSelectable={1}
-            initialSelected={[]}
             selected={selectedCountries}
             setSelected={setSelectedCountries}
           />
@@ -1122,7 +1120,7 @@ const Configuration = () => {
           onChange={(event: any) => {
             const searchTerm = event.target.value;
             const filteredIems = cities.filter((cat: any) =>
-              cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+              cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalCities(filteredIems);
           }}
@@ -1132,7 +1130,6 @@ const Configuration = () => {
         <CategorySelectionList
           categories={localCities}
           maxSelectable={1}
-          initialSelected={[]}
           selected={selectedCities}
           setSelected={setSelectedCities}
         />
@@ -1153,12 +1150,12 @@ const Configuration = () => {
         primaryAction={(selectedPrimaryCurrencies) => {
           console.log(
             "selectedPrimaryCurrencies ====",
-            selectedPrimaryCurrencies
+            selectedPrimaryCurrencies,
           );
           //@ts-ignore
           formikRef.current?.setFieldValue(
             "primary_currency",
-            selectedPrimaryCurrencies
+            selectedPrimaryCurrencies,
           );
           setOpenPrimaryCurrencyModal(false);
         }}
@@ -1169,7 +1166,7 @@ const Configuration = () => {
           onChange={(event: any) => {
             const searchTerm = event.target.value;
             const filteredIems = currencies.filter((cat: any) =>
-              cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+              cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalPrimaryCurrencies(filteredIems);
           }}
@@ -1181,7 +1178,6 @@ const Configuration = () => {
         <CategorySelectionList
           categories={localPrimaryCurrencies}
           maxSelectable={1}
-          initialSelected={[]}
           selected={selectedPrimaryCurrencies}
           setSelected={setSelectedPrimaryCurrencies}
         />
@@ -1202,12 +1198,12 @@ const Configuration = () => {
         primaryAction={(selectedSecondaryCurrencies) => {
           console.log(
             "selectedSecondaryCurrencies ====",
-            selectedSecondaryCurrencies
+            selectedSecondaryCurrencies,
           );
           //@ts-ignore
           formikRef.current?.setFieldValue(
             "secondary_currency",
-            selectedSecondaryCurrencies
+            selectedSecondaryCurrencies,
           );
           setOpenSecondaryCurrencyModal(false);
         }}
@@ -1221,7 +1217,7 @@ const Configuration = () => {
               (cat: any) =>
                 cat.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
                 //@ts-ignore
-                formikRef.current?.values?.primary_currency.id !== cat.id
+                formikRef.current?.values?.primary_currency.id !== cat.id,
             );
             setLocalPrimaryCurrencies(filteredIems);
           }}
@@ -1233,7 +1229,6 @@ const Configuration = () => {
         <CategorySelectionList
           categories={localSecondaryCurrencies}
           maxSelectable={1}
-          initialSelected={[]}
           selected={selectedSecondaryCurrencies}
           setSelected={setSelectedSecondaryCurrencies}
         />

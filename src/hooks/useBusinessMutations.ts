@@ -1,6 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiMutation } from "./useApiMutation";
-import { updateProfileImage, HomePageData } from "../services/businessService";
+import {
+  updateProfileImage,
+  HomePageData,
+  patchBusinessAccountInfo,
+  BusinessAccountInfo,
+  BusinessAccountInfoUpdatePayload,
+} from "../services/businessService";
 
 export const useUpdateBusinessProfileImage = () => {
   const queryClient = useQueryClient();
@@ -11,6 +17,21 @@ export const useUpdateBusinessProfileImage = () => {
       queryClient.invalidateQueries({
         queryKey: ["homePageData"],
       });
+    },
+  });
+};
+
+export const useUpdateBusinessAccountInfo = () => {
+  const queryClient = useQueryClient();
+  return useApiMutation<
+    BusinessAccountInfo,
+    Error,
+    BusinessAccountInfoUpdatePayload
+  >({
+    mutationFn: patchBusinessAccountInfo,
+    successMessage: "Datos de cuenta actualizados exitosamente",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["businessAccountInfo"] });
     },
   });
 };

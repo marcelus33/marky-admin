@@ -122,6 +122,7 @@ export interface BusinessAccountInfo {
   business_id: string;
   business_type: string;
   exchange_rate: string;
+  is_primary_to_secondary?: boolean;
   city_id: number | null;
   city_name: string | null;
   country_id: number | null;
@@ -138,6 +139,29 @@ export interface BusinessAccountInfo {
 // GET: Fetch business account info
 export async function getBusinessAccountInfo(): Promise<BusinessAccountInfo> {
   const response = await api.get(`${baseURL}/account-info/`);
+  return response.data;
+}
+
+// Payload type for updating account info (PATCH)
+export interface BusinessAccountInfoUpdatePayload {
+  business_name?: string;
+  email?: string;
+  phone_number?: string;
+  business_id?: string;
+  business_type?: string;
+  exchange_rate?: string | null;
+  is_primary_to_secondary?: boolean;
+  categories?: number[];
+  city?: number;
+  primary_currency?: number;
+  secondary_currency?: number | null;
+}
+
+// PATCH: Update business account info
+export async function patchBusinessAccountInfo(
+  data: BusinessAccountInfoUpdatePayload,
+): Promise<BusinessAccountInfo> {
+  const response = await api.patch(`${baseURL}/account-info/`, data);
   return response.data;
 }
 

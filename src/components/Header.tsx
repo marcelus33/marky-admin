@@ -1,4 +1,6 @@
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
 import {
   AppBar,
   Avatar,
@@ -7,15 +9,21 @@ import {
   Menu,
   MenuItem,
   Toolbar,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import defaultUserAvatar from "../assets/images/user_default.png";
 
 export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -43,7 +51,11 @@ export const Header: React.FC = () => {
         <IconButton color="inherit">
           <NotificationsIcon sx={{ color: "#9E9EA6" }} />
         </IconButton>
-        <IconButton color="inherit" onClick={handleProfileClick}>
+        <IconButton
+          color="inherit"
+          onClick={handleProfileClick}
+          aria-label="user-menu"
+        >
           <Avatar src={defaultUserAvatar} />
         </IconButton>
         <Menu
@@ -54,13 +66,48 @@ export const Header: React.FC = () => {
             vertical: "bottom",
             horizontal: "right",
           }}
+          PaperProps={{
+            sx: {
+              minWidth: 260,
+              px: 1,
+              py: 2,
+              backgroundColor: "white",
+              borderRadius: 2,
+            },
+          }}
         >
+          <Box sx={{ px: 4, pb: 4 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Nombre comercio
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              nombre_id_comercio
+            </Typography>
+          </Box>
+          <Divider />
           <MenuItem
+            sx={{ p: 4 }}
             onClick={() => {
-              handleClose(); /* Implement logout here */
+              handleClose();
+              navigate("/account/configuration");
             }}
           >
-            Logout
+            <ListItemIcon>
+              <AccountCircleIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Mi cuenta</ListItemText>
+          </MenuItem>
+          <MenuItem
+            sx={{ p: 4 }}
+            onClick={() => {
+              handleClose();
+              navigate("/logout");
+            }}
+          >
+            <ListItemIcon>
+              <LogoutIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Cerrar sesión</ListItemText>
           </MenuItem>
         </Menu>
       </Toolbar>

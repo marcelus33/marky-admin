@@ -3,7 +3,10 @@ export interface Category {
   label?: string;
   name?: string;
   icon?: string;
-  order: number;
+  /** Optional order to make the type permissive for different sources */
+  order?: number;
+  /** Optional code (used in some lists) */
+  code?: string;
   //
   hasOffer?: boolean | null;
   discountPercentage?: number | null;
