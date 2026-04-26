@@ -15,6 +15,7 @@ import {
   Chip,
   FormControlLabel,
   IconButton,
+  InputAdornment,
   List,
   ListItemButton,
   ListItemIcon,
@@ -27,7 +28,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Field, Form, Formik } from "formik";
+import { Field, Form, Formik, useFormikContext } from "formik";
 import React, { useEffect, useState } from "react";
 import * as Yup from "yup";
 import BusinessTypeSelectorField from "../../components/BusinessTypeSelectorField";
@@ -79,6 +80,100 @@ const SettingsCard: React.FC<{
   );
 };
 
+type LocationFormValues = {
+  country: string;
+  city: string;
+};
+
+const LocationFormFields: React.FC<{
+  countries?: any[];
+  currentCityLabel: string;
+  onCancel: () => void;
+}> = ({ countries, currentCityLabel, onCancel }) => {
+  const { values, setFieldValue, isSubmitting } =
+    useFormikContext<LocationFormValues>();
+  const { cities, isLoading: isLoadingCities } = useCities(
+    values.country || null,
+  );
+
+  const hasSelectedCityInOptions = (cities || []).some(
+    (c: any) => String(c.id) === String(values.city),
+  );
+
+  return (
+    <Form>
+      <TextField
+        select
+        fullWidth
+        label="País"
+        value={values.country}
+        onChange={(e) => {
+          const nextCountryId = e.target.value;
+          if (nextCountryId === values.country) return;
+          setFieldValue("country", nextCountryId);
+          setFieldValue("city", "");
+        }}
+        margin="normal"
+        sx={(theme) => ({
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: theme.palette.grey[100],
+          },
+        })}
+      >
+        {(countries || []).map((c: any) => (
+          <MenuItem key={c.id} value={String(c.id)}>
+            {c.name}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        label="Ciudad"
+        value={values.city}
+        onChange={(e) => setFieldValue("city", e.target.value)}
+        margin="normal"
+        disabled={!values.country || isLoadingCities}
+        sx={(theme) => ({
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: theme.palette.grey[100],
+          },
+        })}
+      >
+        {isLoadingCities && values.country ? (
+          <MenuItem value="">Cargando ciudades...</MenuItem>
+        ) : (
+          (cities || []).map((c: any) => (
+            <MenuItem key={c.id} value={String(c.id)}>
+              {c.name}
+            </MenuItem>
+          ))
+        )}
+
+        {!isLoadingCities &&
+          values.city &&
+          !hasSelectedCityInOptions &&
+          currentCityLabel && (
+            <MenuItem value={values.city}>{currentCityLabel}</MenuItem>
+          )}
+      </TextField>
+
+      <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+        <Button onClick={onCancel}>Cancelar</Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={isSubmitting}
+          sx={{ paddingX: 4 }}
+        >
+          Guardar
+        </Button>
+      </Box>
+    </Form>
+  );
+};
+
 const AccountConfigurationPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -102,20 +197,6 @@ const AccountConfigurationPage: React.FC = () => {
     | "money"
     | "access"
   >(null);
-  const [selectedCountryForModal, setSelectedCountryForModal] = useState<
-    number | null
-  >(null);
-
-  useEffect(() => {
-    if (data?.country_id && selectedCountryForModal === null) {
-      setSelectedCountryForModal(data.country_id);
-    }
-  }, [data?.country_id, selectedCountryForModal]);
-
-  const { cities, isLoading: isLoadingCities } = useCities(
-    selectedCountryForModal ? String(selectedCountryForModal) : null,
-  );
-
   const exchangeFromCode = data?.is_primary_to_secondary
     ? data?.primary_currency_code
     : data?.secondary_currency_code;
@@ -264,10 +345,7 @@ const AccountConfigurationPage: React.FC = () => {
               <SettingsCard
                 title="Ubicación geográfica"
                 icon={<LocationOnOutlinedIcon />}
-                onEdit={() => {
-                  setSelectedCountryForModal(data?.country_id ?? null);
-                  setOpenModal("location");
-                }}
+                onEdit={() => setOpenModal("location")}
               >
                 <Box
                   display="flex"
@@ -313,7 +391,9 @@ const AccountConfigurationPage: React.FC = () => {
                   label={
                     data?.business_type === "commercial"
                       ? "Comercial"
-                      : (data?.business_type ?? "-")
+                      : data?.business_type === "entrepreneur"
+                        ? "Emprendedor"
+                        : data?.business_type || "sin definir"
                   }
                   color="primary"
                 />
@@ -369,7 +449,7 @@ const AccountConfigurationPage: React.FC = () => {
                   <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Box
                       sx={(theme) => ({
-                        backgroundColor: theme.palette.warning.light,
+                        backgroundColor: theme.palette.grey[100],
                         px: 2,
                         py: 1,
                         borderRadius: 1,
@@ -497,6 +577,7 @@ const AccountConfigurationPage: React.FC = () => {
                     type="submit"
                     variant="contained"
                     disabled={isSubmitting}
+                    sx={{ paddingX: 4 }}
                   >
                     Guardar
                   </Button>
@@ -552,6 +633,7 @@ const AccountConfigurationPage: React.FC = () => {
                   type="submit"
                   variant="contained"
                   disabled={isSubmitting}
+                  sx={{ paddingX: 4 }}
                 >
                   Guardar
                 </Button>
@@ -618,6 +700,7 @@ const AccountConfigurationPage: React.FC = () => {
                     type="submit"
                     variant="contained"
                     disabled={isSubmitting}
+                    sx={{ paddingX: 4 }}
                   >
                     Guardar
                   </Button>
@@ -664,69 +747,12 @@ const AccountConfigurationPage: React.FC = () => {
               }
             }}
           >
-            {({ values, setFieldValue, isSubmitting }) => (
-              <Form>
-                <TextField
-                  select
-                  fullWidth
-                  label="País"
-                  value={values.country}
-                  onChange={(e) => {
-                    const countryId = e.target.value as any;
-                    setFieldValue("country", countryId);
-                    setSelectedCountryForModal(
-                      countryId ? Number(countryId) : null,
-                    );
-                    setFieldValue("city", "");
-                  }}
-                  margin="normal"
-                  sx={(theme) => ({
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: theme.palette.grey[100],
-                    },
-                  })}
-                >
-                  {(countries || []).map((c: any) => (
-                    <MenuItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  fullWidth
-                  label="Ciudad"
-                  value={values.city}
-                  onChange={(e) => setFieldValue("city", e.target.value)}
-                  margin="normal"
-                  disabled={!values.country || isLoadingCities}
-                  sx={(theme) => ({
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: theme.palette.grey[100],
-                    },
-                  })}
-                >
-                  {isLoadingCities && values.country ? (
-                    <MenuItem value="">Cargando ciudades...</MenuItem>
-                  ) : (
-                    (cities || []).map((c: any) => (
-                      <MenuItem key={c.id} value={String(c.id)}>
-                        {c.name}
-                      </MenuItem>
-                    ))
-                  )}
-                </TextField>
-                <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-                  <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={isSubmitting}
-                  >
-                    Guardar
-                  </Button>
-                </Box>
-              </Form>
+            {() => (
+              <LocationFormFields
+                countries={countries}
+                currentCityLabel={data?.city_name ?? ""}
+                onCancel={() => setOpenModal(null)}
+              />
             )}
           </Formik>
         )}
@@ -785,6 +811,7 @@ const AccountConfigurationPage: React.FC = () => {
                   type="submit"
                   variant="contained"
                   disabled={isSubmitting}
+                  sx={{ paddingX: 4 }}
                 >
                   Guardar
                 </Button>
@@ -840,88 +867,185 @@ const AccountConfigurationPage: React.FC = () => {
             }
           }}
         >
-          {({ values, setFieldValue, isSubmitting }) => (
-            <Form>
-              <TextField
-                select
-                fullWidth
-                label="Moneda principal"
-                value={values.primary_currency}
-                onChange={(e) =>
-                  setFieldValue("primary_currency", e.target.value)
-                }
-                margin="normal"
-                sx={(theme) => ({
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: theme.palette.grey[100],
-                  },
-                })}
-              >
-                {(currencies || []).map((c: any) => (
-                  <MenuItem key={c.id} value={c.id}>
-                    {c.code} - {c.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={values.enable_exchange_rate}
-                    onChange={(e) =>
-                      setFieldValue("enable_exchange_rate", e.target.checked)
+          {({ values, setFieldValue, isSubmitting }) => {
+            const primaryCurrencyObj = (currencies || []).find(
+              (c: any) => String(c.id) === String(values.primary_currency),
+            );
+            const secondaryCurrencyObj = (currencies || []).find(
+              (c: any) => String(c.id) === String(values.secondary_currency),
+            );
+
+            const fromCode = values.is_primary_to_secondary
+              ? primaryCurrencyObj?.code
+              : secondaryCurrencyObj?.code;
+            const toCode = values.is_primary_to_secondary
+              ? secondaryCurrencyObj?.code
+              : primaryCurrencyObj?.code;
+
+            return (
+              <Form>
+                <TextField
+                  select
+                  fullWidth
+                  label="Moneda principal"
+                  value={values.primary_currency}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    // if secondary equals new primary, clear secondary and rate
+                    if (String(values.secondary_currency) === String(next)) {
+                      setFieldValue("secondary_currency", "");
+                      setFieldValue("exchange_rate", "");
                     }
-                  />
-                }
-                label="Precios con tasa de cambio"
-              />
-              {values.enable_exchange_rate && (
-                <>
-                  <TextField
-                    select
-                    fullWidth
-                    label="Moneda secundaria"
-                    value={values.secondary_currency}
-                    onChange={(e) =>
-                      setFieldValue("secondary_currency", e.target.value)
-                    }
-                    margin="normal"
-                    sx={(theme) => ({
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: theme.palette.grey[100],
-                      },
-                    })}
-                  >
-                    {(currencies || [])
-                      .filter(
-                        (curr: any) =>
-                          String(curr.id) !== String(values.primary_currency),
-                      )
-                      .map((c: any) => (
-                        <MenuItem key={c.id} value={c.id}>
-                          {c.code} - {c.name}
-                        </MenuItem>
-                      ))}
-                  </TextField>
-                  <Field
-                    component={NumberInput}
-                    name="exchange_rate"
-                    label="Tasa de cambio"
-                    description="Formato LATAM"
-                  />
-                </>
-              )}
-              <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-                <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isSubmitting}
+                    setFieldValue("primary_currency", next);
+                  }}
+                  margin="normal"
+                  sx={(theme) => ({
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: theme.palette.grey[100],
+                    },
+                  })}
                 >
-                  Guardar
-                </Button>
-              </Box>
-            </Form>
-          )}
+                  {(currencies || []).map((c: any) => (
+                    <MenuItem key={c.id} value={c.id}>
+                      {c.code} - {c.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={values.enable_exchange_rate}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFieldValue("enable_exchange_rate", checked);
+                        if (!checked) {
+                          setFieldValue("secondary_currency", "");
+                          setFieldValue("exchange_rate", "");
+                        }
+                      }}
+                    />
+                  }
+                  label="Precios con tasa de cambio"
+                />
+                {values.enable_exchange_rate && (
+                  <>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Moneda secundaria"
+                      value={values.secondary_currency}
+                      onChange={(e) =>
+                        setFieldValue("secondary_currency", e.target.value)
+                      }
+                      margin="normal"
+                      sx={(theme) => ({
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: theme.palette.grey[100],
+                        },
+                      })}
+                    >
+                      {(currencies || [])
+                        .filter(
+                          (curr: any) =>
+                            String(curr.id) !== String(values.primary_currency),
+                        )
+                        .map((c: any) => (
+                          <MenuItem key={c.id} value={c.id}>
+                            {c.code} - {c.name}
+                          </MenuItem>
+                        ))}
+                    </TextField>
+
+                    {values.secondary_currency && (
+                      <Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            width: "100%",
+                          }}
+                        >
+                          <Box
+                            sx={(theme) => ({
+                              width: "15%",
+                              backgroundColor: theme.palette.grey[300],
+                              paddingX: 2,
+                              paddingY: 1,
+                              borderRadius: 2,
+                              textAlign: "center",
+                            })}
+                          >
+                            <Typography id="modal-description" variant="body2">
+                              {fromCode ? `1 ${fromCode}` : ""}
+                            </Typography>
+                          </Box>
+
+                          <Box sx={{ width: "20%" }}>
+                            <Typography id="modal-description" variant="body2">
+                              es igual a:
+                            </Typography>
+                          </Box>
+
+                          <Field
+                            component={NumberInput}
+                            name="exchange_rate"
+                            label="Tasa de cambio"
+                            // description="Formato"
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <Typography variant="body2">
+                                    {toCode ?? ""}
+                                  </Typography>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+
+                          <Button
+                            variant="outlined"
+                            sx={{
+                              border: 0,
+                              backgroundColor: theme.palette.grey[300],
+                              mt: 4,
+                            }}
+                            onClick={() => {
+                              setFieldValue(
+                                "is_primary_to_secondary",
+                                !values.is_primary_to_secondary,
+                              );
+                              setFieldValue("exchange_rate", "");
+                            }}
+                          >
+                            <CachedIcon color="action" />
+                          </Button>
+                        </Box>
+                      </Box>
+                    )}
+                  </>
+                )}
+                <Box
+                  mt={4}
+                  display="flex"
+                  justifyContent="flex-end"
+                  gap={2}
+                  pt={4}
+                  // borderTop={1}
+                >
+                  <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                    sx={{ paddingX: 4 }}
+                  >
+                    Guardar
+                  </Button>
+                </Box>
+              </Form>
+            );
+          }}
         </Formik>
       </CustomModal>
     </Box>

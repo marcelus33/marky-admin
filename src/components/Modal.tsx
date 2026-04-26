@@ -69,45 +69,47 @@ const CustomModal: React.FC<CustomModalProps> = ({
           {children}
         </Box>
         {/*  */}
-        <Box
-          sx={{
-            borderTop: "1px solid lightgray",
-            display: "flex",
-            p: 4,
-            justifyContent: "flex-end",
-            gap: 4,
-          }}
-        >
-          {!hideFooter && (
-            <>
-              <Button
-                onClick={secondaryAction ? secondaryAction : onClose}
-                type="button"
-                variant="contained"
-                sx={{
-                  backgroundColor: colors.light.grey[600],
-                  color: colors.light.text.secondary,
-                  paddingX: "1rem",
-                }}
-              >
-                {secondaryActionLabel}
-              </Button>
-              {primaryAction && (
+        {!hideFooter && (
+          <Box
+            sx={{
+              borderTop: "1px solid lightgray",
+              display: "flex",
+              p: 4,
+              justifyContent: "flex-end",
+              gap: 4,
+            }}
+          >
+            {
+              <>
                 <Button
-                  onClick={() => primaryAction(primaryActionParams)}
+                  onClick={secondaryAction ? secondaryAction : onClose}
                   type="button"
                   variant="contained"
-                  color="primary"
                   sx={{
+                    backgroundColor: colors.light.grey[600],
+                    color: colors.light.text.secondary,
                     paddingX: "1rem",
                   }}
                 >
-                  {primaryActionLabel}
+                  {secondaryActionLabel}
                 </Button>
-              )}
-            </>
-          )}
-        </Box>
+                {primaryAction && (
+                  <Button
+                    onClick={() => primaryAction(primaryActionParams)}
+                    type="button"
+                    variant="contained"
+                    color="primary"
+                    sx={{
+                      paddingX: "1rem",
+                    }}
+                  >
+                    {primaryActionLabel}
+                  </Button>
+                )}
+              </>
+            }
+          </Box>
+        )}
       </Box>
     </Modal>
   );
