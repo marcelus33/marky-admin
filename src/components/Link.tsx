@@ -1,5 +1,4 @@
 import { styled } from "@mui/material/styles";
-import { Link as MUILink } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
 export interface LinkProps {

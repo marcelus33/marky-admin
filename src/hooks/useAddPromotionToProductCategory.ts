@@ -1,7 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addPromotionToProductCategory } from "../services/productService";
-import { PaginatedResponse } from "../services/types";
-import { ProductCategory } from "../services/productService";
 
 const useAddPromotionToProductCategory = () => {
   const queryClient = useQueryClient();

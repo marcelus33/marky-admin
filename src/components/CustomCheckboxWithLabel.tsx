@@ -1,7 +1,7 @@
 import React from "react";
 // import { CheckboxWithLabel } from "formik-mui"; // Asegúrate de tener este componente
 import { Box, Typography } from "@mui/material";
-import { FieldInputProps, FieldMetaProps, FieldProps } from "formik";
+import { FieldInputProps, FieldMetaProps } from "formik";
 import CheckboxWithLabel from "./CheckboxWithLabel";
 
 interface CustomCheckboxWithLabelProps {

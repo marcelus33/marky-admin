@@ -2,7 +2,7 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as LoginImage } from "../assets/images/email_verification_send.svg";
 import Link from "../components/Link";
@@ -16,12 +16,10 @@ const EmailVerification: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { token = "" } = useParams();
-  const location = useLocation();
-  const { email = "" } = location.state || {};
   const [verificationCode, setVerificationCode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [serverMessage, setServerMessage] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
+  const [, setServerMessage] = useState<string | null>(null);
   const { user } = useSessionStore();
 
   const handleCodeComplete = (code: string) => {

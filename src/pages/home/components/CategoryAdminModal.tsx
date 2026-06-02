@@ -7,8 +7,6 @@ import {
   IconButton,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import categoryIcons from "../../../assets/icons/category/categoryIcons";
-import { ReactComponent as CrownIcon } from "../../../assets/icons/crown.svg";
 import XButton from "../../../components/XButton";
 import useProductCategories from "../../../hooks/useProductCategories";
 import useUpdateProductCategoryOrder from "../../../hooks/useUpdateProductCategoryOrder";

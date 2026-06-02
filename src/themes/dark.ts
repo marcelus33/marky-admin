@@ -1,7 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 import typography from "./utils/typography";
 import components from "./utils/components";
-import colors from "./utils/colors";
 import darkComponents from "./utils/darkComponents";
 
 const darkTheme = createTheme({

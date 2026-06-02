@@ -1,5 +1,4 @@
-import { Avatar, Box, IconButton, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { Avatar, Box, Typography } from "@mui/material";
 import React, { useRef } from "react";
 import { HomePageData } from "../../../services/businessService";
 import businessImageDefault from "../../../assets/images/business-image-default.svg";
@@ -26,7 +25,6 @@ export const BusinessInfo: React.FC<{
   openDescriptionModal,
   openAttributesModal,
 }) => {
-  const theme = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutate: updateProfileImage } = useUpdateBusinessProfileImage();
 

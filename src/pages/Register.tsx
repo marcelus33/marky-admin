@@ -1,14 +1,11 @@
-import { Box, Button, Grid, TextField, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Field, FieldProps, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import React, { useState } from "react";
 import "react-phone-input-2/lib/material.css"; // Customizable
 import * as Yup from "yup";
-import { ReactComponent as GoogleIcon } from "../assets/icons/google.svg";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as RegisterImage } from "../assets/images/register.svg";
-import CustomCheckboxWithLabel from "../components/CustomCheckboxWithLabel";
-import DividerWithText from "../components/DividerWithText";
 import FormikPhoneInput from "../components/FormikPhoneInput";
 import Input from "../components/Input";
 import Link from "../components/Link";
@@ -36,8 +33,7 @@ const AcceptTermsLabel = () => {
 const Register: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [isGoogleSignup, setIsGoogleSignup] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState<string>("");
+  const isGoogleSignup = false;
   const [loading, setLoading] = useState(false);
 
   const initialValues = {
@@ -50,15 +46,11 @@ const Register: React.FC = () => {
   const isRequiredMessage = "Este campo es requerido";
   const validationSchema = Yup.object().shape({
     businessName: Yup.string().required(isRequiredMessage),
-    email: isGoogleSignup
-      ? Yup.string()
-      : Yup.string().email("Email no válido").required(isRequiredMessage),
+    email: Yup.string().email("Email no válido").required(isRequiredMessage),
     phone: Yup.string().required(isRequiredMessage),
-    password: isGoogleSignup
-      ? Yup.string()
-      : Yup.string()
-          .min(8, "Debe tener al menos 8 carácteres")
-          .required(isRequiredMessage),
+    password: Yup.string()
+      .min(8, "Debe tener al menos 8 carácteres")
+      .required(isRequiredMessage),
   });
 
   const handleSubmit = async (
@@ -87,16 +79,6 @@ const Register: React.FC = () => {
       setLoading(false);
       displayFormikFormErrors(error, setFieldError);
     }
-  };
-
-  const handleGoogleSuccess = (response: any) => {
-    setIsGoogleSignup(true);
-    setGoogleEmail("response.profileObj.email");
-    console.log("Google login success:", response);
-  };
-
-  const handleGoogleFailure = (error: any) => {
-    console.error("Google login failed", error);
   };
 
   return (

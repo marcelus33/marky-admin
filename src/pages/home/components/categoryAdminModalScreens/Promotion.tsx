@@ -10,7 +10,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
 } from "@mui/material";
 import { Category } from "../../../../types/category";
 // import categoryIcons from "../../../assets/icons/category/categoryIcons";
@@ -32,8 +31,6 @@ const getIconComponent = (cat: Category) => {
     <CrownIcon fontSize="small" />
   );
 };
-
-type ActiveScreen = "welcome" | "main" | "sort" | "createEdit" | "promotion";
 
 interface PromotionProps {
   category: Category | undefined;

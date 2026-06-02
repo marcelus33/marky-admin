@@ -1,13 +1,10 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Field, FieldProps, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import React from "react";
 import * as Yup from "yup";
-import { ReactComponent as GoogleIcon } from "../assets/icons/google.svg";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as LoginImage } from "../assets/images/email_verification_send.svg";
-import CheckboxWithLabel from "../components/CheckboxWithLabel";
-import DividerWithText from "../components/DividerWithText";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";

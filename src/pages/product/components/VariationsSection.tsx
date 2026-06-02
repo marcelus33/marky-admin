@@ -5,10 +5,9 @@ import {
   Switch,
   FormControlLabel,
   Button,
-  Grid,
   IconButton,
 } from "@mui/material";
-import { Add, Delete, PhotoCamera } from "@mui/icons-material";
+import { Add, Delete } from "@mui/icons-material";
 import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
 import { useImageCropper } from "../../../hooks/useImageCropper";

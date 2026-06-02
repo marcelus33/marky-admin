@@ -29,7 +29,7 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
   selectedCategory,
   onSelectCategory,
 }) => {
-  const { data: categoriesData, isLoading } = useProductCategories(
+  const { data: categoriesData } = useProductCategories(
     {
       include_products: false,
     },

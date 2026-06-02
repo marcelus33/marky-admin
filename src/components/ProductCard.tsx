@@ -5,7 +5,6 @@ import {
   CardMedia,
   Typography,
   Tooltip,
-  Chip,
   IconButton,
   Checkbox,
   Divider,

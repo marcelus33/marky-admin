@@ -1,6 +1,6 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Field, FieldProps, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import React, { useState } from "react";
 import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";

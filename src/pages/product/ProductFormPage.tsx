@@ -1,18 +1,10 @@
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import MenuIcon from "@mui/icons-material/Menu";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
-import TuneIcon from "@mui/icons-material/Tune";
 import {
-  AppBar,
   Box,
   Drawer,
-  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Toolbar,
   Typography,
   useMediaQuery,
   useTheme,
@@ -300,6 +292,9 @@ const ProductFormPage = () => {
         }
       }
     }
+    // location.state is intentionally omitted: this effect must only run when
+    // `id` changes. The duplicate-product state is read once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Reset dirty state when initial values are loaded/changed (e.g. after
@@ -327,10 +322,6 @@ const ProductFormPage = () => {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isFormDirty]);
-
-  const handleMenuClick = () => {
-    setMobileOpen(true);
-  };
 
   const handleDrawerClose = () => {
     setMobileOpen(false);

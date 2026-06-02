@@ -2,7 +2,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useApiMutation } from "./useApiMutation";
 import {
   updateProfileImage,
-  HomePageData,
   patchBusinessAccountInfo,
   BusinessAccountInfo,
   BusinessAccountInfoUpdatePayload,

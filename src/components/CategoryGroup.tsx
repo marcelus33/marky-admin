@@ -11,7 +11,7 @@ import {
   MenuItem,
   Typography,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import categoryIcons from "../assets/icons/category/categoryIcons";
 import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";

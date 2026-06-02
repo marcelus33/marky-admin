@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import React from "react";
+import { Box, Typography } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { useTheme } from "@mui/material/styles";
 import { ReactComponent as ParaguayFlagIcon } from "../assets/icons/flag-paraguay.svg";

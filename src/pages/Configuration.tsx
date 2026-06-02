@@ -45,11 +45,6 @@ import { useSessionStore } from "../stores/sessionStore";
 import colors from "../themes/utils/colors";
 import { ShowNotification } from "../utils/utils";
 
-interface CategoryOption {
-  value: number | string;
-  label: string;
-}
-
 const CustomConnector = styled(StepConnector)(({ theme }) => ({
   // Default connector line style
   [`& .${stepConnectorClasses.line}`]: {
@@ -158,33 +153,17 @@ const Configuration = () => {
     }),
   ];
   //
-  const {
-    categories = [],
-    isLoading: isLoadingCategories,
-    isError: isErrorCategories,
-  } = useCategories();
+  const { categories = [] } = useCategories();
   const [localCategories, setLocalCategories] = useState(categories);
   const [localCountries, setLocalCountries] = useState([]);
   const [localCities, setLocalCities] = useState([]);
   const [localPrimaryCurrencies, setLocalPrimaryCurrencies] = useState([]);
   const [localSecondaryCurrencies, setLocalSecondaryCurrencies] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const {
-    countries,
-    isLoading: isLoadingCountries,
-    isError: isErrorCountries,
-  } = useCountries();
-  const {
-    cities,
-    isLoading: isLoadingCities,
-    isError: isErrorCities,
-  } = useCities(selectedCountry);
+  const { countries } = useCountries();
+  const { cities } = useCities(selectedCountry);
 
-  const {
-    currencies,
-    isLoading: isLoadingCurrencies,
-    isError: isErrorCurrencies,
-  } = useCurrencies();
+  const { currencies } = useCurrencies();
 
   //
   const steps = [
@@ -229,7 +208,7 @@ const Configuration = () => {
     console.log("Form payload", payload);
     // return;
     try {
-      const response = await createBusinessProfile(payload);
+      await createBusinessProfile(payload);
       ShowNotification({
         message: "Configuración creada con éxito",
         type: "success",

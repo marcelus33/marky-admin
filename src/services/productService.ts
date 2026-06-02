@@ -1,6 +1,5 @@
 import { CategoryWithProducts } from "../types/categoryWithProducts";
 import { Product } from "../types/product";
-import { objectToFormData } from "../utils/formData";
 import api from "./axiosConfig";
 import { PaginatedProductCategoriesResponse, PaginatedResponse } from "./types";
 import { mapCategoryWithProducts } from "../mappers/productMapper";

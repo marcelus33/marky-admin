@@ -17,10 +17,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { Category } from "../../../../types/category";
-import { splitISODateTime } from "../../../../utils/utils";
 import { useState } from "react";
 import MobileOptionsMenu from "./components/MobileOptionsMenu";
-import useProductCategories from "../../../../hooks/useProductCategories";
 import useDeleteProductCategory from "../../../../hooks/useDeleteProductCategory";
 
 interface CategoryItemProps {
@@ -61,15 +59,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
     // setFieldValue("promotionOption", promotionOption);
     // setFieldValue("discountPercentage", cat.discountPercentage);
     // setFieldValue("countdownActive", !!cat.promotionStartsAt);
-    //
-    const { promotionStartsAt, promotionEndsAt } = cat;
-    const { date: startDate, time: startTime } =
-      splitISODateTime(promotionStartsAt);
-    const { date: endDate, time: endTime } = splitISODateTime(promotionEndsAt);
-    // setFieldValue("promotionDateStart", startDate);
-    // setFieldValue("promotionTimeStart", startTime);
-    // setFieldValue("promotionDateEnd", endDate);
-    // setFieldValue("promotionTimeEnd", endTime);
 
     setCategoryForm(catCopy);
   };
