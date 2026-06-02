@@ -1,18 +1,26 @@
 import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import CachedIcon from "@mui/icons-material/Cached";
+import CardMembershipOutlinedIcon from "@mui/icons-material/CardMembershipOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import {
   Avatar,
   Box,
   Button,
-  Chip,
+  Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -29,7 +37,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { Field, Form, Formik, useFormikContext } from "formik";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import BusinessTypeSelectorField from "../../components/BusinessTypeSelectorField";
 import CategorySelectionList from "../../components/CategorySelectionList";
@@ -51,17 +59,20 @@ const SettingsCard: React.FC<{
   icon?: React.ReactNode;
   onEdit?: () => void;
   children?: React.ReactNode;
-}> = ({ title, icon, onEdit, children }) => {
+  paperSx?: object;
+}> = ({ title, icon, onEdit, children, paperSx }) => {
   return (
     <Paper
       elevation={0}
       sx={{
-        borderRadius: 2,
-        p: 4,
-        mb: 3,
+        borderRadius: "12px",
+        pt: 4,
+        pb: 6,
+        px: 6,
+        mb: "25px",
         bgcolor: "white",
-        border: "1px solid",
-        borderColor: "divider",
+        border: "1px solid #EDEDED",
+        ...paperSx,
       }}
     >
       <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -70,8 +81,12 @@ const SettingsCard: React.FC<{
           <Typography variant="h6">{title}</Typography>
         </Box>
         {onEdit && (
-          <IconButton size="small" onClick={onEdit}>
-            <EditOutlinedIcon />
+          <IconButton
+            size="small"
+            onClick={onEdit}
+            sx={{ bgcolor: "#EDEDED", borderRadius: "6px", p: 2 }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 18 }} />
           </IconButton>
         )}
       </Box>
@@ -79,6 +94,33 @@ const SettingsCard: React.FC<{
     </Paper>
   );
 };
+
+const FieldDisplay: React.FC<{
+  label: string;
+  value?: React.ReactNode;
+  sx?: object;
+}> = ({ label, value, sx }) => (
+  <Box sx={sx}>
+    <Typography
+      sx={{ fontSize: 14, fontWeight: 700, color: "#4b4b4b", mb: 0.5 }}
+    >
+      {label}
+    </Typography>
+    <Box
+      sx={{
+        backgroundColor: "#FAFAFA",
+        borderRadius: "6px",
+        py: 1.5,
+        px: 3,
+        minHeight: 48,
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      {value ?? "-"}
+    </Box>
+  </Box>
+);
 
 type LocationFormValues = {
   country: string;
@@ -174,6 +216,16 @@ const LocationFormFields: React.FC<{
   );
 };
 
+const sidebarNavItemSx = {
+  borderRadius: 2,
+  mb: 1,
+  "&.Mui-selected": {
+    backgroundColor: "#F9F9F9",
+    boxShadow: "inset -4px 0 0 0 #347AEA",
+    "&:hover": { backgroundColor: "#F9F9F9" },
+  },
+};
+
 const AccountConfigurationPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -181,7 +233,7 @@ const AccountConfigurationPage: React.FC = () => {
     "configuration" | "security"
   >("configuration");
 
-  const { data, isLoading, error } = useBusinessAccountInfo();
+  const { data, isLoading } = useBusinessAccountInfo();
   const updateAccountInfo = useUpdateBusinessAccountInfo();
 
   const { categories: allCategories } = useCategories();
@@ -213,7 +265,7 @@ const AccountConfigurationPage: React.FC = () => {
             sx={{
               width: 280,
               p: 4,
-              borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRight: (t) => `1px solid ${t.palette.divider}`,
             }}
           >
             <Box
@@ -222,22 +274,29 @@ const AccountConfigurationPage: React.FC = () => {
               alignItems="center"
               mb={3}
             >
-              <Avatar sx={{ width: 90, height: 90, mb: 2 }} />
-              <Typography variant="h6">
-                {data?.business_name ?? "Nombre del Comercio"}
-              </Typography>
+              <Avatar sx={{ width: 110, height: 110, mb: 2 }} />
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <Typography
+                  sx={{ fontSize: 18, fontWeight: 500, color: "#4b4b4b" }}
+                >
+                  {data?.business_name ?? "Nombre del Comercio"}
+                </Typography>
+                <VerifiedIcon sx={{ fontSize: 16, color: "#337AEA" }} />
+              </Box>
               <Typography variant="caption" color="text.secondary">
                 Usuario
               </Typography>
             </Box>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Typography
+              sx={{ fontSize: 14, fontWeight: 500, color: "#9E9EA6", mb: 1 }}
+            >
               Tu cuenta
             </Typography>
             <List>
               <ListItemButton
                 selected={selectedSection === "configuration"}
                 onClick={() => setSelectedSection("configuration")}
-                sx={{ borderRadius: 2, mb: 1 }}
+                sx={sidebarNavItemSx}
               >
                 <ListItemIcon>
                   <SettingsOutlinedIcon />
@@ -247,12 +306,38 @@ const AccountConfigurationPage: React.FC = () => {
               <ListItemButton
                 selected={selectedSection === "security"}
                 onClick={() => setSelectedSection("security")}
-                sx={{ borderRadius: 2, mb: 1 }}
+                sx={sidebarNavItemSx}
               >
                 <ListItemIcon>
                   <LockOutlinedIcon />
                 </ListItemIcon>
                 <ListItemText primary="Seguridad" />
+              </ListItemButton>
+              {/* <ListItemButton sx={sidebarNavItemSx}>
+                <ListItemIcon>
+                  <CardMembershipOutlinedIcon />
+                </ListItemIcon>
+                <ListItemText primary="Subscripción" />
+              </ListItemButton>
+              <ListItemButton sx={sidebarNavItemSx}>
+                <ListItemIcon>
+                  <ReceiptLongOutlinedIcon />
+                </ListItemIcon>
+                <ListItemText primary="Facturación" />
+              </ListItemButton> */}
+            </List>
+            <Divider sx={{ my: 2 }} />
+            <Typography
+              sx={{ fontSize: 14, fontWeight: 500, color: "#9E9EA6", mb: 1 }}
+            >
+              Ayuda
+            </Typography>
+            <List>
+              <ListItemButton sx={sidebarNavItemSx}>
+                <ListItemIcon>
+                  <WhatsAppIcon />
+                </ListItemIcon>
+                <ListItemText primary="Atención al cliente" />
               </ListItemButton>
             </List>
           </Box>
@@ -266,63 +351,156 @@ const AccountConfigurationPage: React.FC = () => {
             mb={3}
           >
             <Box>
-              <Typography variant="h4">
+              <Typography
+                sx={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: 28,
+                  fontWeight: 500,
+                  lineHeight: 1.5,
+                  color: "#000",
+                }}
+              >
                 {selectedSection === "configuration"
                   ? "Configuración"
                   : "Seguridad"}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                sx={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: 16,
+                  color: "#7C8DB5",
+                  lineHeight: 1.5,
+                }}
+              >
                 @{data?.business_id ?? "nombre_empresa"}
               </Typography>
             </Box>
-            <Box>
-              <Button variant="outlined" size="small">
+            <Paper
+              elevation={0}
+              sx={{
+                boxShadow: "0px 2px 5px rgba(124,141,181,0.12)",
+                borderRadius: "8px",
+                px: 3,
+                py: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Typography sx={{ fontSize: 14, color: "#4b4b4b" }}>
                 Creada el 17/07/2025
-              </Button>
-            </Box>
+              </Typography>
+              <KeyboardArrowDownIcon sx={{ fontSize: 18, color: "#9E9EA6" }} />
+            </Paper>
           </Box>
 
           {isLoading ? (
-            // FIX 1: was missing the loading state JSX — now shows a proper loading message
             <Typography>Cargando...</Typography>
           ) : selectedSection === "configuration" ? (
-            // FIX 2: was rendering configuration content under "security" branch and vice versa
             <Box>
-              {/* ID del comercio */}
-              <SettingsCard
-                title="ID del comercio"
-                icon={<BadgeOutlinedIcon />}
-                onEdit={() => data && setOpenModal("id")}
+              {/* ID del comercio + QR Card */}
+              <Box
+                display="flex"
+                gap={3}
+                flexDirection={{ xs: "column", md: "row" }}
+                alignItems={{ md: "flex-start" }}
               >
-                <Box mb={2.5}>
-                  <Typography variant="caption">Nombre</Typography>
-                  <Box
-                    mt={1}
-                    p={3}
-                    sx={{
-                      backgroundColor: (theme) => theme.palette.grey[100],
-                      borderRadius: 1,
-                    }}
+                <Box flex={1}>
+                  <SettingsCard
+                    title="ID del comercio"
+                    icon={<BadgeOutlinedIcon />}
+                    onEdit={() => data && setOpenModal("id")}
                   >
-                    {data?.business_name ?? "-"}
-                  </Box>
+                    <FieldDisplay
+                      label="Nombre"
+                      value={data?.business_name}
+                      sx={{ mb: 2.5 }}
+                    />
+                    <FieldDisplay
+                      label="Usuario"
+                      value={data?.business_id}
+                      sx={{ mb: 2.5 }}
+                    />
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "#4b4b4b",
+                          mb: 0.5,
+                        }}
+                      >
+                        Tu enlace público
+                      </Typography>
+                      <Box display="flex" gap={1}>
+                        <Box
+                          sx={{
+                            flex: 1,
+                            backgroundColor: "#FAFAFA",
+                            borderRadius: "6px",
+                            py: 1.5,
+                            px: 3,
+                            minHeight: 48,
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: 14,
+                            color: "#4b4b4b",
+                          }}
+                        >
+                          marky.me/{data?.business_id ?? "..."}
+                        </Box>
+                        <Button
+                          variant="text"
+                          startIcon={<ContentCopyIcon />}
+                          sx={{
+                            bgcolor: "#EDEDED",
+                            borderRadius: "6px",
+                            px: 3,
+                            color: "#4b4b4b",
+                            textTransform: "none",
+                            whiteSpace: "nowrap",
+                            "&:hover": { bgcolor: "#E0E0E0" },
+                          }}
+                        >
+                          Copiar enlace
+                        </Button>
+                      </Box>
+                    </Box>
+                  </SettingsCard>
                 </Box>
 
-                <Box mb={2.5}>
-                  <Typography variant="caption">Usuario</Typography>
-                  {/* FIX 3: removed orphaned JSX block that duplicated business_id outside SettingsCard */}
-                  <Box
-                    mt={1}
-                    p={3}
+                {/* <Box
+                  sx={{
+                    width: { xs: "100%", md: 280 },
+                    bgcolor: "#E8F3FF",
+                    borderRadius: "12px",
+                    p: 5,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 2,
+                    mb: "25px",
+                  }}
+                >
+                  <QrCode2Icon sx={{ fontSize: 80, color: "#337AEA" }} />
+                  <Typography
                     sx={{
-                      backgroundColor: (theme) => theme.palette.grey[100],
-                      borderRadius: 1,
+                      fontSize: 14,
+                      color: "#4b4b4b",
+                      textAlign: "center",
                     }}
                   >
-                    {data?.business_id ?? "-"}
-                  </Box>
-                </Box>
-              </SettingsCard>
+                    Comparte tu negocio con tus clientes
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<FileDownloadOutlinedIcon />}
+                    sx={{ borderRadius: "8px", textTransform: "none" }}
+                  >
+                    Descargar QR
+                  </Button>
+                </Box> */}
+              </Box>
 
               {/* Categorías */}
               <SettingsCard
@@ -330,15 +508,47 @@ const AccountConfigurationPage: React.FC = () => {
                 icon={<CategoryOutlinedIcon />}
                 onEdit={() => setOpenModal("categories")}
               >
-                <Box display="flex" gap={1}>
-                  {(data?.categories ?? []).length ? (
-                    data!.categories.map((c) => (
-                      <Chip key={c.id} label={c.name} color="primary" />
-                    ))
-                  ) : (
-                    <Chip label="Sin categoría" />
-                  )}
-                </Box>
+                {(data?.categories ?? []).length ? (
+                  <Box>
+                    <Typography sx={{ fontSize: 14, color: "#4b4b4b", mb: 1 }}>
+                      Categoría principal de tu negocio
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: "#9E9EA6", mb: 2 }}>
+                      Especialidad
+                    </Typography>
+                    <Box display="flex" gap={1} flexWrap="wrap">
+                      {data!.categories.map((c) => (
+                        <Box
+                          key={c.id}
+                          sx={{
+                            bgcolor: "#E8F3FF",
+                            color: "#337AEA",
+                            fontSize: 14,
+                            px: 2,
+                            py: 1,
+                            borderRadius: "6px",
+                          }}
+                        >
+                          {c.name}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      bgcolor: "#E8F3FF",
+                      color: "#337AEA",
+                      fontSize: 14,
+                      px: 2,
+                      py: 1,
+                      borderRadius: "6px",
+                      display: "inline-block",
+                    }}
+                  >
+                    Sin categoría
+                  </Box>
+                )}
               </SettingsCard>
 
               {/* Ubicación */}
@@ -353,30 +563,10 @@ const AccountConfigurationPage: React.FC = () => {
                   flexDirection={{ xs: "column", md: "row" }}
                 >
                   <Box flex={1}>
-                    <Typography variant="caption">País</Typography>
-                    <Box
-                      mt={1}
-                      p={3}
-                      sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
-                        borderRadius: 1,
-                      }}
-                    >
-                      {data?.country_name ?? "-"}
-                    </Box>
+                    <FieldDisplay label="País" value={data?.country_name} />
                   </Box>
                   <Box flex={1}>
-                    <Typography variant="caption">Ciudad</Typography>
-                    <Box
-                      mt={1}
-                      p={3}
-                      sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
-                        borderRadius: 1,
-                      }}
-                    >
-                      {data?.city_name ?? "-"}
-                    </Box>
+                    <FieldDisplay label="Ciudad" value={data?.city_name} />
                   </Box>
                 </Box>
               </SettingsCard>
@@ -387,16 +577,31 @@ const AccountConfigurationPage: React.FC = () => {
                 icon={<StorefrontOutlinedIcon />}
                 onEdit={() => setOpenModal("business_type")}
               >
-                <Chip
-                  label={
-                    data?.business_type === "commercial"
-                      ? "Comercial"
-                      : data?.business_type === "entrepreneur"
-                        ? "Emprendedor"
-                        : data?.business_type || "sin definir"
-                  }
-                  color="primary"
-                />
+                <Box display="flex" alignItems="center" gap={2}>
+                  <StorefrontOutlinedIcon sx={{ color: "#337AEA" }} />
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "#337AEA",
+                        fontSize: 14,
+                      }}
+                    >
+                      {data?.business_type === "commercial"
+                        ? "Comercial"
+                        : data?.business_type === "entrepreneur"
+                          ? "Emprendedor"
+                          : data?.business_type || "Sin definir"}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: "#9E9EA6" }}>
+                      {data?.business_type === "commercial"
+                        ? "Tu negocio dispone de sucursal para recibir clientes o comensales"
+                        : data?.business_type === "entrepreneur"
+                          ? "Tu negocio aun no cuenta con sucursal. Opera desde un centro de producción."
+                          : ""}
+                    </Typography>
+                  </Box>
+                </Box>
               </SettingsCard>
 
               {/* Expresión monetaria */}
@@ -411,32 +616,24 @@ const AccountConfigurationPage: React.FC = () => {
                   flexDirection={{ xs: "column", md: "row" }}
                 >
                   <Box flex={1}>
-                    <Typography variant="caption">Moneda de uso</Typography>
-                    <Box
-                      mt={1}
-                      p={3}
-                      sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
-                        borderRadius: 1,
-                      }}
-                    >
-                      {data?.primary_currency_code} -{" "}
-                      {data?.primary_currency_name}
-                    </Box>
+                    <FieldDisplay
+                      label="Moneda de uso"
+                      value={
+                        data?.primary_currency_code
+                          ? `${data.primary_currency_code} - ${data.primary_currency_name}`
+                          : undefined
+                      }
+                    />
                   </Box>
                   <Box flex={1}>
-                    <Typography variant="caption">Moneda secundaria</Typography>
-                    <Box
-                      mt={1}
-                      p={3}
-                      sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
-                        borderRadius: 1,
-                      }}
-                    >
-                      {data?.secondary_currency_code} -{" "}
-                      {data?.secondary_currency_name}
-                    </Box>
+                    <FieldDisplay
+                      label="Moneda secundaria"
+                      value={
+                        data?.secondary_currency_code
+                          ? `${data.secondary_currency_code} - ${data.secondary_currency_name}`
+                          : undefined
+                      }
+                    />
                   </Box>
                 </Box>
                 <Box mt={2}>
@@ -448,23 +645,25 @@ const AccountConfigurationPage: React.FC = () => {
                   </Typography>
                   <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Box
-                      sx={(theme) => ({
-                        backgroundColor: theme.palette.grey[100],
+                      sx={{
+                        backgroundColor: "#FFF4E8",
                         px: 2,
                         py: 1,
                         borderRadius: 1,
-                      })}
+                      }}
                     >{`1 ${exchangeFromCode ?? ""}`}</Box>
                     <Box>es igual a:</Box>
                     <Box
                       sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
+                        backgroundColor: "#FFF4E8",
                         px: 2,
                         py: 1,
                         borderRadius: 1,
                       }}
                     >{`${data?.exchange_rate} ${exchangeToCode ?? ""}`}</Box>
-                    <IconButton>
+                    <IconButton
+                      sx={{ bgcolor: "#EDEDED", borderRadius: "6px", p: 2 }}
+                    >
                       <CachedIcon />
                     </IconButton>
                   </Box>
@@ -485,30 +684,10 @@ const AccountConfigurationPage: React.FC = () => {
                   flexDirection={{ xs: "column", md: "row" }}
                 >
                   <Box flex={1}>
-                    <Typography variant="caption">Email</Typography>
-                    <Box
-                      mt={1}
-                      p={3}
-                      sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
-                        borderRadius: 1,
-                      }}
-                    >
-                      {data?.email ?? "-"}
-                    </Box>
+                    <FieldDisplay label="Email" value={data?.email} />
                   </Box>
                   <Box flex={1}>
-                    <Typography variant="caption">Teléfono</Typography>
-                    <Box
-                      mt={1}
-                      p={3}
-                      sx={{
-                        backgroundColor: (theme) => theme.palette.grey[100],
-                        borderRadius: 1,
-                      }}
-                    >
-                      {data?.phone_number ?? "-"}
-                    </Box>
+                    <FieldDisplay label="Teléfono" value={data?.phone_number} />
                   </Box>
                 </Box>
               </SettingsCard>
@@ -899,9 +1078,9 @@ const AccountConfigurationPage: React.FC = () => {
                     setFieldValue("primary_currency", next);
                   }}
                   margin="normal"
-                  sx={(theme) => ({
+                  sx={(t) => ({
                     "& .MuiOutlinedInput-root": {
-                      backgroundColor: theme.palette.grey[100],
+                      backgroundColor: t.palette.grey[100],
                     },
                   })}
                 >
@@ -938,9 +1117,9 @@ const AccountConfigurationPage: React.FC = () => {
                         setFieldValue("secondary_currency", e.target.value)
                       }
                       margin="normal"
-                      sx={(theme) => ({
+                      sx={(t) => ({
                         "& .MuiOutlinedInput-root": {
-                          backgroundColor: theme.palette.grey[100],
+                          backgroundColor: t.palette.grey[100],
                         },
                       })}
                     >
@@ -967,9 +1146,9 @@ const AccountConfigurationPage: React.FC = () => {
                           }}
                         >
                           <Box
-                            sx={(theme) => ({
+                            sx={(t) => ({
                               width: "15%",
-                              backgroundColor: theme.palette.grey[300],
+                              backgroundColor: t.palette.grey[300],
                               paddingX: 2,
                               paddingY: 1,
                               borderRadius: 2,
@@ -991,7 +1170,6 @@ const AccountConfigurationPage: React.FC = () => {
                             component={NumberInput}
                             name="exchange_rate"
                             label="Tasa de cambio"
-                            // description="Formato"
                             InputProps={{
                               endAdornment: (
                                 <InputAdornment position="end">
@@ -1031,7 +1209,6 @@ const AccountConfigurationPage: React.FC = () => {
                   justifyContent="flex-end"
                   gap={2}
                   pt={4}
-                  // borderTop={1}
                 >
                   <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
                   <Button
