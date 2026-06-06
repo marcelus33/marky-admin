@@ -38,6 +38,9 @@ const useUpdateProductCategory = () => {
           };
         }
       );
+      queryClient.invalidateQueries({
+        queryKey: ["productCategoriesWithProducts"],
+      });
     },
   });
 };

@@ -40,7 +40,7 @@ const App = () => {
                   path={path}
                   element={
                     isAuthenticated ? (
-                      !user.has_configuration &&
+                      !user?.has_configuration &&
                       path !== ROUTES.CONFIGURATION ? (
                         <Navigate to={`${ROUTES.CONFIGURATION}`} />
                       ) : (
@@ -61,11 +61,11 @@ const App = () => {
                   path={path}
                   element={
                     isAuthenticated ? (
-                      !user.has_configuration &&
+                      !user?.has_configuration &&
                       path !== ROUTES.CONFIGURATION &&
                       path !== ROUTES.LOGOUT ? (
                         <Navigate to={`${ROUTES.CONFIGURATION}`} />
-                      ) : user.has_configuration &&
+                      ) : user?.has_configuration &&
                         path === ROUTES.CONFIGURATION ? (
                         <Navigate to="/home" />
                       ) : (

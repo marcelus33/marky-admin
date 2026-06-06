@@ -52,7 +52,7 @@ const EmailVerification: React.FC = () => {
 
   const handleResend = async () => {
     try {
-      const userEmail = user.email;
+      const userEmail = user?.email ?? "";
       const response = await resendVerification({ email: userEmail });
       ShowNotification({ message: response.message, type: "success" });
     } catch (error: any) {

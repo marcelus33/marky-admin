@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import {
   updateProductCategoryAvailability,
   ProductCategory,
@@ -78,14 +79,7 @@ const useUpdateProductCategoryAvailability = () => {
     },
     onSuccess: (updatedCategory: ProductCategory) => {
       // Optionally show success toast
-      try {
-        // lazy import to avoid coupling to react-toastify if not present
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { toast } = require("react-toastify");
-        toast.success("Disponibilidad de categoría actualizada");
-      } catch (e) {
-        // ignore if toast not available
-      }
+      toast.success("Disponibilidad de categoría actualizada");
       // Update productCategories list without products
       const categoriesKey = ["productCategories", { include_products: false }];
       queryClient.setQueryData<any>(categoriesKey, (old: any) => {

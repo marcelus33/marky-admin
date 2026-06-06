@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import { formatPrice } from "../utils/format";
 import { useUpdateProductAvailability } from "../hooks/useProductMutations";
+import ProductStopperTag from "./ProductStopperTag";
 
 interface ProductCardProps {
   product: ProductGridItem;
@@ -146,7 +147,7 @@ const DropdownMenu: React.FC<{
             control={
               <Checkbox
                 checked={isUnavailable}
-                disabled={(updateAvailability as any).isLoading}
+                disabled={updateAvailability.isPending}
                 onChange={async (e) => {
                   const checked = e.target.checked; // checked === true means "No disponible"
                   const previous = isUnavailable;
@@ -465,8 +466,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             : product.isRecommended
               ? "RECOMMENDED"
               : undefined;
-          // Dynamically import to avoid circular deps at top-level
-          const ProductStopperTag = require("./ProductStopperTag").default;
           return <ProductStopperTag stopper={stopper} />;
         })()}
 

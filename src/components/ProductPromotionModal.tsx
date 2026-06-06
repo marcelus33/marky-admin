@@ -231,7 +231,7 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
     <Dialog
       open={open}
       onClose={() => {
-        if (!(updateProductPromotion as any).isLoading) onClose();
+        if (!updateProductPromotion.isPending) onClose();
       }}
       fullWidth
       maxWidth="sm"
@@ -448,10 +448,10 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       type="submit"
                       fullWidth
                       disabled={
-                        !isValid || (updateProductPromotion as any).isLoading
+                        !isValid || updateProductPromotion.isPending
                       }
                     >
-                      {(updateProductPromotion as any).isLoading
+                      {updateProductPromotion.isPending
                         ? "Guardando..."
                         : "Guardar/Crear"}
                     </Button>

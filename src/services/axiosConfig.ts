@@ -41,11 +41,12 @@ api.interceptors.response.use(
             }
           );
 
-          // Actualiza los tokens en el store
+          // Actualiza los tokens en el store preservando el usuario actual
+          const { user } = useSessionStore.getState();
           setSession({
             accessToken: data.access,
             refreshToken,
-            user: null, // Puedes actualizar el usuario si necesitas
+            user,
           });
 
           // Añade el nuevo token al header y reintenta la solicitud original

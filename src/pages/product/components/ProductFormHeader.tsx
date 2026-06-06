@@ -83,7 +83,7 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
               checked={Boolean(
                 formik.values.is_available ?? formik.values.is_active,
               )}
-              disabled={(updateAvailability as any).isLoading}
+              disabled={updateAvailability.isPending}
               onChange={async (e) => {
                 const checked = e.target.checked;
                 // keep previous value to restore on error
@@ -178,7 +178,7 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
                 <Checkbox
                   // checked when product is hidden (is_active === false)
                   checked={!formik.values.is_active}
-                  disabled={(updateAvailability as any).isLoading}
+                  disabled={updateAvailability.isPending}
                   onChange={async (e) => {
                     const checked = e.target.checked; // checked === true means "hide"
                     const previous = Boolean(formik.values.is_active);

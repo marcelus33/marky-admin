@@ -6,9 +6,9 @@ interface User {
   id: number;
   username: string;
   email: string;
-  business_name: string;
-  phone_number: string;
-  // Agrega aquí otros campos que necesites
+  business_name?: string;
+  phone_number?: string;
+  has_configuration: boolean;
 }
 
 interface SessionState {
@@ -25,9 +25,9 @@ interface SessionState {
   updateUserConfiguration: (has_configuration: boolean) => void;
 }
 
-export const useSessionStore: any = create<SessionState>()(
+export const useSessionStore = create<SessionState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       refreshToken: null,
       user: null,
@@ -39,10 +39,7 @@ export const useSessionStore: any = create<SessionState>()(
       clearSession: () =>
         set({ accessToken: null, refreshToken: null, user: null }),
 
-      isAuthenticated: () => {
-        const accessToken = useSessionStore.getState().accessToken;
-        return !!accessToken;
-      },
+      isAuthenticated: () => !!get().accessToken,
 
       updateUserConfiguration: (has_configuration: boolean) =>
         set((state) => ({

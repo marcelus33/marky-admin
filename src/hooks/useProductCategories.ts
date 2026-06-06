@@ -15,7 +15,7 @@ const useProductCategories = (
   return useQuery({
     queryKey: ["productCategories", params],
     queryFn: () => getProductCategories(params),
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     ...options,
   });
 };

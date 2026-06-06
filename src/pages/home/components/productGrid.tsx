@@ -66,9 +66,7 @@ export const ProductGrid: React.FC = () => {
     useState(false);
   const [selectedCategoryToDelete, setSelectedCategoryToDelete] =
     useState<any>(null);
-  const isDeletingCategory =
-    (deleteCategoryMutation as any).isLoading ||
-    (deleteCategoryMutation as any).status === "loading";
+  const isDeletingCategory = deleteCategoryMutation.isPending;
 
   const handleFilterChange = (newFilters: Partial<FilterValues>) => {
     setFilters((prev) => {

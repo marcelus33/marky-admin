@@ -364,7 +364,7 @@ const Configuration = () => {
               <Box sx={{ marginBottom: theme.spacing(2) }}>
                 Configuración para tu cuenta
               </Box>
-              {user.business_name && (
+              {user?.business_name && (
                 <span style={{ color: theme.palette.primary.main }}>
                   {user.business_name}
                 </span>

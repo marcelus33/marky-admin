@@ -129,9 +129,7 @@ const ProductFormPage = () => {
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const deleteMutation = useDeleteProduct();
-  const isDeleting =
-    (deleteMutation as any).isLoading ||
-    (deleteMutation as any).status === "loading";
+  const isDeleting = deleteMutation.isPending;
 
   const [initialValues, setInitialValues] = useState<Product>({
     name: "",

@@ -8,7 +8,7 @@ export const useAttributes = (enabled: boolean) => {
   return useQuery<AttributesApiResponse>({
     queryKey: ["attributes"],
     queryFn: getAttributes,
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     retry: 1,
     enabled,
   });

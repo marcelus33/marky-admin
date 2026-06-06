@@ -1,3 +1,4 @@
+import AccountConfigurationPage from "../pages/account/AccountConfigurationPage";
 import Configuration from "../pages/Configuration";
 import Home from "../pages/home";
 import ProductDetailPage from "../pages/product/ProductDetailPage";
@@ -11,7 +12,7 @@ export const protectedRoutes = [
   { path: ROUTES.CONFIGURATION, component: Configuration },
   {
     path: ROUTES.ACCOUNT_CONFIGURATION,
-    component: require("../pages/account/AccountConfigurationPage").default,
+    component: AccountConfigurationPage,
   },
   { path: ROUTES.HOME, component: Home },
   { path: ROUTES.PRODUCT_DETAIL, component: ProductDetailPage },

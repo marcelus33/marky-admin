@@ -268,7 +268,7 @@ const CategoryPromotionModal: React.FC<Props> = ({
     <Dialog
       open={open}
       onClose={() => {
-        if (!(addPromotionMutation as any).isLoading) onClose();
+        if (!addPromotionMutation.isPending) onClose();
       }}
       fullWidth
       maxWidth="sm"
@@ -523,10 +523,10 @@ const CategoryPromotionModal: React.FC<Props> = ({
                       type="submit"
                       fullWidth
                       disabled={
-                        !isValid || (addPromotionMutation as any).isLoading
+                        !isValid || addPromotionMutation.isPending
                       }
                     >
-                      {(addPromotionMutation as any).isLoading
+                      {addPromotionMutation.isPending
                         ? "Guardando..."
                         : "Guardar/Crear"}
                     </Button>

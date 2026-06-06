@@ -19,11 +19,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import defaultUserAvatar from "../assets/images/user_default.png";
+import { useSessionStore } from "../stores/sessionStore";
 
 export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { user } = useSessionStore();
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -78,10 +80,10 @@ export const Header: React.FC = () => {
         >
           <Box sx={{ px: 4, pb: 4 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              Nombre comercio
+              {user?.business_name ?? user?.username}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              nombre_id_comercio
+              {user?.username}
             </Typography>
           </Box>
           <Divider />

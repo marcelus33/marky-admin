@@ -27,6 +27,9 @@ const useCreateProductCategory = () => {
           };
         }
       );
+      queryClient.invalidateQueries({
+        queryKey: ["productCategoriesWithProducts"],
+      });
     },
   });
 };

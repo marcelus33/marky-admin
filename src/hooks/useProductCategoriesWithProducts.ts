@@ -13,7 +13,7 @@ const useProductCategoriesWithProducts = (
   return useQuery({
     queryKey: ["productCategoriesWithProducts", params],
     queryFn: () => getProductCategoriesWithProducts(params),
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     ...options,
   });
 };

@@ -62,6 +62,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
         </Box>
         {/*  */}
         <Box
+          id="modal-description"
           sx={{
             p: 4,
           }}

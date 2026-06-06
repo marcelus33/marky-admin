@@ -103,6 +103,8 @@ export async function register(payload: RegisterPayload) {
   const { user } = response.data;
   const { setSession } = useSessionStore.getState();
   setSession({
+    accessToken: "",
+    refreshToken: "",
     user: user || null,
   });
 
