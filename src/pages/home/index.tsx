@@ -1,10 +1,9 @@
 import { Box, Grid } from "@mui/material";
 import { Formik } from "formik";
 import { useState, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useHomePageData } from "../../hooks/useHomePageData";
-import { updateBusiness } from "../../services/businessService";
+import { useUpdateBusiness } from "../../hooks/useBusinessMutations";
 import AttributesModal from "./components/AttributesModal";
 import { BusinessInfo } from "./components/businessInfo";
 import { ChannelWizardModal } from "./components/ChannelWizardModal";
@@ -40,14 +39,7 @@ const Home = () => {
   const [openAttributesModal, setOpenAttributesModal] = useState(false);
   const [openPresentationModal, setOpenPresentationModal] = useState(false);
 
-  const queryClient = useQueryClient();
-
-  const { mutate: updateBusinessMutation } = useMutation({
-    mutationFn: updateBusiness,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["homePageData"] });
-    },
-  });
+  const { mutate: updateBusinessMutation } = useUpdateBusiness();
 
   // Fetch home page data
   const { data: homePageData, isLoading, error } = useHomePageData();

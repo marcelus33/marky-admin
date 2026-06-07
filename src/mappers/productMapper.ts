@@ -1,4 +1,4 @@
-import { ProductGridItem } from "../types/product";
+import { Product, ProductGridItem } from "../types/product";
 
 export const mapProductGridItem = (productData: any): ProductGridItem => {
   return {
@@ -44,6 +44,32 @@ export const mapProductGridItem = (productData: any): ProductGridItem => {
           : true,
     is_active: productData.is_active,
   } as ProductGridItem;
+};
+
+export const mapProduct = (productData: any): Product => {
+  return {
+    ...productData,
+    is_active: productData.is_active,
+    multibuyOption: productData.multibuy_option,
+    discountPercentage: productData.discount_percentage,
+    promotionStartDate: productData.promotion_starts_at,
+    promotionEndDate: productData.promotion_ends_at,
+    primaryPrice: productData.primary_price ?? productData.primaryPrice,
+    secondaryPrice: productData.secondary_price ?? productData.secondaryPrice,
+    primaryPriceWithDiscount:
+      productData.primary_price_with_discount ??
+      productData.primaryPriceWithDiscount,
+    secondaryPriceWithDiscount:
+      productData.secondary_price_with_discount ??
+      productData.secondaryPriceWithDiscount,
+    variants: Array.isArray(productData.variants)
+      ? productData.variants.map((v: any) => ({
+          ...v,
+          primaryPrice: v.primary_price ?? v.primaryPrice,
+          secondaryPrice: v.secondary_price ?? v.secondaryPrice,
+        }))
+      : [],
+  };
 };
 
 export const mapCategoryWithProducts = (cat: any) => {

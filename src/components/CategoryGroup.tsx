@@ -36,7 +36,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   // no local-only state: rely on query cache optimistic updates
-  const isUnavailable = !(category as any).is_available;
+  const isUnavailable = !category.is_available;
   const navigate = useNavigate();
 
   // Helper to format a remaining duration (ms) into a detailed Spanish string
@@ -61,7 +61,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
       promotion_ends_at,
       multibuy_option,
       discount_percentage,
-    } = category as any;
+    } = category;
     if (!promotion_ends_at) return null;
 
     const now = new Date();
@@ -126,7 +126,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   };
 
   const renderAvailabilityBadge = () => {
-    if ((category as any).is_available) return null;
+    if (category.is_available) return null;
     return (
       <Box
         sx={{
@@ -286,9 +286,9 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         gap={{ xs: 4, md: 6 }}
         // gap={2}
       >
-        {category.products.map((product, idx) => (
+        {category.products.map((product) => (
           <ProductCard
-            key={`product-${idx}`}
+            key={product.id}
             product={product}
             onClick={() => {
               navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));

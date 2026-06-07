@@ -55,9 +55,9 @@ const AttributesInfo: React.FC<AttributesInfoProps> = ({
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={1}>
             {attributes.length < 1 &&
-              attributesPlaceholder.map((attr: any, i: number) => (
+              attributesPlaceholder.map((attr: any) => (
                 <Box
-                  key={i}
+                  key={attr.id}
                   sx={{
                     backgroundColor: "grey.200",
                     padding: 1,
@@ -73,9 +73,9 @@ const AttributesInfo: React.FC<AttributesInfoProps> = ({
         </Box>
       ) : (
         <Box display="flex" flexWrap="wrap" gap={1}>
-          {attributes.map((attr: any, i: number) => (
+          {attributes.map((attr: any) => (
             <Box
-              key={i}
+              key={attr.id}
               sx={{ backgroundColor: "#E8F3FF", padding: 1, borderRadius: 1 }}
             >
               <Typography variant="body2" color="primary">

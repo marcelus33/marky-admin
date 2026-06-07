@@ -2,7 +2,7 @@ import { CategoryWithProducts } from "../types/categoryWithProducts";
 import { Product } from "../types/product";
 import api from "./axiosConfig";
 import { PaginatedProductCategoriesResponse, PaginatedResponse } from "./types";
-import { mapCategoryWithProducts } from "../mappers/productMapper";
+import { mapCategoryWithProducts, mapProduct } from "../mappers/productMapper";
 
 export interface ProductCategory {
   id: number;
@@ -116,36 +116,9 @@ export const updateProduct = async (
   return response.data;
 };
 
-const mapProductToCamelCase = (productData: any): Product => {
-  return {
-    ...productData,
-    is_active: productData.is_active,
-    multibuyOption: productData.multibuy_option,
-    discountPercentage: productData.discount_percentage,
-    promotionStartDate: productData.promotion_starts_at,
-    promotionEndDate: productData.promotion_ends_at,
-    // map formatted price labels if backend provides them
-    primaryPrice: productData.primary_price ?? productData.primaryPrice,
-    secondaryPrice: productData.secondary_price ?? productData.secondaryPrice,
-    primaryPriceWithDiscount:
-      productData.primary_price_with_discount ??
-      productData.primaryPriceWithDiscount,
-    secondaryPriceWithDiscount:
-      productData.secondary_price_with_discount ??
-      productData.secondaryPriceWithDiscount,
-    variants: Array.isArray(productData.variants)
-      ? productData.variants.map((v: any) => ({
-          ...v,
-          primaryPrice: v.primary_price ?? v.primaryPrice,
-          secondaryPrice: v.secondary_price ?? v.secondaryPrice,
-        }))
-      : [],
-  };
-};
-
 export const getProductById = async (id: number): Promise<Product> => {
   const response = await api.get(`${productBaseURL}/${id}/`);
-  return mapProductToCamelCase(response.data);
+  return mapProduct(response.data);
 };
 
 export const deleteProduct = async (id: number): Promise<void> => {

@@ -215,7 +215,12 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
           {activeScreen === "promotion" && (
             <Promotion
               category={selectedPromotionCategory}
-              onSubmit={() => {
+              onSubmit={(updatedCategory) => {
+                setCategories((prev) =>
+                  prev.map((c) =>
+                    c.id === updatedCategory.id ? updatedCategory : c
+                  )
+                );
                 setActiveScreen("main");
               }}
             />

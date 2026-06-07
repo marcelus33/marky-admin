@@ -68,9 +68,9 @@ const CustomPopupMenu: React.FC<CustomPopupMenuProps> = ({
         }
       }
     >
-      {menuItems.map((item, index) => (
+      {menuItems.map((item) => (
         <MenuItem
-          key={index}
+          key={item.text}
           onClick={item.onClick}
           sx={{
             borderRadius: 2,

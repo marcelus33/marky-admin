@@ -50,7 +50,7 @@ const DropdownMenu: React.FC<{
 
   // derive initial availability from product payload (may be snake_case or camelCase)
   const initialIsAvailable = Boolean(
-    (product as any).is_available ?? (product as any).is_active ?? true,
+    product.is_available ?? product.is_active ?? true,
   );
   const [isUnavailable, setIsUnavailable] = useState(!initialIsAvailable);
   const navigate = useNavigate();
@@ -155,7 +155,7 @@ const DropdownMenu: React.FC<{
                   // optimistic update
                   setIsUnavailable(checked);
 
-                  const id = (product as any).id;
+                  const id = product.id;
                   if (id) {
                     const fd = new FormData();
                     // persist only the is_available field on the backend
@@ -248,11 +248,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const renderPromotionBadge = () => {
     // Prefer mapped camelCase fields from the product mapper, but fall back to
     // original snake_case if needed.
-    const promotionStarts =
-      (product as any).promotionStartsAt ??
-      (product as any).promotion_starts_at;
-    const promotionEnds =
-      (product as any).promotionEndsAt ?? (product as any).promotion_ends_at;
+    const promotionStarts = product.promotionStartsAt;
+    const promotionEnds = product.promotionEndsAt;
 
     if (!promotionEnds) return null;
 

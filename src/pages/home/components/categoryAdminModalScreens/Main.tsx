@@ -45,24 +45,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
   const IconComponent =
     cat.icon && categoryIcons[cat.icon] ? categoryIcons[cat.icon] : null;
 
-  const setPromotionInitialData = (cat: Category) => {
-    const promotionOption = cat.multibuyOption
-      ? "oferta"
-      : cat.discountPercentage
-      ? "descuento"
-      : "";
-    console.log("promotionOption", promotionOption);
-
-    const catCopy = { ...cat };
-    // TODO: fix this...
-    // setFieldValue("isPromotionActive", !!promotionOption);
-    // setFieldValue("promotionOption", promotionOption);
-    // setFieldValue("discountPercentage", cat.discountPercentage);
-    // setFieldValue("countdownActive", !!cat.promotionStartsAt);
-
-    setCategoryForm(catCopy);
-  };
-
   return (
     <Box
       key={cat.id}
@@ -122,7 +104,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
               onClick={() => {
                 setActiveScreen("promotion");
                 setSelectedPromotionCategory(cat);
-                setPromotionInitialData(cat);
               }}
               size="small"
             >
@@ -159,7 +140,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
               onPromo={() => {
                 setActiveScreen("promotion");
                 setSelectedPromotionCategory(cat);
-                setPromotionInitialData(cat);
               }}
               onDelete={() => {
                 setOpenDeleteCategoryDialog(true);

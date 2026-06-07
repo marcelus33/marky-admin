@@ -35,6 +35,8 @@ import { useCategories } from "../hooks/useCategories";
 import { useCities } from "../hooks/useCities";
 import { useCountries } from "../hooks/useCountries";
 import { useCurrencies } from "../hooks/useCurrencies";
+import { Country, City } from "../services/citiesService";
+import { Currency } from "../services/currenciesService";
 import { ROUTES } from "../routes/paths";
 import {
   createBusinessProfile,
@@ -155,10 +157,10 @@ const Configuration = () => {
   //
   const { categories = [] } = useCategories();
   const [localCategories, setLocalCategories] = useState(categories);
-  const [localCountries, setLocalCountries] = useState([]);
-  const [localCities, setLocalCities] = useState([]);
-  const [localPrimaryCurrencies, setLocalPrimaryCurrencies] = useState([]);
-  const [localSecondaryCurrencies, setLocalSecondaryCurrencies] = useState([]);
+  const [localCountries, setLocalCountries] = useState<Country[]>([]);
+  const [localCities, setLocalCities] = useState<City[]>([]);
+  const [localPrimaryCurrencies, setLocalPrimaryCurrencies] = useState<Currency[]>([]);
+  const [localSecondaryCurrencies, setLocalSecondaryCurrencies] = useState<Currency[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const { countries } = useCountries();
   const { cities } = useCities(selectedCountry);
@@ -258,16 +260,16 @@ const Configuration = () => {
   }, [categories]);
 
   useEffect(() => {
-    setLocalCountries(countries);
+    setLocalCountries(countries ?? []);
   }, [countries]);
 
   useEffect(() => {
-    setLocalCities(cities);
+    setLocalCities(cities ?? []);
   }, [cities]);
 
   useEffect(() => {
-    setLocalPrimaryCurrencies(currencies);
-    setLocalSecondaryCurrencies(currencies);
+    setLocalPrimaryCurrencies(currencies ?? []);
+    setLocalSecondaryCurrencies(currencies ?? []);
   }, [currencies]);
 
   useEffect(() => {
@@ -1054,7 +1056,7 @@ const Configuration = () => {
           sx={{ width: "100%", mb: 4 }}
           onChange={(event: any) => {
             const searchTerm = event.target.value;
-            const filteredIems = countries.filter((cat: any) =>
+            const filteredIems = (countries ?? []).filter((cat: any) =>
               cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalCountries(filteredIems);
@@ -1064,7 +1066,7 @@ const Configuration = () => {
           Lista de países disponibles
         </FormLabel>
         {/*  */}
-        {countries?.length > 0 && (
+        {!!countries?.length && (
           <CategorySelectionList
             categories={localCountries}
             maxSelectable={1}
@@ -1098,7 +1100,7 @@ const Configuration = () => {
           sx={{ width: "100%", mb: 4 }}
           onChange={(event: any) => {
             const searchTerm = event.target.value;
-            const filteredIems = cities.filter((cat: any) =>
+            const filteredIems = (cities ?? []).filter((cat: any) =>
               cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalCities(filteredIems);
@@ -1144,7 +1146,7 @@ const Configuration = () => {
           sx={{ width: "100%", mb: 4 }}
           onChange={(event: any) => {
             const searchTerm = event.target.value;
-            const filteredIems = currencies.filter((cat: any) =>
+            const filteredIems = (currencies ?? []).filter((cat: any) =>
               cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
             setLocalPrimaryCurrencies(filteredIems);
@@ -1192,7 +1194,7 @@ const Configuration = () => {
           sx={{ width: "100%", mb: 4 }}
           onChange={(event: any) => {
             const searchTerm = event.target.value;
-            const filteredIems = currencies.filter(
+            const filteredIems = (currencies ?? []).filter(
               (cat: any) =>
                 cat.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
                 //@ts-ignore

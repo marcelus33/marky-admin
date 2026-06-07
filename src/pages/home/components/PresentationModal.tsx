@@ -360,9 +360,9 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
         >
           {attributes && attributes.length > 0 ? (
             <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
-              {attributes.map((attr: any, i: number) => (
+              {attributes.map((attr: any) => (
                 <Box
-                  key={i}
+                  key={attr.id}
                   sx={{
                     backgroundColor: "#E8F3FF",
                     padding: 1,
@@ -395,9 +395,9 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
               {/*  */}
               <Box display="flex" flexWrap="wrap" gap={1}>
                 {attributes.length < 1 &&
-                  attributesPlaceholder.map((attr: any, i: number) => (
+                  attributesPlaceholder.map((attr: any) => (
                     <Box
-                      key={i}
+                      key={attr.id}
                       sx={{
                         backgroundColor: "grey.200",
                         padding: 1,

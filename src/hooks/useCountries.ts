@@ -1,23 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCountries, Country } from "../services/citiesService";
+import { PaginatedResponse } from "../services/types";
 
-// Hook para obtener países
 export const useCountries = () => {
-  const {
-    data: countriesResponse = {},
-    isLoading,
-    isError,
-  } = useQuery<Country[]>({
-    queryKey: ["countries"], // queryKey debe ser parte de las opciones
-    queryFn: getCountries, // Aquí es donde pasas la función que hace la llamada a la API
+  const { data, isLoading, isError } = useQuery<PaginatedResponse<Country>>({
+    queryKey: ["countries"],
+    queryFn: getCountries,
   });
 
-  // @ts-ignore
-  const countries = countriesResponse.results;
+  const countries = data?.results;
 
-  return {
-    countries,
-    isLoading,
-    isError,
-  };
+  return { countries, isLoading, isError };
 };
