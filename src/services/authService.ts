@@ -41,7 +41,7 @@ interface RegisterResponse {
 }
 
 interface VerifyEmailPayload {
-  token: string;
+  email: string;
   verification_code: string;
 }
 
@@ -62,7 +62,7 @@ interface SendPasswordRecoveryPayload {
   email: string;
 }
 
-interface SendPasswordRecoveryRespopnse {
+interface SendPasswordRecoveryResponse {
   email: string;
   message: string;
 }
@@ -73,7 +73,7 @@ interface ChangePasswordPayload {
   new_password: string;
 }
 
-interface ChangePasswordRespponse {
+interface ChangePasswordResponse {
   message: string;
 }
 
@@ -131,7 +131,7 @@ export async function resendVerification(payload: ResendVerificationPayload) {
 export async function sendPasswordRecovery(
   payload: SendPasswordRecoveryPayload
 ) {
-  const response = await api.post<SendPasswordRecoveryRespopnse>(
+  const response = await api.post<SendPasswordRecoveryResponse>(
     `${baseURL}/password-recovery/`,
     payload
   );
@@ -139,7 +139,7 @@ export async function sendPasswordRecovery(
 }
 
 export async function changePassword(payload: ChangePasswordPayload) {
-  const response = await api.post<ChangePasswordRespponse>(
+  const response = await api.post<ChangePasswordResponse>(
     `${baseURL}/password-change/`,
     payload
   );

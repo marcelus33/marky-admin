@@ -1,0 +1,135 @@
+import {
+  mapProductGridItem,
+  mapProduct,
+  mapCategoryWithProducts,
+} from "./productMapper";
+
+describe("mapProductGridItem", () => {
+  it("maps snake_case backend fields to camelCase", () => {
+    const result = mapProductGridItem({
+      id: 1,
+      name: "Pizza",
+      description: "Pizza de muzzarella",
+      image: "pizza.jpg",
+      price: 50000,
+      primary_price: "PYG 50.000",
+      secondary_price: "USD 7,00",
+      is_recommended: true,
+      is_favorite: false,
+      promotion_starts_at: "2024-01-01T00:00:00Z",
+      promotion_ends_at: "2024-01-31T00:00:00Z",
+      discount_percentage: "10",
+      multibuy_option: "2x1",
+      is_active: true,
+    });
+
+    expect(result).toMatchObject({
+      id: 1,
+      name: "Pizza",
+      primaryPrice: "PYG 50.000",
+      secondaryPrice: "USD 7,00",
+      isRecommended: true,
+      isFavorite: false,
+      promotionStartsAt: "2024-01-01T00:00:00Z",
+      promotionEndsAt: "2024-01-31T00:00:00Z",
+      discountPercent: 10,
+      multibuyOption: "2x1",
+      is_available: true,
+      is_active: true,
+    });
+  });
+
+  it("falls back to is_active when is_available is missing", () => {
+    const result = mapProductGridItem({
+      id: 1,
+      name: "Pizza",
+      price: 100,
+      is_active: false,
+    });
+
+    expect(result.is_available).toBe(false);
+  });
+
+  it("defaults is_available to true when neither field is present", () => {
+    const result = mapProductGridItem({ id: 1, name: "Pizza", price: 100 });
+    expect(result.is_available).toBe(true);
+  });
+
+  it("defaults price to 0 when missing", () => {
+    const result = mapProductGridItem({ id: 1, name: "Pizza" });
+    expect(result.price).toBe(0);
+  });
+});
+
+describe("mapProduct", () => {
+  it("maps snake_case fields and variant prices", () => {
+    const result = mapProduct({
+      id: 1,
+      name: "Pizza",
+      description: "desc",
+      price: 100,
+      is_active: true,
+      discount_percentage: 15,
+      multibuy_option: "3x2",
+      promotion_starts_at: "2024-01-01T00:00:00Z",
+      promotion_ends_at: "2024-01-31T00:00:00Z",
+      primary_price: "PYG 100.000",
+      secondary_price: "USD 14,00",
+      variants: [
+        {
+          id: 1,
+          name: "Chico",
+          primary_price: "PYG 50.000",
+          secondary_price: "USD 7,00",
+        },
+      ],
+    });
+
+    expect(result.multibuyOption).toBe("3x2");
+    expect(result.discountPercentage).toBe(15);
+    expect(result.promotionStartDate).toBe("2024-01-01T00:00:00Z");
+    expect(result.promotionEndDate).toBe("2024-01-31T00:00:00Z");
+    expect(result.primaryPrice).toBe("PYG 100.000");
+    expect(result.secondaryPrice).toBe("USD 14,00");
+    expect(result.variants[0]).toMatchObject({
+      primaryPrice: "PYG 50.000",
+      secondaryPrice: "USD 7,00",
+    });
+  });
+
+  it("defaults variants to an empty array when missing", () => {
+    const result = mapProduct({
+      id: 1,
+      name: "Pizza",
+      description: "",
+      price: 0,
+      is_active: true,
+    });
+
+    expect(result.variants).toEqual([]);
+  });
+});
+
+describe("mapCategoryWithProducts", () => {
+  it("maps nested products and forwards availability", () => {
+    const result = mapCategoryWithProducts({
+      id: 1,
+      name: "Pizzas",
+      is_active: true,
+      products: [{ id: 1, name: "Muzzarella", price: 100 }],
+    });
+
+    expect(result.is_available).toBe(true);
+    expect(result.products[0]).toMatchObject({ id: 1, name: "Muzzarella" });
+  });
+
+  it("defaults products to an empty array when missing", () => {
+    const result = mapCategoryWithProducts({
+      id: 1,
+      name: "Pizzas",
+      is_active: true,
+    });
+
+    expect(result.products).toEqual([]);
+  });
+});

@@ -13,6 +13,21 @@ describe("formatPrice", () => {
   it("adds thousands separator", () => {
     expect(formatPrice(1000000)).toBe("1.000.000,00");
   });
+
+  it("formats zero", () => {
+    expect(formatPrice(0)).toBe("0,00");
+  });
+
+  it("formats negative prices", () => {
+    expect(formatPrice(-1000)).toBe("-1.000,00");
+  });
+
+  it("documents the current (broken) output for non-numeric strings", () => {
+    // formatPrice("abc") -> parseFloat("abc") is NaN -> "NaN".toFixed-ish path
+    // produces "NaN,undefined". This is a known display bug, tracked in
+    // AUDIT-FOLLOWUP-2026-06-14.md rather than fixed here.
+    expect(formatPrice("abc")).toBe("NaN,undefined");
+  });
 });
 
 describe("splitISODateTime", () => {

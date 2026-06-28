@@ -24,16 +24,19 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.log("axios error", error);
-    console.log("err response ==>", error.response);
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const { refreshToken, setSession, clearSession } =
         useSessionStore.getState();
 
-      try {
-        if (refreshToken) {
+      if (!refreshToken) {
+        // No hay refresh token disponible (p. ej. tras recargar la página):
+        // cerrar sesión y redirigir al login en lugar de quedar "atascado".
+        clearSession();
+        window.location.href = "/login";
+      } else {
+        try {
           const { data } = await axios.post(
             `${process.env.REACT_APP_API_URL}/users/token/refresh/`,
             {
@@ -52,11 +55,11 @@ api.interceptors.response.use(
           // Añade el nuevo token al header y reintenta la solicitud original
           originalRequest.headers.Authorization = `Bearer ${data.access}`;
           return api(originalRequest);
+        } catch (refreshError) {
+          console.error("Error al refrescar el token:", refreshError);
+          clearSession(); // Limpia la sesión si el refresh falla
+          window.location.href = "/login"; // Redirige al login
         }
-      } catch (refreshError) {
-        console.error("Error al refrescar el token:", refreshError);
-        clearSession(); // Limpia la sesión si el refresh falla
-        window.location.href = "/login"; // Redirige al login
       }
     }
     const mappedError = mapAxiosError(error);

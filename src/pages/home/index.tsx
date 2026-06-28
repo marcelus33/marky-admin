@@ -72,10 +72,10 @@ const Home = () => {
     };
   }, [homePageData]);
 
-  const handleSubmit = (values: typeof branchFormInitialValues) => {
-    // Aquí enviarías los datos al backend
-    console.log("Formulario enviado:", values);
-  };
+  // Formik aquí solo mantiene el estado local del formulario; cada campo se
+  // guarda mediante las mutaciones de los modales hijos (ver más abajo), por
+  // lo que este formulario nunca se envía directamente.
+  const handleSubmit = () => {};
 
   // Show loading spinner while fetching data
   if (isLoading) {

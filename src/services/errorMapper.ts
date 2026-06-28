@@ -15,7 +15,6 @@ export function mapAxiosError(error: AxiosError<DRFErrorResponse>) {
   }
 
   const { data, status } = error.response;
-  console.log("mapAxiosError e.response", error.response);
   return {
     message:
       data?.error || data?.detail || data?.message || "Ha ocurrido un error",

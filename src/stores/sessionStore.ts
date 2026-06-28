@@ -48,6 +48,12 @@ export const useSessionStore = create<SessionState>()(
     }),
     {
       name: "session-storage", // localstorage key name
+      // El refresh token NO se persiste: es la credencial de larga duración
+      // y no debe quedar expuesta a lectura por XSS en localStorage.
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        user: state.user,
+      }),
     }
   )
 );
