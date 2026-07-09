@@ -842,7 +842,8 @@ const Configuration = () => {
                                     >
                                       <Box
                                         sx={{
-                                          width: "15%",
+                                          width: "fit-content",
+                                          whiteSpace: "nowrap",
                                           backgroundColor: "#FFF4E8",
                                           paddingX: 2,
                                           paddingY: 4,
@@ -863,7 +864,12 @@ const Configuration = () => {
                                         </Typography>
                                       </Box>
 
-                                      <Box sx={{ width: "20%" }}>
+                                      <Box
+                                        sx={{
+                                          width: "fit-content",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
                                         <Typography
                                           id="modal-description"
                                           variant="body2"
@@ -933,7 +939,7 @@ const Configuration = () => {
                     </Box>
                     <Box
                       sx={{
-                        marginTop: theme.spacing(7),
+                        marginTop: activeStep === 2 ? "65px" : theme.spacing(7),
                         width: "100%",
                         display: "flex",
                         gap: 3,
