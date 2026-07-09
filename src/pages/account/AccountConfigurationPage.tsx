@@ -1143,7 +1143,8 @@ const AccountConfigurationPage: React.FC = () => {
                         >
                           <Box
                             sx={(t) => ({
-                              width: "15%",
+                              width: "fit-content",
+                              whiteSpace: "nowrap",
                               backgroundColor: t.palette.grey[300],
                               paddingX: 2,
                               paddingY: 1,
@@ -1156,7 +1157,7 @@ const AccountConfigurationPage: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          <Box sx={{ width: "20%" }}>
+                          <Box sx={{ width: "fit-content", whiteSpace: "nowrap" }}>
                             <Typography id="modal-description" variant="body2">
                               es igual a:
                             </Typography>
