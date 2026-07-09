@@ -45,6 +45,7 @@ import {
 import { Category } from "../services/categoriesService";
 import { useSessionStore } from "../stores/sessionStore";
 import colors from "../themes/utils/colors";
+import { sanitizeBusinessId } from "../utils/sanitizeBusinessId";
 import { ShowNotification } from "../utils/utils";
 
 const CustomConnector = styled(StepConnector)(({ theme }) => ({
@@ -100,7 +101,7 @@ const Configuration = () => {
           "Solo se permiten letras minúsculas, guiones (-) y guiones bajos (_)",
         )
         .min(4, "No puede tener menos de 4 caracteres")
-        .max(22, "No puede tener más de 22 caracteres")
+        .max(24, "No puede tener más de 24 caracteres")
         .test(
           "unique-business-id",
           "Este nombre de negocio ya existe",
@@ -511,11 +512,14 @@ const Configuration = () => {
                             component={Input}
                             maxLength={24}
                             placeholder="Escribe tu usuario..."
-                            label="Nombre del comercio"
+                            label="Nombre de Usuario"
                             required
                             value={values.business_id}
                             onChange={(e: React.ChangeEvent<any>) => {
-                              setFieldValue("business_id", e.target.value);
+                              setFieldValue(
+                                "business_id",
+                                sanitizeBusinessId(e.target.value),
+                              );
                             }}
                             onBlur={handleBlur}
                             // onBlur={async (
