@@ -43,6 +43,7 @@ import {
   validateBusinessName,
 } from "../services/businessService";
 import { Category } from "../services/categoriesService";
+import { buildBusinessProfilePayload } from "./Configuration.payload";
 import { useSessionStore } from "../stores/sessionStore";
 import colors from "../themes/utils/colors";
 import { sanitizeBusinessId } from "../utils/sanitizeBusinessId";
@@ -196,20 +197,7 @@ const Configuration = () => {
   };
 
   const handleSubmit = async (values: any) => {
-    const payload = {
-      business_id: values.business_id,
-      categories: values.categories.map((cat: any) => cat.id),
-      city: values.city[0].id,
-      primary_currency: values.primary_currency[0].id,
-      secondary_currency: values.enable_exchange_rate
-        ? values.secondary_currency[0].id
-        : null,
-      exchange_rate: values.enable_exchange_rate
-        ? values.exchange_rate.replace(".", "").replace(",", ".")
-        : null,
-    };
-    console.log("Form payload", payload);
-    // return;
+    const payload = buildBusinessProfilePayload(values);
     try {
       await createBusinessProfile(payload);
       ShowNotification({
@@ -918,7 +906,7 @@ const Configuration = () => {
                                             "is_primary_to_secondary",
                                             !values.is_primary_to_secondary,
                                           );
-                                          setFieldValue("exchange_rate", 0);
+                                          setFieldValue("exchange_rate", "");
                                         }}
                                       >
                                         <ExchangeIcon />
