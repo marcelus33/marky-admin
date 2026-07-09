@@ -56,6 +56,11 @@ const NumberInput: React.FC<
     let newDisplay = e.target.value;
     // Permitir solo dígitos, puntos y comas
     newDisplay = newDisplay.replace(/[^0-9.,]/g, "");
+    // Limitar a 2 decimales tras la coma (backend: DecimalField decimal_places=2)
+    const [intPart, ...decParts] = newDisplay.split(",");
+    if (decParts.length > 0) {
+      newDisplay = `${intPart},${decParts.join("").slice(0, 2)}`;
+    }
     setDisplayValue(newDisplay);
     const newRaw = formatToRaw(newDisplay);
     form.setFieldValue(field.name, newRaw);
