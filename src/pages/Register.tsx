@@ -45,7 +45,9 @@ const Register: React.FC = () => {
 
   const isRequiredMessage = "Este campo es requerido";
   const validationSchema = Yup.object().shape({
-    businessName: Yup.string().required(isRequiredMessage),
+    businessName: Yup.string()
+      .max(15, "No puede tener más de 15 caracteres")
+      .required(isRequiredMessage),
     email: Yup.string().email("Email no válido").required(isRequiredMessage),
     phone: Yup.string().required(isRequiredMessage),
     password: Yup.string()
@@ -260,6 +262,7 @@ const Register: React.FC = () => {
                       <Field
                         name="businessName"
                         component={Input}
+                        maxLength={15}
                         label="Nombre del comercio"
                         type="text"
                         required
