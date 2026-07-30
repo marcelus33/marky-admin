@@ -1,5 +1,4 @@
 import EmailVerification from "../pages/EmailVerification";
-import EmailVerificationSend from "../pages/EmailVerificationSend";
 import Login from "../pages/Login";
 import NewPassword from "../pages/NewPassword";
 import RecoverPassword from "../pages/RecoverPassword";
@@ -10,7 +9,6 @@ export const publicRoutes = [
   { path: ROUTES.LOGIN, component: Login },
   { path: "/", component: Login },
   { path: ROUTES.REGISTER, component: Register },
-  { path: ROUTES.VERIFY_EMAIL_SEND, component: EmailVerificationSend },
   { path: ROUTES.VERIFY_EMAIL, component: EmailVerification },
   { path: ROUTES.RECOVER_PASSWORD, component: RecoverPassword },
   { path: ROUTES.NEW_PASSWORD, component: NewPassword },

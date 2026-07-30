@@ -68,10 +68,9 @@ const Register: React.FC = () => {
         business_name: values.businessName,
         phone_number: values.phone,
       });
-      const { verification_link } = response;
       ShowNotification({ message: response.message, type: "success" });
       setLoading(false);
-      navigate(ROUTES.VERIFY_EMAIL.replace(":token", verification_link), {
+      navigate(ROUTES.VERIFY_EMAIL, {
         state: {
           email: values.email,
         },
