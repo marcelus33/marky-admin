@@ -23,3 +23,9 @@ yarn-debug.log*
 yarn-error.log*
 
 *storybook.log
+
+AUDIT.md
+cline-prompt.txt
+SKILL.md
+frontend-local.md
+.env*

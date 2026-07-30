@@ -3,7 +3,7 @@
 const colors = {
   light: {
     primary: {
-      main: "#337AEA", // Primary color
+      main: "#2563EB", // Primary color
       dark: "#2962CB", // Primary hover
     },
     secondary: {
@@ -18,16 +18,16 @@ const colors = {
       light: "#C8F6CD", // Success background
     },
     text: {
-      primary: "#4B4B4B", // Primary text color
+      primary: "#374151", // Primary text color
       secondary: "#333333", // Logos text color
-      disabled: "#9E9EA6", // Placeholder text color
+      disabled: "#6B7280", // Placeholder text color
     },
     grey: {
       900: "#9E9EA6", // Placeholder text color
-      800: "#D7D7D7", // Input borders
+      800: "#AEB7C4", // Input borders
       600: "#E6E6E6", // Config buttons background (non-primary)
       400: "#EDEDED", // Hover color for grey-60 elements
-      100: "#EDEDED", // Background for inputs with data
+      100: "#FFFFFF", // Background for inputs with data
       50: "#FAFAFA",
     },
     background: {

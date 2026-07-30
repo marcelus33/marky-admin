@@ -6,6 +6,7 @@ import "react-phone-input-2/lib/material.css"; // Customizable
 import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as RegisterImage } from "../assets/images/register.svg";
+import AuthAside from "../components/AuthAside";
 import FormikPhoneInput from "../components/FormikPhoneInput";
 import Input from "../components/Input";
 import Link from "../components/Link";
@@ -86,46 +87,12 @@ const Register: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{
-            display: {
-              xs: "none",
-              md: "block",
-              backgroundColor: theme.palette.primary.main + "1A",
-            },
-            paddingLeft: { md: `${theme.spacing(15)} !important` },
-            paddingRight: { md: `${theme.spacing(15)} !important` },
-            paddingTop: { md: `${theme.spacing(12)} !important` },
-          }}
-        >
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            minHeight="100vh"
-            sx={{ padding: 2 }}
-          >
-            <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
-            <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-              Una plataforma creada con amor{" "}
-              <span style={{ color: theme.palette.primary.main }}>
-                para tus comensales.
-              </span>
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              No sólo de sabor se trata, sorprende a tu audiencia.
-            </Typography>
-            <Box
-              display="flex"
-              justifyContent="center"
-              sx={{ marginTop: theme.spacing(24) }}
-            >
-              <RegisterImage />
-            </Box>
-          </Box>
-        </Grid>
+        <AuthAside
+          title="Una plataforma creada con amor"
+          highlight="para tus comensales."
+          supportText="No sólo de sabor se trata, sorprende a tu audiencia."
+          image={<RegisterImage />}
+        />
         {/* =========== REGISTER FORM CONTAINER ============= */}
         <Grid
           item
