@@ -123,19 +123,18 @@ const Register: React.FC = () => {
             <Box
               sx={{
                 width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
+                height: "64px",
+                paddingX: "16px",
+                borderBottom: "1px solid #E5E7EB",
                 display: {
                   xs: "flex",
                   md: "none",
                 },
+                alignItems: "center",
               }}
               justifyContent={"flex-start"}
             >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
+              <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
             </Box>
           </Box>
           <Box
@@ -149,8 +148,14 @@ const Register: React.FC = () => {
               flexDirection="column"
               alignItems="center"
               justifyContent="center"
-              minHeight="100vh"
-              padding={2}
+              sx={{
+                minHeight: "100dvh",
+                height: "auto",
+                overflowY: "auto",
+                width: "100%",
+                padding: "24px 16px 32px",
+                paddingBottom: "max(32px, env(safe-area-inset-bottom))",
+              }}
             >
               <Typography
                 sx={{

@@ -103,19 +103,18 @@ const Login: React.FC = () => {
             <Box
               sx={{
                 width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
+                height: "64px",
+                paddingX: "16px",
+                borderBottom: "1px solid #E5E7EB",
                 display: {
                   xs: "flex",
                   md: "none",
                 },
+                alignItems: "center",
               }}
               justifyContent={"flex-start"}
             >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
+              <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
             </Box>
           </Box>
           <Box
@@ -128,9 +127,13 @@ const Login: React.FC = () => {
               display="flex"
               flexDirection="column"
               alignItems="center"
-              justifyContent="center"
-              minHeight="100vh"
-              padding={2}
+              sx={{
+                justifyContent: { xs: "flex-start", md: "center" },
+                minHeight: "100vh",
+                paddingX: theme.spacing(2),
+                paddingBottom: theme.spacing(2),
+                paddingTop: { xs: "32px", md: theme.spacing(2) },
+              }}
             >
               <Typography
                 sx={{
@@ -214,10 +217,10 @@ const Login: React.FC = () => {
                     <Box
                       display={"flex"}
                       flexDirection={{ xs: "column", sm: "row" }}
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                      justifyContent={{ xs: "flex-start", sm: "space-between" }}
                       sx={{
-                        marginBottom: theme.spacing(8),
+                        marginBottom: { xs: "32px", sm: theme.spacing(8) },
                       }}
                     >
                       <Field
@@ -229,7 +232,13 @@ const Login: React.FC = () => {
                         as={CheckboxWithLabel}
                         label="Mantener la sesión iniciada"
                       />
-                      <Link to={`${ROUTES.RECOVER_PASSWORD}`}>
+                      <Link
+                        to={`${ROUTES.RECOVER_PASSWORD}`}
+                        sx={{
+                          alignSelf: { xs: "flex-end", sm: "auto" },
+                          marginTop: { xs: "12px", sm: 0 },
+                        }}
+                      >
                         <Typography variant="link">
                           ¿Olvidaste tu contraseña?
                         </Typography>
@@ -244,6 +253,22 @@ const Login: React.FC = () => {
                     >
                       Iniciar sesión
                     </Button>
+                    {/* MOBILE REGISTER ACCESS */}
+                    <Box
+                      gap={2}
+                      sx={{
+                        display: { xs: "flex", md: "none" },
+                        justifyContent: "center",
+                        marginTop: "24px",
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ¿No tienes una cuenta?
+                      </Typography>
+                      <Link to={`${ROUTES.REGISTER}`} variant="accent">
+                        Regístrate
+                      </Link>
+                    </Box>
                   </Form>
                 )}
               </Formik>

@@ -939,7 +939,10 @@ const Configuration = () => {
                     </Box>
                     <Box
                       sx={{
-                        marginTop: activeStep === 2 ? "65px" : theme.spacing(7),
+                        marginTop:
+                          activeStep === 1 || activeStep === 2
+                            ? "65px"
+                            : theme.spacing(7),
                         width: "100%",
                         display: "flex",
                         gap: 3,
