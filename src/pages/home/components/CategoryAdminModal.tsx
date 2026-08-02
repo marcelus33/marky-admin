@@ -44,11 +44,17 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
     useState<Category>();
   const goBack = () => setActiveScreen("main");
 
+  const handleModalClose = () => {
+    onClose(hasOrderChanged);
+    setActiveScreen("main");
+    setHasOrderChanged(false);
+  };
+
   const handleCreateEditSubmit = (
     cat: Partial<Category>,
     backScreen: boolean = true,
   ) => {
-    console.log("handleCreateEditSubmit", cat);
+    const wasEditing = Boolean(categoryForm?.id);
 
     setCategories((prev) => {
       const exists = prev.some((c) => c.id === cat.id);
@@ -62,14 +68,17 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
       }
     });
 
-    if (backScreen) {
-      setActiveScreen("main");
-    }
-
     setCategoryForm(null);
-    console.log("handleCreateEditSubmit 2");
 
-    // TODO: API CALL con toast de success o error
+    if (backScreen) {
+      if (wasEditing) {
+        // Al editar, vuelve al listado dentro del modal
+        setActiveScreen("main");
+      } else {
+        // Al crear, guarda y lleva de vuelta al Home
+        handleModalClose();
+      }
+    }
   };
 
   const onDeleteCategory = (cat: any) => {
@@ -114,16 +123,7 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
   }, [categories, activeScreen, isLoading, open]);
 
   return (
-    <Dialog
-      open={open}
-      onClose={() => {
-        onClose(hasOrderChanged);
-        setActiveScreen("main");
-        setHasOrderChanged(false);
-      }}
-      fullWidth
-      maxWidth="md"
-    >
+    <Dialog open={open} onClose={handleModalClose} fullWidth maxWidth="md">
       <>
         <Box
           sx={{
@@ -147,14 +147,7 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
             </DialogTitle>
           </Box>
           <Box display={"flex"} sx={{ paddingY: 3 }}>
-            <XButton
-              onClick={() => {
-                onClose(hasOrderChanged);
-                setActiveScreen("main");
-                setHasOrderChanged(false);
-              }}
-              sx={{ marginRight: 2 }}
-            />
+            <XButton onClick={handleModalClose} sx={{ marginRight: 2 }} />
           </Box>
         </Box>
         {/* ========== MODAL CONTENT ========== */}

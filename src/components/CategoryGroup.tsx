@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -216,6 +217,21 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
             },
           }}
         >
+          <MenuItem
+            onClick={() => {
+              navigate(ROUTES.PRODUCT_CREATE);
+              handleClose();
+            }}
+            sx={{
+              borderRadius: 2,
+              p: 3,
+              display: "flex",
+              gap: 4,
+            }}
+          >
+            <AddIcon fontSize="medium" />
+            <Typography>Añadir producto</Typography>
+          </MenuItem>
           <MenuItem
             onClick={() => {
               onPromotionClick?.(category);

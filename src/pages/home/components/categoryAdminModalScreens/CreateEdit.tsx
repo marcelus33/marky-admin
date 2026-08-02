@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { Form, Formik, FormikHelpers } from "formik";
 import useCreateProductCategory from "../../../../hooks/useCreateProductCategory";
 import useUpdateProductCategory from "../../../../hooks/useUpdateProductCategory";
+import { ShowNotification } from "../../../../utils/utils";
 
 interface CreateEditProps {
   /** if editing, the category you want to load; otherwise undefined for “create” */
@@ -217,6 +218,10 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
                       };
                       onSubmit(mappedData, false);
                       resetForm();
+                      ShowNotification({
+                        message: `Categoría "${data.name}" creada con éxito`,
+                        type: "success",
+                      });
                     },
                   });
                 }}
