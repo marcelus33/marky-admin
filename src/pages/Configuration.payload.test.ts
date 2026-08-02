@@ -22,7 +22,7 @@ describe("buildBusinessProfilePayload (Configuration Step 3 exchange rate)", () 
     expect(payload.exchange_rate).toBe("667.05");
   });
 
-  it("sends null for exchange_rate and secondary_currency when disabled", () => {
+  it("sends null for exchange_rate and omits secondary_currency when disabled", () => {
     const payload = buildBusinessProfilePayload({
       ...baseValues,
       enable_exchange_rate: false,
@@ -30,6 +30,25 @@ describe("buildBusinessProfilePayload (Configuration Step 3 exchange rate)", () 
       exchange_rate: "",
     });
     expect(payload.exchange_rate).toBeNull();
-    expect(payload.secondary_currency).toBeNull();
+    // La moneda secundaria es opcional: el backend
+    // (BusinessProfileWriteSerializer) declara `secondary_currency` como
+    // `required=False` pero sin `allow_null=True`, así que enviar `null`
+    // explícitamente es rechazado como si fuera obligatorio. El valor debe
+    // ser `undefined` (no `null`) para que JSON.stringify/axios omitan la
+    // clave del body en vez de enviarla en null.
+    expect(payload.secondary_currency).toBeUndefined();
+    expect(JSON.parse(JSON.stringify(payload))).not.toHaveProperty(
+      "secondary_currency",
+    );
+  });
+
+  it("includes secondary_currency when exchange rate is enabled", () => {
+    const payload = buildBusinessProfilePayload({
+      ...baseValues,
+      enable_exchange_rate: true,
+      secondary_currency: [{ id: 20 }],
+      exchange_rate: "5000",
+    });
+    expect(payload.secondary_currency).toBe(20);
   });
 });
