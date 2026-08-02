@@ -187,6 +187,9 @@ const Home = () => {
                       onClose={() => setOpenSocialMediaModal(false)}
                       // @ts-ignore
                       initialData={initialChannels}
+                      onSubmit={(channels) => {
+                        setFieldValue("socialMedia", channels);
+                      }}
                     />
 
                     <DescriptionModal

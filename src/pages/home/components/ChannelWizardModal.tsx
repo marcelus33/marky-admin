@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
+  InputAdornment,
   Typography,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,6 +59,24 @@ const ALL_CHANNELS: ChannelKey[] = [
   "website",
 ];
 
+// Prefijo de URL bloqueado por RRSS: el usuario solo escribe su usuario.
+const CHANNEL_URL_PREFIXES: Partial<Record<ChannelKey, string>> = {
+  instagram: "https://www.instagram.com/",
+  facebook: "https://www.facebook.com/",
+};
+
+const stripChannelPrefix = (chan: ChannelKey, value: string): string => {
+  const prefix = CHANNEL_URL_PREFIXES[chan];
+  if (!prefix || !value) return value;
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+};
+
+const buildChannelValue = (chan: ChannelKey, value: string): string => {
+  const prefix = CHANNEL_URL_PREFIXES[chan];
+  if (!prefix || !value) return value;
+  return value.startsWith(prefix) ? value : `${prefix}${value}`;
+};
+
 export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   open,
   onBack,
@@ -76,57 +95,11 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   const updateSocialMediaMutation = useApiMutation({
     mutationFn: updateSocialMediaLinks,
     successMessage: "Canales guardados exitosamente",
-    onSuccess: (data) => {
-      // Update the cache with the new social media data instead of refetching
-      queryClient.setQueryData(["homePageData"], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        // Create a map of existing social links
-        const existingSocialLinks = [...oldData.social_links];
-
-        // Update or add social links based on the response data
-        Object.entries(data).forEach(([platform, url]) => {
-          if (url && typeof url === "string" && url.trim() !== "") {
-            // Find existing link for this platform
-            const existingIndex = existingSocialLinks.findIndex(
-              (link: any) => link.platform === platform
-            );
-
-            const linkData = {
-              id:
-                existingIndex >= 0 ? existingSocialLinks[existingIndex].id : 0,
-              platform,
-              platform_display:
-                platform.charAt(0).toUpperCase() + platform.slice(1),
-              url: url as string,
-            };
-
-            if (existingIndex >= 0) {
-              // Update existing link
-              existingSocialLinks[existingIndex] = linkData;
-            } else {
-              // Add new link
-              existingSocialLinks.push(linkData);
-            }
-          } else {
-            // Remove link if URL is empty
-            const existingIndex = existingSocialLinks.findIndex(
-              (link: any) => link.platform === platform
-            );
-            if (existingIndex >= 0) {
-              existingSocialLinks.splice(existingIndex, 1);
-            }
-          }
-        });
-
-        return {
-          ...oldData,
-          social_links: existingSocialLinks,
-        };
-      });
-
-      // Close modal - the cache update will trigger UI updates
-      onClose();
+    onSuccess: () => {
+      // El backend reemplaza el set completo de canales en cada guardado, así
+      // que se invalida (y no se reconstruye a mano) para reflejar el estado
+      // real del servidor, igual que useUpdateBusiness.
+      queryClient.invalidateQueries({ queryKey: ["homePageData"] });
     },
   });
 
@@ -141,7 +114,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
 
     // Rellena con lo que venga en el array
     (initialData ?? []).forEach(({ type, url }) => {
-      m[type] = url;
+      m[type] = stripChannelPrefix(type, url);
     });
 
     return m;
@@ -185,15 +158,19 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
     .url("URL inválida")
     .required("El campo es obligatorio");
 
+  const usernameSchema = Yup.string()
+    .required("El campo es obligatorio")
+    .matches(/^[^\s/]+$/, "Ingresa solo tu usuario, sin espacios ni \"/\"");
+
   const getValidationSchema = (selectedChannels: ChannelKey[]) => {
     // 1) first build a plain “shape” object of the fields you need
     const shape: Record<string, Yup.Schema<any>> = {};
 
     if (selectedChannels.includes("instagram")) {
-      shape.instagram = urlSchema;
+      shape.instagram = usernameSchema;
     }
     if (selectedChannels.includes("facebook")) {
-      shape.facebook = urlSchema;
+      shape.facebook = usernameSchema;
     }
     if (selectedChannels.includes("whatsapp")) {
       shape.whatsapp = phoneSchema;
@@ -214,16 +191,27 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
       validationSchema={getValidationSchema(selectedChannels)}
       onSubmit={async ({ channelsData }, { setSubmitting, setErrors }) => {
         try {
-          // Filter out empty values and prepare data for API
+          // Filter out empty values, rebuild full URLs for RRSS with a fixed
+          // prefix, and prepare data for the API
           const dataToSend: Record<string, string> = {};
           Object.entries(channelsData).forEach(([key, value]) => {
             if (value && value.trim() !== "") {
-              dataToSend[key] = value;
+              dataToSend[key] = buildChannelValue(
+                key as ChannelKey,
+                value.trim()
+              );
             }
           });
 
-          // Call the mutation
-          updateSocialMediaMutation.mutate(dataToSend);
+          // Call the mutation. `dataToSend` is passed to onSubmit right away
+          // so the parent page updates instantly, the same way Descripción y
+          // Atributos do, instead of waiting only on the cache invalidation.
+          updateSocialMediaMutation.mutate(dataToSend, {
+            onSuccess: () => {
+              onSubmit(dataToSend as Record<ChannelKey, string>);
+              onClose();
+            },
+          });
         } catch (err: any) {
           // Handle errors - the mutation will handle showing notifications
           console.error("Error submitting channels:", err);
@@ -400,10 +388,16 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                           );
                         }
 
+                        const prefix = CHANNEL_URL_PREFIXES[chan];
+
                         return (
                           <Field
                             key={chan}
-                            placeholder={`www.${label.toLocaleLowerCase()}.com`}
+                            placeholder={
+                              prefix
+                                ? "usuario"
+                                : `www.${label.toLocaleLowerCase()}.com`
+                            }
                             name={fieldName}
                             value={values.channelsData[chan]}
                             onChange={(e: React.ChangeEvent<any>) => {
@@ -411,10 +405,21 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                             }}
                             component={Input}
                             label={label}
-                            type="url"
+                            type={prefix ? "text" : "url"}
                             required
                             error={fieldTouched && !!fieldError}
                             helperText={fieldTouched ? fieldError : ""}
+                            InputProps={
+                              prefix
+                                ? {
+                                    startAdornment: (
+                                      <InputAdornment position="start">
+                                        {prefix}
+                                      </InputAdornment>
+                                    ),
+                                  }
+                                : undefined
+                            }
                           />
                         );
                       })}
