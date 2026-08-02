@@ -4,6 +4,7 @@ import { Box, Button, Typography } from "@mui/material";
 import ConfirmationDialog from "../../../components/ConfirmationDialog";
 import WarningIcon from "@mui/icons-material/Warning";
 import useDeleteProductCategory from "../../../hooks/useDeleteProductCategory";
+import useDeleteProduct from "../../../hooks/useDeleteProduct";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -67,6 +68,13 @@ export const ProductGrid: React.FC = () => {
   const [selectedCategoryToDelete, setSelectedCategoryToDelete] =
     useState<any>(null);
   const isDeletingCategory = deleteCategoryMutation.isPending;
+
+  const deleteProductMutation = useDeleteProduct();
+  const [openDeleteProductDialog, setOpenDeleteProductDialog] =
+    useState(false);
+  const [selectedProductToDelete, setSelectedProductToDelete] =
+    useState<any>(null);
+  const isDeletingProduct = deleteProductMutation.isPending;
 
   const handleFilterChange = (newFilters: Partial<FilterValues>) => {
     setFilters((prev) => {
@@ -209,6 +217,10 @@ export const ProductGrid: React.FC = () => {
             setSelectedPromotionProduct(product);
             setOpenProductPromotionModal(true);
           }}
+          onProductDeleteClick={(product) => {
+            setSelectedProductToDelete(product);
+            setOpenDeleteProductDialog(true);
+          }}
         />
       ))}
       <ConfirmationDialog
@@ -250,6 +262,46 @@ export const ProductGrid: React.FC = () => {
           });
         }}
         isLoading={Boolean(isDeletingCategory)}
+      />
+      <ConfirmationDialog
+        open={Boolean(openDeleteProductDialog)}
+        title={"Eliminar producto"}
+        content={
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"center"}
+            gap={4}
+          >
+            <WarningIcon color="warning" fontSize="large" />
+            <Typography variant="body2" fontSize={"medium"}>
+              ¿Deseas eliminar el producto
+              {selectedProductToDelete
+                ? ` "${selectedProductToDelete.name}"`
+                : ""}
+              ? Esta acción no se puede deshacer.
+            </Typography>
+          </Box>
+        }
+        onClose={() => {
+          if (!isDeletingProduct) {
+            setOpenDeleteProductDialog(false);
+            setSelectedProductToDelete(null);
+          }
+        }}
+        onConfirm={() => {
+          if (!selectedProductToDelete) return;
+          deleteProductMutation.mutate(Number(selectedProductToDelete.id), {
+            onSuccess: () => {
+              setOpenDeleteProductDialog(false);
+              setSelectedProductToDelete(null);
+            },
+            onError: () => {
+              setOpenDeleteProductDialog(false);
+            },
+          });
+        }}
+        isLoading={Boolean(isDeletingProduct)}
       />
       <CategoryPromotionModal
         open={openPromotionModal}
