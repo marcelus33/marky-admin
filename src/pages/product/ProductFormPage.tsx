@@ -36,6 +36,8 @@ import ExtrasSection from "./components/ExtrasSection";
 import HighlightSection from "./components/HighlightSection";
 import ProductFormHeader from "./components/ProductFormHeader";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import SectionErrorBoundary from "../../components/SectionErrorBoundary";
 import useDeleteProduct from "../../hooks/useDeleteProduct";
 import ProductSection from "./components/ProductSection";
 import SubmitSection from "./components/SubmitSection";
@@ -59,7 +61,11 @@ const validationSchema = Yup.object().shape({
   price: Yup.number()
     .required("El precio es requerido")
     .positive("El precio debe ser un número positivo"),
-  category: Yup.number().nullable().required("La categoría es requerida"),
+  // Category is optional: the backend allows products without a category
+  // (ForeignKey is null=True/blank=True), so requiring it here used to
+  // block saving a brand-new product before the user had a chance to
+  // assign one from the "Producto" tab.
+  category: Yup.number().nullable(),
   variants: Yup.array().of(
     Yup.object().shape({
       name: Yup.string().required("El nombre de la presentación es requerido"),
@@ -131,6 +137,21 @@ const ProductFormPage = () => {
   const deleteMutation = useDeleteProduct();
   const isDeleting = deleteMutation.isPending;
 
+  // True while we're fetching an existing product's data for the edit flow.
+  // Keeps the page from rendering the blank/"create new product" Formik
+  // state for a split second before the real data arrives.
+  const [isLoadingProduct, setIsLoadingProduct] = useState<boolean>(!!id);
+
+  // "Activar multi presentaciones" / "Activar productos adicionales" toggles.
+  // These live here (instead of as local useState inside VariationsSection /
+  // ExtrasSection) so they survive tab switches: switching tabs unmounts the
+  // previously selected section component, which would otherwise reset any
+  // local state back to its default value on every remount.
+  const [multiPresentation, setMultiPresentation] = useState(true);
+  const [showExtras, setShowExtras] = useState(true);
+
+  const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
+
   const [initialValues, setInitialValues] = useState<Product>({
     name: "",
     description: "",
@@ -183,6 +204,7 @@ const ProductFormPage = () => {
 
   useEffect(() => {
     if (id) {
+      setIsLoadingProduct(true);
       const fetchProduct = async () => {
         try {
           const product = await getProductById(Number(id));
@@ -266,6 +288,8 @@ const ProductFormPage = () => {
           }
         } catch (error) {
           console.error("Failed to fetch product", error);
+        } finally {
+          setIsLoadingProduct(false);
         }
       };
       fetchProduct();
@@ -347,12 +371,24 @@ const ProductFormPage = () => {
     {
       name: "Variaciones",
       icon: <VariacionesMenuIcon />,
-      component: (props: any) => <VariationsSection {...props} />,
+      component: (props: any) => (
+        <VariationsSection
+          {...props}
+          multiPresentation={multiPresentation}
+          onMultiPresentationChange={setMultiPresentation}
+        />
+      ),
     },
     {
       name: "Adicionales o extras",
       icon: <AdicionalesProductoMenuIcon />,
-      component: (props: any) => <ExtrasSection {...props} />,
+      component: (props: any) => (
+        <ExtrasSection
+          {...props}
+          showExtras={showExtras}
+          onShowExtrasChange={setShowExtras}
+        />
+      ),
     },
     {
       name: "Destacar producto",
@@ -365,6 +401,19 @@ const ProductFormPage = () => {
     (section) => section.name === selectedSection,
   )?.component;
 
+  // While we're fetching an existing product (edit flow), avoid rendering
+  // the Formik form with its blank/"create new product" defaults — that
+  // briefly flashes an empty form before the real data replaces it. Show a
+  // loading state instead until the fetch finishes.
+  if (isLoadingProduct) {
+    return (
+      <>
+        <Header />
+        <LoadingSpinner fullScreen message="Cargando producto..." />
+      </>
+    );
+  }
+
   return (
     <Formik
       innerRef={formikRef}
@@ -375,6 +424,15 @@ const ProductFormPage = () => {
         values: Product,
         { setSubmitting }: FormikHelpers<Product>,
       ) => {
+        // Guard against duplicate submissions: the "Publicar" button click
+        // doesn't disable instantly, so a user impatiently double/triple
+        // clicking while waiting for the request to resolve could otherwise
+        // fire this handler (and the create/update mutation) more than
+        // once, creating duplicate products.
+        if (isSaving) {
+          setSubmitting(false);
+          return;
+        }
         console.log("submitting.....", values);
 
         // 1) Build promotion ISO strings as before
@@ -728,9 +786,14 @@ const ProductFormPage = () => {
                       mb: 12,
                     }}
                   >
-                    {selectedComponent && selectedComponent(formikProps)}
+                    <SectionErrorBoundary resetKey={selectedSection}>
+                      {selectedComponent && selectedComponent(formikProps)}
+                    </SectionErrorBoundary>
                   </Box>
-                  <SubmitSection onSectionSelect={handleSectionSelect} />
+                  <SubmitSection
+                    onSectionSelect={handleSectionSelect}
+                    isSubmitting={isSaving}
+                  />
                 </Box>
               </Box>
 

@@ -57,11 +57,6 @@ const EmailVerification: React.FC = () => {
     } catch (error: any) {
       ShowNotification({ message: error.message, type: "error" });
     }
-    // navigate(ROUTES.VERIFY_EMAIL_SEND, {
-    //   state: {
-    //     isDisabledOnMount: false,
-    //   },
-    // });
   };
 
   return (

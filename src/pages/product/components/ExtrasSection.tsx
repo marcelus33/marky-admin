@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
@@ -6,15 +6,23 @@ import {
   FormControlLabel,
   Button,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
 import Input from "../../../components/Input";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 
 interface ExtrasSectionProps extends FormikProps<any> {
   maxItems?: number;
+  // Lifted up to ProductFormPage so the "Activar productos adicionales"
+  // selection survives switching to another tab and back (switching tabs
+  // unmounts this component, which would otherwise reset any local state
+  // back to its default).
+  showExtras: boolean;
+  onShowExtrasChange: (value: boolean) => void;
 }
 
 const ExtrasSection: React.FC<ExtrasSectionProps> = ({
@@ -24,8 +32,11 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
   handleChange,
   handleBlur,
   maxItems = 10,
+  showExtras,
+  onShowExtrasChange,
 }) => {
-  const [showExtras, setShowExtras] = useState(true);
+  const { data: businessAccountInfo } = useBusinessAccountInfo();
+  const currencyCode = businessAccountInfo?.primary_currency_code;
 
   return (
     <Box
@@ -53,7 +64,7 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
         control={
           <Switch
             checked={showExtras}
-            onChange={(e) => setShowExtras(e.target.checked)}
+            onChange={(e) => onShowExtrasChange(e.target.checked)}
           />
         }
         label="Activar productos adicionales"
@@ -119,6 +130,11 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                         sx: {
                           backgroundColor: "white",
                         },
+                        endAdornment: currencyCode ? (
+                          <InputAdornment position="end">
+                            <Typography variant="body2">{`[${currencyCode}]`}</Typography>
+                          </InputAdornment>
+                        ) : undefined,
                       }}
                     />
                   </Box>

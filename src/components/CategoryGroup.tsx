@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -25,6 +26,7 @@ interface CategoryGroupProps {
   onDeleteCategory?: () => void;
   onToggleAvailability?: (checked: boolean) => void;
   onProductPromotionClick?: (product: any) => void;
+  onProductDeleteClick?: (product: any) => void;
 }
 
 const CategoryGroup: React.FC<CategoryGroupProps> = ({
@@ -33,6 +35,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   onDeleteCategory,
   onToggleAvailability,
   onProductPromotionClick,
+  onProductDeleteClick,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   // no local-only state: rely on query cache optimistic updates
@@ -216,6 +219,21 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         >
           <MenuItem
             onClick={() => {
+              navigate(ROUTES.PRODUCT_CREATE);
+              handleClose();
+            }}
+            sx={{
+              borderRadius: 2,
+              p: 3,
+              display: "flex",
+              gap: 4,
+            }}
+          >
+            <AddIcon fontSize="medium" />
+            <Typography>Añadir producto</Typography>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
               onPromotionClick?.(category);
               handleClose();
             }}
@@ -294,6 +312,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
               navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));
             }}
             onPromotionClick={onProductPromotionClick}
+            onDeleteClick={onProductDeleteClick}
           />
         ))}
       </Box>

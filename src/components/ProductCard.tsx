@@ -32,6 +32,7 @@ interface ProductCardProps {
   product: ProductGridItem;
   onClick?: () => void;
   onPromotionClick?: (product: ProductGridItem) => void;
+  onDeleteClick?: (product: ProductGridItem) => void;
 }
 
 const LineClamp = styled(Typography)({
@@ -44,7 +45,8 @@ const LineClamp = styled(Typography)({
 const DropdownMenu: React.FC<{
   product: ProductGridItem;
   onPromotionClick?: (product: ProductGridItem) => void;
-}> = ({ product, onPromotionClick }) => {
+  onDeleteClick?: (product: ProductGridItem) => void;
+}> = ({ product, onPromotionClick, onDeleteClick }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const updateAvailability = useUpdateProductAvailability();
 
@@ -54,8 +56,6 @@ const DropdownMenu: React.FC<{
   );
   const [isUnavailable, setIsUnavailable] = useState(!initialIsAvailable);
   const navigate = useNavigate();
-
-  console.log("dproduct", product);
 
   const open = Boolean(anchorEl);
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -86,7 +86,6 @@ const DropdownMenu: React.FC<{
         onClick={(e) => {
           e.stopPropagation();
           handleOpen(e);
-          // handleMenuOpen(product.id); // or open a menu
         }}
       >
         <MoreVertIcon fontSize="small" />
@@ -132,9 +131,10 @@ const DropdownMenu: React.FC<{
           Copiar URL
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            // onDeleteCategory?.();
-            // handleClose();
+          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+            event.stopPropagation();
+            onDeleteClick?.(product);
+            handleClose();
           }}
           sx={{ color: "error.main", py: 4, borderRadius: 2 }}
         >
@@ -219,6 +219,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onClick,
   onPromotionClick,
+  onDeleteClick,
 }) => {
   const discountNumber = Number(product.discountPercent ?? 0);
   const showDiscount = !isNaN(discountNumber) && discountNumber > 0;
@@ -341,8 +342,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     );
   };
 
-  console.log("product ===>", product);
-
   return (
     <Card
       onClick={(event: React.MouseEvent<HTMLDivElement>) => {
@@ -443,7 +442,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Box>
       </Box>
 
-      <DropdownMenu product={product} onPromotionClick={onPromotionClick} />
+      <DropdownMenu
+        product={product}
+        onPromotionClick={onPromotionClick}
+        onDeleteClick={onDeleteClick}
+      />
 
       <CardContent sx={{ p: 2, backgroundColor: "transparent", mt: 2 }}>
         {/* Views */}

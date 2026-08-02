@@ -5,7 +5,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ReactComponent as LoginImage } from "../assets/images/login.svg";
+import loginIllustration from "../assets/images/login-illustration.png";
+import AuthAside from "../components/AuthAside";
 import CheckboxWithLabel from "../components/CheckboxWithLabel";
 import Input from "../components/Input";
 import Link from "../components/Link";
@@ -59,46 +60,19 @@ const Login: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{
-            display: {
-              xs: "none",
-              md: "block",
-              backgroundColor: theme.palette.primary.main + "1A",
-            },
-            paddingLeft: { md: `${theme.spacing(15)} !important` },
-            paddingRight: { md: `${theme.spacing(15)} !important` },
-            paddingTop: { md: `${theme.spacing(12)} !important` },
-          }}
-        >
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            minHeight="100vh"
-            sx={{ padding: 2 }}
-          >
-            <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
-            <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-              Tus comensales merecen atención,{" "}
-              <span style={{ color: theme.palette.primary.main }}>
-                consiéntelos.
-              </span>
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              Apóyate en tu plataforma gastronómica pensada para lograrlo.
-            </Typography>
+        <AuthAside
+          title="Ya tienes el talento."
+          highlight="Ahora muéstralo."
+          supportText="Organiza y presenta tus productos en un catálogo digital profesional."
+          image={
             <Box
-              display="flex"
-              justifyContent="center"
-              sx={{ marginTop: theme.spacing(24) }}
-            >
-              <LoginImage />
-            </Box>
-          </Box>
-        </Grid>
+              component="img"
+              src={loginIllustration}
+              alt=""
+              sx={{ width: "100%", maxWidth: 280 }}
+            />
+          }
+        />
         {/* =========== LOGIN FORM CONTAINER ============= */}
         <Grid
           item
@@ -120,28 +94,27 @@ const Login: React.FC = () => {
                 },
               }}
             >
-              <Typography variant="body2">¿Aún no formas parte?</Typography>
-              <Link to={`${ROUTES.REGISTER}`}>
-                <Typography variant="link">Registrate ahora</Typography>
+              <Typography variant="body2">¿No tienes una cuenta?</Typography>
+              <Link to={`${ROUTES.REGISTER}`} variant="accent">
+                Regístrate
               </Link>
             </Box>
             {/* MOBILE HEADER */}
             <Box
               sx={{
                 width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
+                height: "64px",
+                paddingX: "16px",
+                borderBottom: "1px solid #E5E7EB",
                 display: {
                   xs: "flex",
                   md: "none",
                 },
+                alignItems: "center",
               }}
               justifyContent={"flex-start"}
             >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
+              <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
             </Box>
           </Box>
           <Box
@@ -154,9 +127,13 @@ const Login: React.FC = () => {
               display="flex"
               flexDirection="column"
               alignItems="center"
-              justifyContent="center"
-              minHeight="100vh"
-              padding={2}
+              sx={{
+                justifyContent: { xs: "flex-start", md: "center" },
+                minHeight: "100vh",
+                paddingX: theme.spacing(2),
+                paddingBottom: theme.spacing(2),
+                paddingTop: { xs: "32px", md: theme.spacing(2) },
+              }}
             >
               <Typography
                 sx={{
@@ -165,7 +142,7 @@ const Login: React.FC = () => {
                 }}
                 variant="h2"
               >
-                Inicia sesión
+                Inicia sesión en Marky
               </Typography>
               {/* <Button
                 variant="contained"
@@ -201,7 +178,7 @@ const Login: React.FC = () => {
                   <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
                     <Box
                       sx={{
-                        marginBottom: theme.spacing(4),
+                        marginBottom: theme.spacing(6),
                         marginTop: theme.spacing(6),
                       }}
                     >
@@ -210,6 +187,7 @@ const Login: React.FC = () => {
                         component={Input}
                         label="Correo electrónico"
                         type="email"
+                        placeholder="nombre@correo.com"
                         required
                         error={touched.email && Boolean(errors.email)}
                         helperText={touched.email && errors.email}
@@ -225,6 +203,7 @@ const Login: React.FC = () => {
                         component={Input}
                         label="Contraseña"
                         type="password"
+                        placeholder="Ingresa tu contraseña"
                         required
                         error={touched.password && Boolean(errors.password)}
                         helperText={touched.password && errors.password}
@@ -238,10 +217,10 @@ const Login: React.FC = () => {
                     <Box
                       display={"flex"}
                       flexDirection={{ xs: "column", sm: "row" }}
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                      justifyContent={{ xs: "flex-start", sm: "space-between" }}
                       sx={{
-                        marginBottom: theme.spacing(4),
+                        marginBottom: { xs: "32px", sm: theme.spacing(8) },
                       }}
                     >
                       <Field
@@ -251,9 +230,15 @@ const Login: React.FC = () => {
                         checked={values.rememberMe}
                         onChange={handleChange}
                         as={CheckboxWithLabel}
-                        label="Mantener mi sesión iniciada"
+                        label="Mantener la sesión iniciada"
                       />
-                      <Link to={`${ROUTES.RECOVER_PASSWORD}`}>
+                      <Link
+                        to={`${ROUTES.RECOVER_PASSWORD}`}
+                        sx={{
+                          alignSelf: { xs: "flex-end", sm: "auto" },
+                          marginTop: { xs: "12px", sm: 0 },
+                        }}
+                      >
                         <Typography variant="link">
                           ¿Olvidaste tu contraseña?
                         </Typography>
@@ -268,6 +253,22 @@ const Login: React.FC = () => {
                     >
                       Iniciar sesión
                     </Button>
+                    {/* MOBILE REGISTER ACCESS */}
+                    <Box
+                      gap={2}
+                      sx={{
+                        display: { xs: "flex", md: "none" },
+                        justifyContent: "center",
+                        marginTop: "24px",
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ¿No tienes una cuenta?
+                      </Typography>
+                      <Link to={`${ROUTES.REGISTER}`} variant="accent">
+                        Regístrate
+                      </Link>
+                    </Box>
                   </Form>
                 )}
               </Formik>

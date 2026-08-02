@@ -31,7 +31,6 @@ interface RegisterPayload {
 
 interface RegisterResponse {
   message: string;
-  verification_link: string;
   user?: {
     id: number;
     username: string;

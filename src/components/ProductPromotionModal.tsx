@@ -40,12 +40,11 @@ const initialValues = {
 
 const validationSchema = Yup.object({
   isPromotionActive: Yup.boolean(),
-  promotionOption: Yup.string().when("isPromotionActive", {
-    is: true,
-    then: (schema) =>
-      schema.required("Debe seleccionar 'descuento' u 'oferta'"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
+  // Not required: a promotion can consist of just a countdown (no
+  // descuento/oferta), so forcing this field blocked "Guardar/Crear"
+  // (it always showed as disabled) whenever the user only wanted to
+  // schedule a "cuenta regresiva" without picking a discount type.
+  promotionOption: Yup.string().notRequired(),
   discountPercentage: Yup.number()
     .transform((value, original) =>
       String(original).trim() === "" ? null : value,

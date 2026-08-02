@@ -47,15 +47,46 @@ const NumberInput: React.FC<
     return display.replace(/\./g, "").replace(",", ".");
   };
 
-  // Inicializa el displayValue a partir del valor almacenado en Formik
+  // Inicializa/sincroniza el displayValue a partir del valor almacenado en
+  // Formik. IMPORTANTE: no debemos pisar lo que el usuario está escribiendo.
+  // Cada `handleChange` llama a `form.setFieldValue`, lo que dispara este
+  // efecto de nuevo con el `field.value` recién actualizado. Si simplemente
+  // reformateáramos siempre, un valor intermedio como "15," (el usuario
+  // acaba de escribir la coma decimal, todavía no el dígito decimal) se
+  // reformatea a "15" porque `formatToDisplay` descarta una parte decimal
+  // vacía — borrando la coma antes de que el usuario pueda escribir el
+  // decimal. Por eso solo resincronizamos cuando el valor entrante
+  // realmente representa un número distinto al que el usuario ya tiene
+  // escrito en pantalla (cambios externos: carga inicial, edición de
+  // producto, reset del formulario, etc.).
   useEffect(() => {
-    setDisplayValue(field.value ? formatToDisplay(String(field.value)) : "");
+    setDisplayValue((prevDisplay) => {
+      const prevRaw = formatToRaw(prevDisplay);
+      const incoming = field.value ? String(field.value) : "";
+      const sameRaw = prevRaw === incoming;
+      const sameNumericValue =
+        prevRaw !== "" &&
+        incoming !== "" &&
+        !isNaN(Number(prevRaw)) &&
+        !isNaN(Number(incoming)) &&
+        Number(prevRaw) === Number(incoming);
+      if (sameRaw || sameNumericValue) {
+        return prevDisplay;
+      }
+      return incoming ? formatToDisplay(incoming) : "";
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [field.value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let newDisplay = e.target.value;
     // Permitir solo dígitos, puntos y comas
     newDisplay = newDisplay.replace(/[^0-9.,]/g, "");
+    // Limitar a 2 decimales tras la coma (backend: DecimalField decimal_places=2)
+    const [intPart, ...decParts] = newDisplay.split(",");
+    if (decParts.length > 0) {
+      newDisplay = `${intPart},${decParts.join("").slice(0, 2)}`;
+    }
     setDisplayValue(newDisplay);
     const newRaw = formatToRaw(newDisplay);
     form.setFieldValue(field.name, newRaw);

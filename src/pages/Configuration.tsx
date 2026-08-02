@@ -43,8 +43,10 @@ import {
   validateBusinessName,
 } from "../services/businessService";
 import { Category } from "../services/categoriesService";
+import { buildBusinessProfilePayload } from "./Configuration.payload";
 import { useSessionStore } from "../stores/sessionStore";
 import colors from "../themes/utils/colors";
+import { sanitizeBusinessId } from "../utils/sanitizeBusinessId";
 import { ShowNotification } from "../utils/utils";
 
 const CustomConnector = styled(StepConnector)(({ theme }) => ({
@@ -100,7 +102,7 @@ const Configuration = () => {
           "Solo se permiten letras minúsculas, guiones (-) y guiones bajos (_)",
         )
         .min(4, "No puede tener menos de 4 caracteres")
-        .max(22, "No puede tener más de 22 caracteres")
+        .max(24, "No puede tener más de 24 caracteres")
         .test(
           "unique-business-id",
           "Este nombre de negocio ya existe",
@@ -195,20 +197,7 @@ const Configuration = () => {
   };
 
   const handleSubmit = async (values: any) => {
-    const payload = {
-      business_id: values.business_id,
-      categories: values.categories.map((cat: any) => cat.id),
-      city: values.city[0].id,
-      primary_currency: values.primary_currency[0].id,
-      secondary_currency: values.enable_exchange_rate
-        ? values.secondary_currency[0].id
-        : null,
-      exchange_rate: values.enable_exchange_rate
-        ? values.exchange_rate.replace(".", "").replace(",", ".")
-        : null,
-    };
-    console.log("Form payload", payload);
-    // return;
+    const payload = buildBusinessProfilePayload(values);
     try {
       await createBusinessProfile(payload);
       ShowNotification({
@@ -511,11 +500,14 @@ const Configuration = () => {
                             component={Input}
                             maxLength={24}
                             placeholder="Escribe tu usuario..."
-                            label="Nombre del comercio"
+                            label="Nombre de Usuario"
                             required
                             value={values.business_id}
                             onChange={(e: React.ChangeEvent<any>) => {
-                              setFieldValue("business_id", e.target.value);
+                              setFieldValue(
+                                "business_id",
+                                sanitizeBusinessId(e.target.value),
+                              );
                             }}
                             onBlur={handleBlur}
                             // onBlur={async (
@@ -850,7 +842,8 @@ const Configuration = () => {
                                     >
                                       <Box
                                         sx={{
-                                          width: "15%",
+                                          width: "fit-content",
+                                          whiteSpace: "nowrap",
                                           backgroundColor: "#FFF4E8",
                                           paddingX: 2,
                                           paddingY: 4,
@@ -871,7 +864,12 @@ const Configuration = () => {
                                         </Typography>
                                       </Box>
 
-                                      <Box sx={{ width: "20%" }}>
+                                      <Box
+                                        sx={{
+                                          width: "fit-content",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
                                         <Typography
                                           id="modal-description"
                                           variant="body2"
@@ -914,7 +912,7 @@ const Configuration = () => {
                                             "is_primary_to_secondary",
                                             !values.is_primary_to_secondary,
                                           );
-                                          setFieldValue("exchange_rate", 0);
+                                          setFieldValue("exchange_rate", "");
                                         }}
                                       >
                                         <ExchangeIcon />
@@ -941,7 +939,10 @@ const Configuration = () => {
                     </Box>
                     <Box
                       sx={{
-                        marginTop: theme.spacing(7),
+                        marginTop:
+                          activeStep === 1 || activeStep === 2
+                            ? "65px"
+                            : theme.spacing(7),
                         width: "100%",
                         display: "flex",
                         gap: 3,

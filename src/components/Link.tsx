@@ -2,7 +2,7 @@ import { styled } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
 
 export interface LinkProps {
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "accent";
   size?: "large" | "medium" | "small";
   to?: string; // Make to optional
 }
@@ -31,6 +31,25 @@ const Link = styled(
 
   const fontSize =
     size === "large" ? "14px" : size === "small" ? "12px" : "14px";
+
+  if (variant === "accent") {
+    return {
+      fontSize,
+      lineHeight: "22px",
+      letterSpacing: "-0.1px",
+      fontWeight: 600,
+      textDecoration: "none",
+      cursor: "pointer",
+      color: theme.palette.primary.main,
+      "&:hover": {
+        color: theme.palette.primary.dark,
+      },
+      "&:focus-visible": {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: "2px",
+      },
+    };
+  }
 
   return {
     fontSize,

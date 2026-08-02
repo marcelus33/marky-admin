@@ -73,7 +73,8 @@ const CustomSelectorField: React.FC<CustomSelectorFieldProps> = ({
               readOnly: true,
               startAdornment: (
                 <InputAdornment position="start">
-                  {getOptionLabel(selectedItems[0]) === "Paraguay" ? (
+                  {selectedItems.length > 0 &&
+                  getOptionLabel(selectedItems[0]) === "Paraguay" ? (
                     <ParaguayFlagIcon />
                   ) : (
                     <VenezuelaFlagIcon />

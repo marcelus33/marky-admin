@@ -3,8 +3,7 @@ export const ROUTES = {
   LOGIN: "/login",
   LOGOUT: "/logout",
   REGISTER: "/register",
-  VERIFY_EMAIL_SEND: "/verify-email/",
-  VERIFY_EMAIL: "/verify-email/:token",
+  VERIFY_EMAIL: "/verify-email/",
   RECOVER_PASSWORD: "/recover-password",
   NEW_PASSWORD: "/reset-password/:uid/:token",
   // protected routes

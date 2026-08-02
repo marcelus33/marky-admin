@@ -5,7 +5,8 @@ import React, { useState } from "react";
 import "react-phone-input-2/lib/material.css"; // Customizable
 import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ReactComponent as RegisterImage } from "../assets/images/register.svg";
+import registerIllustration from "../assets/images/register-illustration.png";
+import AuthAside from "../components/AuthAside";
 import FormikPhoneInput from "../components/FormikPhoneInput";
 import Input from "../components/Input";
 import Link from "../components/Link";
@@ -17,15 +18,9 @@ import { displayFormikFormErrors, ShowNotification } from "../utils/utils";
 const AcceptTermsLabel = () => {
   return (
     <Typography component="span">
-      Al continuar, estás de acuerdo con nuestros{" "}
-      <Link>
-        <Typography variant="link">Términos del Servicio</Typography>
-      </Link>{" "}
-      y{" "}
-      <Link>
-        <Typography variant="link">Políticas de Privacidad</Typography>
-      </Link>
-      .
+      Al crear una cuenta, aceptas nuestros{" "}
+      <Link variant="accent">Términos de servicio</Link> y nuestra{" "}
+      <Link variant="accent">Política de privacidad</Link>.
     </Typography>
   );
 };
@@ -45,7 +40,9 @@ const Register: React.FC = () => {
 
   const isRequiredMessage = "Este campo es requerido";
   const validationSchema = Yup.object().shape({
-    businessName: Yup.string().required(isRequiredMessage),
+    businessName: Yup.string()
+      .max(22, "No puede tener más de 22 caracteres")
+      .required(isRequiredMessage),
     email: Yup.string().email("Email no válido").required(isRequiredMessage),
     phone: Yup.string().required(isRequiredMessage),
     password: Yup.string()
@@ -62,13 +59,12 @@ const Register: React.FC = () => {
       const response = await register({
         email: values.email,
         password: values.password,
-        business_name: values.businessName,
+        business_name: values.businessName.trim(),
         phone_number: values.phone,
       });
-      const { verification_link } = response;
       ShowNotification({ message: response.message, type: "success" });
       setLoading(false);
-      navigate(ROUTES.VERIFY_EMAIL.replace(":token", verification_link), {
+      navigate(ROUTES.VERIFY_EMAIL, {
         state: {
           email: values.email,
         },
@@ -84,46 +80,19 @@ const Register: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{
-            display: {
-              xs: "none",
-              md: "block",
-              backgroundColor: theme.palette.primary.main + "1A",
-            },
-            paddingLeft: { md: `${theme.spacing(15)} !important` },
-            paddingRight: { md: `${theme.spacing(15)} !important` },
-            paddingTop: { md: `${theme.spacing(12)} !important` },
-          }}
-        >
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            minHeight="100vh"
-            sx={{ padding: 2 }}
-          >
-            <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
-            <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-              Una plataforma creada con amor{" "}
-              <span style={{ color: theme.palette.primary.main }}>
-                para tus comensales.
-              </span>
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              No sólo de sabor se trata, sorprende a tu audiencia.
-            </Typography>
+        <AuthAside
+          title="Tu negocio gastronómico,"
+          highlight="listo para mostrarse."
+          supportText="Organiza tus productos y crea un catálogo digital profesional para compartir con tus clientes."
+          image={
             <Box
-              display="flex"
-              justifyContent="center"
-              sx={{ marginTop: theme.spacing(24) }}
-            >
-              <RegisterImage />
-            </Box>
-          </Box>
-        </Grid>
+              component="img"
+              src={registerIllustration}
+              alt=""
+              sx={{ width: "100%", maxWidth: 280 }}
+            />
+          }
+        />
         {/* =========== REGISTER FORM CONTAINER ============= */}
         <Grid
           item
@@ -145,28 +114,27 @@ const Register: React.FC = () => {
                 },
               }}
             >
-              <Typography variant="body2">¿Ya formas parte?</Typography>
-              <Link to={`${ROUTES.LOGIN}`}>
-                <Typography variant="link">Inicia sesión ahora</Typography>
+              <Typography variant="body2">¿Ya tienes una cuenta?</Typography>
+              <Link to={`${ROUTES.LOGIN}`} variant="accent">
+                Inicia sesión
               </Link>
             </Box>
             {/* MOBILE HEADER */}
             <Box
               sx={{
                 width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
+                height: "64px",
+                paddingX: "16px",
+                borderBottom: "1px solid #E5E7EB",
                 display: {
                   xs: "flex",
                   md: "none",
                 },
+                alignItems: "center",
               }}
               justifyContent={"flex-start"}
             >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
+              <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
             </Box>
           </Box>
           <Box
@@ -180,18 +148,24 @@ const Register: React.FC = () => {
               flexDirection="column"
               alignItems="center"
               justifyContent="center"
-              minHeight="100vh"
-              padding={2}
+              sx={{
+                minHeight: "100dvh",
+                height: "auto",
+                overflowY: "auto",
+                width: "100%",
+                padding: "24px 16px 32px",
+                paddingBottom: "max(32px, env(safe-area-inset-bottom))",
+              }}
             >
               <Typography
                 sx={{
                   width: "100%",
                   textAlign: "left",
-                  marginBottom: theme.spacing(1),
+                  marginBottom: theme.spacing(6),
                 }}
                 variant="h2"
               >
-                {isGoogleSignup ? "Cuenta comercial" : "Crea una cuenta"}
+                {isGoogleSignup ? "Cuenta comercial" : "Crea tu cuenta en Marky"}
               </Typography>
               {/* {!isGoogleSignup ? (
                 <Button
@@ -251,16 +225,13 @@ const Register: React.FC = () => {
                     style={{ width: "100%" }}
                     noValidate
                   >
-                    <Box
-                      sx={{
-                        marginBottom: theme.spacing(4),
-                        marginTop: theme.spacing(6),
-                      }}
-                    >
+                    <Box sx={{ marginBottom: theme.spacing(6) }}>
                       <Field
                         name="businessName"
                         component={Input}
-                        label="Nombre del comercio"
+                        maxLength={22}
+                        label="Nombre del negocio"
+                        placeholder="Ej. Dulce Momento"
                         type="text"
                         required
                         disabled={loading}
@@ -274,12 +245,13 @@ const Register: React.FC = () => {
                     </Box>
                     {!isGoogleSignup && (
                       <>
-                        <Box sx={{ marginBottom: theme.spacing(4) }}>
+                        <Box sx={{ marginBottom: theme.spacing(6) }}>
                           <Field
                             name="email"
                             component={Input}
                             label="Correo electrónico"
                             type="email"
+                            placeholder="nombre@correo.com"
                             required
                             disabled={loading}
                             error={touched.email && Boolean(errors.email)}
@@ -290,12 +262,13 @@ const Register: React.FC = () => {
                             }}
                           />
                         </Box>
-                        <Box sx={{ marginBottom: theme.spacing(4) }}>
+                        <Box sx={{ marginBottom: theme.spacing(6) }}>
                           <Field
                             name="password"
                             component={Input}
                             label="Contraseña"
                             type="password"
+                            placeholder="Crea una contraseña"
                             required
                             disabled={loading}
                             error={touched.password && Boolean(errors.password)}
@@ -308,20 +281,20 @@ const Register: React.FC = () => {
                         </Box>
                       </>
                     )}
-                    <Box sx={{ marginBottom: theme.spacing(4) }}>
+                    <Box sx={{ marginBottom: theme.spacing(2) }}>
                       <Field
                         name="phone"
                         required
                         disabled={loading}
                         component={FormikPhoneInput}
                         label="Número de teléfono"
-                        placeholder="Ingrese su número de teléfono"
+                        placeholder="981 123 456"
                       />
                     </Box>
                     <Box
                       display="flex"
                       alignItems="center"
-                      sx={{ marginBottom: theme.spacing(4) }}
+                      sx={{ marginBottom: theme.spacing(6) }}
                     >
                       <AcceptTermsLabel />
                     </Box>
@@ -333,6 +306,17 @@ const Register: React.FC = () => {
                       sx={{
                         marginTop: theme.spacing(2),
                         marginBottom: theme.spacing(6),
+                        fontWeight: 600,
+                        "&:not(.Mui-disabled):hover": {
+                          backgroundColor: theme.palette.primary.dark,
+                        },
+                        "&.Mui-disabled": {
+                          backgroundColor: "#E5E7EB",
+                          color: "#9CA3AF",
+                          boxShadow: "none",
+                          cursor: "not-allowed",
+                          pointerEvents: "auto",
+                        },
                       }}
                     >
                       Crear cuenta
@@ -340,10 +324,14 @@ const Register: React.FC = () => {
                   </Form>
                 )}
               </Formik>
-              <Box display={"flex"} gap={2}>
-                <Typography variant="body2">¿Ya formas parte?</Typography>
-                <Link to={`${ROUTES.LOGIN}`}>
-                  <Typography variant="link">Inicia sesión ahora</Typography>
+              <Box
+                display={"flex"}
+                gap={2}
+                sx={{ display: { xs: "flex", md: "none" } }}
+              >
+                <Typography variant="body2">¿Ya tienes una cuenta?</Typography>
+                <Link to={`${ROUTES.LOGIN}`} variant="accent">
+                  Inicia sesión
                 </Link>
               </Box>
             </Box>

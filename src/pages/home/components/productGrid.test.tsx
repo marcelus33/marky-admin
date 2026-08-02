@@ -1,0 +1,121 @@
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { ThemeProvider } from "@mui/material/styles";
+import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import lightTheme from "../../../themes/light";
+import { ProductGrid } from "./productGrid";
+import { CategoryWithProducts } from "../../../types/categoryWithProducts";
+
+// productService transitively imports axiosConfig -> axios, whose installed
+// version ships ESM-only and breaks CRA's default Jest transform. Mock it out
+// fully (no jest.requireActual) so the real axios-backed module never loads,
+// same reasoning as Login.test.tsx mocking authService.
+jest.mock("../../../services/productService", () => ({
+  getProductCategories: jest.fn(),
+  getProductCategoriesWithProducts: jest.fn(),
+  createProductCategory: jest.fn(),
+  updateProductCategory: jest.fn(),
+  updateProductCategoryAvailability: jest.fn(),
+  deleteProductCategory: jest.fn(),
+  addPromotionToProductCategory: jest.fn(),
+  updateProductCategoryOrder: jest.fn(),
+  createProduct: jest.fn(),
+  updateProduct: jest.fn(),
+  getProductById: jest.fn(),
+  deleteProduct: jest.fn(),
+}));
+
+import {
+  getProductCategoriesWithProducts,
+  deleteProduct,
+} from "../../../services/productService";
+
+const mockedGetCategories = getProductCategoriesWithProducts as jest.Mock;
+const mockedDeleteProduct = deleteProduct as jest.Mock;
+
+const category: CategoryWithProducts = {
+  id: 1,
+  name: "Galletas",
+  icon: "cookie",
+  multibuy_option: null,
+  discount_percentage: "0",
+  promotion_starts_at: null,
+  promotion_ends_at: null,
+  is_available: true,
+  products: [
+    {
+      id: 42,
+      name: "Galleta de chocolate",
+      price: "2.00",
+    },
+  ],
+};
+
+const renderProductGrid = () => {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={lightTheme}>
+        <MemoryRouter>
+          <ProductGrid />
+        </MemoryRouter>
+      </ThemeProvider>
+    </QueryClientProvider>,
+  );
+};
+
+describe("ProductGrid product delete flow (Home page)", () => {
+  beforeEach(() => {
+    mockedGetCategories.mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      products_count: 1,
+      results: [category],
+    });
+    mockedDeleteProduct.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("shows a confirmation dialog and calls deleteProduct with the right id after confirming 'Eliminar'", async () => {
+    renderProductGrid();
+
+    const productName = await screen.findByText("Galleta de chocolate");
+    const card = productName.closest(".MuiCard-root") as HTMLElement;
+    const menuButton = within(card).getByRole("button");
+    fireEvent.click(menuButton);
+    fireEvent.click(screen.getByText("Eliminar"));
+
+    expect(await screen.findByText("Eliminar producto")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aceptar" }));
+
+    await waitFor(() => {
+      expect(mockedDeleteProduct).toHaveBeenCalledWith(42);
+    });
+  });
+
+  it("does not call deleteProduct if the confirmation dialog is cancelled", async () => {
+    renderProductGrid();
+
+    const productName = await screen.findByText("Galleta de chocolate");
+    const card = productName.closest(".MuiCard-root") as HTMLElement;
+    const menuButton = within(card).getByRole("button");
+    fireEvent.click(menuButton);
+    fireEvent.click(screen.getByText("Eliminar"));
+
+    await screen.findByText("Eliminar producto");
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(mockedDeleteProduct).not.toHaveBeenCalled();
+  });
+});

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -6,18 +6,66 @@ import {
   FormControlLabel,
   Button,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 import { useImageCropper } from "../../../hooks/useImageCropper";
 import ImageCropModal from "../../../components/ImageCropModal";
 import Input from "../../../components/Input";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { ReactComponent as AddVariationImageIcon } from "../../../assets/icons/product-form/add-variation-picture.svg";
 
+// Renders a variant's image preview. Previously this was done inline with
+// `URL.createObjectURL(variant.image)` called directly during render: it
+// created a brand-new blob URL (and leaked the previous one, since it was
+// never revoked) on every single render of the form, and would throw if
+// `variant.image` was ever something other than a File/Blob/string (which
+// would surface as an uncaught render error). This component instead only
+// creates/revokes the object URL when the underlying image actually changes,
+// and falls back to rendering nothing instead of throwing for unexpected
+// values.
+const VariantImagePreview: React.FC<{ image: unknown }> = ({ image }) => {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!image) {
+      setUrl(null);
+      return;
+    }
+    if (typeof image === "string") {
+      setUrl(image);
+      return;
+    }
+    if (image instanceof File || image instanceof Blob) {
+      const objectUrl = URL.createObjectURL(image);
+      setUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+    // Unsupported shape: don't crash the render, just show the placeholder.
+    setUrl(null);
+  }, [image]);
+
+  if (!url) return null;
+  return (
+    <img
+      src={url}
+      alt="Variant"
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    />
+  );
+};
+
 interface VariationsSectionProps extends FormikProps<any> {
   maxItems?: number;
+  // Lifted up to ProductFormPage so the "Activar multi presentaciones"
+  // selection survives switching to another tab and back (switching tabs
+  // unmounts this component, which would otherwise reset any local state
+  // back to its default).
+  multiPresentation: boolean;
+  onMultiPresentationChange: (value: boolean) => void;
 }
 
 const VariationsSection: React.FC<VariationsSectionProps> = ({
@@ -28,8 +76,11 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
   handleChange,
   handleBlur,
   maxItems = 10,
+  multiPresentation,
+  onMultiPresentationChange,
 }) => {
-  const [multiPresentation, setMultiPresentation] = useState(true);
+  const { data: businessAccountInfo } = useBusinessAccountInfo();
+  const currencyCode = businessAccountInfo?.primary_currency_code;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeVariantIndex, setActiveVariantIndex] = useState<number | null>(
     null
@@ -113,7 +164,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
         control={
           <Switch
             checked={multiPresentation}
-            onChange={(e) => setMultiPresentation(e.target.checked)}
+            onChange={(e) => onMultiPresentationChange(e.target.checked)}
           />
         }
         label="Activar multi presentaciones"
@@ -160,19 +211,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                       onClick={() => handleIconClick(index)}
                     >
                       {variant.image ? (
-                        <img
-                          src={
-                            typeof variant.image === "string"
-                              ? variant.image
-                              : URL.createObjectURL(variant.image)
-                          }
-                          alt="Variant"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
+                        <VariantImagePreview image={variant.image} />
                       ) : (
                         <IconButton>
                           <AddVariationImageIcon />
@@ -238,6 +277,11 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                         sx: {
                           backgroundColor: "white",
                         },
+                        endAdornment: currencyCode ? (
+                          <InputAdornment position="end">
+                            <Typography variant="body2">{`[${currencyCode}]`}</Typography>
+                          </InputAdornment>
+                        ) : undefined,
                       }}
                     />
                   </Box>

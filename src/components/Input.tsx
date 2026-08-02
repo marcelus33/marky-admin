@@ -122,6 +122,13 @@ const Input: React.FC<InputProps> = ({
           "& .MuiOutlinedInput-root": {
             backgroundColor: theme.palette.grey[100],
           },
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: theme.palette.grey[800],
+          },
+          "& .MuiInputBase-input::placeholder": {
+            color: theme.palette.text.disabled,
+            opacity: 1,
+          },
         })}
         InputProps={{
           endAdornment: endAdornmentElements,

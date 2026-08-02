@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   ButtonGroup,
+  CircularProgress,
   ClickAwayListener,
   Grow,
   MenuItem,
@@ -23,9 +24,17 @@ const options = [
 
 interface SubmitSectionProps {
   onSectionSelect: (section: string) => void;
+  // True while the create/update mutation is in flight. Disables the
+  // "Publicar" button (and the split-button dropdown) so impatient repeated
+  // clicks while waiting for the response don't fire multiple submissions
+  // and create duplicate products.
+  isSubmitting?: boolean;
 }
 
-const SubmitSection: React.FC<SubmitSectionProps> = ({ onSectionSelect }) => {
+const SubmitSection: React.FC<SubmitSectionProps> = ({
+  onSectionSelect,
+  isSubmitting = false,
+}) => {
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef<HTMLDivElement>(null);
 
@@ -88,8 +97,17 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({ onSectionSelect }) => {
           aria-label="split button"
           sx={{ display: "flex", gap: 0.5 }}
         >
-          <Button type="submit" sx={{ px: 3 }}>
-            Publicar
+          <Button
+            type="submit"
+            sx={{ px: 3 }}
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : undefined
+            }
+          >
+            {isSubmitting ? "Publicando..." : "Publicar"}
           </Button>
           <Button
             size="small"
@@ -98,6 +116,7 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({ onSectionSelect }) => {
             aria-label="select merge strategy"
             aria-haspopup="menu"
             onClick={handleToggle}
+            disabled={isSubmitting}
           >
             <ArrowDropDownIcon />
           </Button>
