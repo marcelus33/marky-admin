@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import SelectButtonField from "../../../components/SelectButtonField";
+import useDebounce from "../../../hooks/useDebounce";
 
 // Create a separate component for the filters section
 const FilterSection: React.FC<{
@@ -24,6 +25,30 @@ const FilterSection: React.FC<{
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [showFilters, setShowFilters] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep the raw keystrokes local to this component instead of pushing them
+  // straight into the parent's (ProductGrid) state on every character. The
+  // parent holds the full product/category list, so updating it on every
+  // keystroke forced the whole grid to re-render each time the user typed,
+  // which is what made the search field feel slow/janky. Only the debounced
+  // value is propagated up, so the heavy grid re-renders once per pause in
+  // typing instead of once per keystroke.
+  const [searchTerm, setSearchTerm] = useState<string>(values.search ?? "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Keep local state in sync if the parent resets filters externally
+  // (e.g. a "clear filters" action elsewhere).
+  useEffect(() => {
+    setSearchTerm(values.search ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.search]);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== values.search) {
+      onFilterChange({ search: debouncedSearchTerm });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     if (searchInputRef.current) {
@@ -44,8 +69,8 @@ const FilterSection: React.FC<{
             name="search"
             variant="outlined"
             size="small"
-            value={values.search}
-            onChange={(e) => onFilterChange({ search: e.target.value })}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -112,8 +137,8 @@ const FilterSection: React.FC<{
             name="search"
             variant="outlined"
             size="small"
-            value={values.search}
-            onChange={(e) => onFilterChange({ search: e.target.value })}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
             InputProps={{
               startAdornment: (

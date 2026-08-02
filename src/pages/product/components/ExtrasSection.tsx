@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
@@ -17,6 +17,12 @@ import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 
 interface ExtrasSectionProps extends FormikProps<any> {
   maxItems?: number;
+  // Lifted up to ProductFormPage so the "Activar productos adicionales"
+  // selection survives switching to another tab and back (switching tabs
+  // unmounts this component, which would otherwise reset any local state
+  // back to its default).
+  showExtras: boolean;
+  onShowExtrasChange: (value: boolean) => void;
 }
 
 const ExtrasSection: React.FC<ExtrasSectionProps> = ({
@@ -26,10 +32,11 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
   handleChange,
   handleBlur,
   maxItems = 10,
+  showExtras,
+  onShowExtrasChange,
 }) => {
   const { data: businessAccountInfo } = useBusinessAccountInfo();
   const currencyCode = businessAccountInfo?.primary_currency_code;
-  const [showExtras, setShowExtras] = useState(true);
 
   return (
     <Box
@@ -57,7 +64,7 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
         control={
           <Switch
             checked={showExtras}
-            onChange={(e) => setShowExtras(e.target.checked)}
+            onChange={(e) => onShowExtrasChange(e.target.checked)}
           />
         }
         label="Activar productos adicionales"
