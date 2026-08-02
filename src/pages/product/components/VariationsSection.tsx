@@ -6,10 +6,12 @@ import {
   FormControlLabel,
   Button,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 import { useImageCropper } from "../../../hooks/useImageCropper";
 import ImageCropModal from "../../../components/ImageCropModal";
 import Input from "../../../components/Input";
@@ -29,6 +31,8 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
   handleBlur,
   maxItems = 10,
 }) => {
+  const { data: businessAccountInfo } = useBusinessAccountInfo();
+  const currencyCode = businessAccountInfo?.primary_currency_code;
   const [multiPresentation, setMultiPresentation] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeVariantIndex, setActiveVariantIndex] = useState<number | null>(
@@ -238,6 +242,11 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                         sx: {
                           backgroundColor: "white",
                         },
+                        endAdornment: currencyCode ? (
+                          <InputAdornment position="end">
+                            <Typography variant="body2">{`[${currencyCode}]`}</Typography>
+                          </InputAdornment>
+                        ) : undefined,
                       }}
                     />
                   </Box>

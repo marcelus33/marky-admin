@@ -6,12 +6,14 @@ import {
   FormControlLabel,
   Button,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
 import Input from "../../../components/Input";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 
 interface ExtrasSectionProps extends FormikProps<any> {
   maxItems?: number;
@@ -25,6 +27,8 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
   handleBlur,
   maxItems = 10,
 }) => {
+  const { data: businessAccountInfo } = useBusinessAccountInfo();
+  const currencyCode = businessAccountInfo?.primary_currency_code;
   const [showExtras, setShowExtras] = useState(true);
 
   return (
@@ -119,6 +123,11 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                         sx: {
                           backgroundColor: "white",
                         },
+                        endAdornment: currencyCode ? (
+                          <InputAdornment position="end">
+                            <Typography variant="body2">{`[${currencyCode}]`}</Typography>
+                          </InputAdornment>
+                        ) : undefined,
                       }}
                     />
                   </Box>

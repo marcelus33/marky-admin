@@ -1,8 +1,9 @@
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { Box, Typography } from "@mui/material";
+import { Box, InputAdornment, Typography } from "@mui/material";
 import { Field, FormikProps } from "formik";
 import Input from "../../../components/Input";
 import NumberInput from "../../../components/NumberInput";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 import { Category } from "../../../types/category";
 import { Product } from "../../../types/product";
 import CategorySelector from "./CategorySelector";
@@ -20,6 +21,8 @@ const ProductSection = ({
   selectedCategory,
 }: ProductSectionProps) => {
   const { values, errors, touched, handleChange, handleBlur } = formik;
+  const { data: businessAccountInfo } = useBusinessAccountInfo();
+  const currencyCode = businessAccountInfo?.primary_currency_code;
   return (
     <Box sx={{ width: "100%" }}>
       <ProductImageGallery />
@@ -80,6 +83,13 @@ const ProductSection = ({
           margin="normal"
           error={touched.price && Boolean(errors.price)}
           helperText={touched.price && errors.price}
+          InputProps={{
+            endAdornment: currencyCode ? (
+              <InputAdornment position="end">
+                <Typography variant="body2">{`[${currencyCode}]`}</Typography>
+              </InputAdornment>
+            ) : undefined,
+          }}
         />
       </Box>
 
