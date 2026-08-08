@@ -5,3 +5,6 @@ export const formatPrice = (price: number | string) => {
   const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return `${integerPart},${parts[1]}`;
 };
+
+export const truncateText = (text: string, maxLength: number) =>
+  text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;

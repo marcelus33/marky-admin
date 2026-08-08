@@ -63,16 +63,22 @@ const ProductSection = ({
         <Input
           name="description"
           label="Descripción"
-          placeholder="Descripción"
+          placeholder="Ej. Galleta artesanal con chips de chocolate, textura suave y toque salado."
           value={values.description}
           onChange={handleChange}
           onBlur={handleBlur}
           multiline
           rows={4}
           required
+          maxLength={300}
+          counterFormat="fraction"
           sx={{ mt: 2 }}
           error={touched.description && Boolean(errors.description)}
-          helperText={touched.description ? errors.description : undefined}
+          helperText={
+            touched.description
+              ? errors.description
+              : "Describe el producto de forma clara. Máximo 300 caracteres."
+          }
         />
         <Field
           name="price"

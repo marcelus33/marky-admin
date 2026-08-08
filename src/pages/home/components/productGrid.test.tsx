@@ -31,13 +31,22 @@ jest.mock("../../../services/productService", () => ({
   deleteProduct: jest.fn(),
 }));
 
+// productGrid also reads the business name (for the empty-state welcome
+// copy) via useHomePageData -> businessService, which transitively imports
+// axiosConfig -> axios; same ESM-parsing issue as productService above.
+jest.mock("../../../services/businessService", () => ({
+  getHomePageData: jest.fn(),
+}));
+
 import {
   getProductCategoriesWithProducts,
   deleteProduct,
 } from "../../../services/productService";
+import { getHomePageData } from "../../../services/businessService";
 
 const mockedGetCategories = getProductCategoriesWithProducts as jest.Mock;
 const mockedDeleteProduct = deleteProduct as jest.Mock;
+const mockedGetHomePageData = getHomePageData as jest.Mock;
 
 const category: CategoryWithProducts = {
   id: 1,
@@ -80,6 +89,7 @@ describe("ProductGrid product delete flow (Home page)", () => {
       results: [category],
     });
     mockedDeleteProduct.mockResolvedValue(undefined);
+    mockedGetHomePageData.mockResolvedValue({ business_name: "Test Biz" });
   });
 
   afterEach(() => {

@@ -59,27 +59,17 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   };
 
   const renderPromotionBadge = () => {
-    const {
-      promotion_starts_at,
-      promotion_ends_at,
-      multibuy_option,
-      discount_percentage,
-    } = category;
+    const { promotion_starts_at, promotion_ends_at } = category;
     if (!promotion_ends_at) return null;
 
     const now = new Date();
     const starts = promotion_starts_at ? new Date(promotion_starts_at) : null;
     const ends = new Date(promotion_ends_at);
 
-    // decide badge color based on promotion type
-    const hasDiscount =
-      !!discount_percentage && parseFloat(discount_percentage as string) > 0;
-    const hasMultibuy = !!multibuy_option;
-    const badgeColor = hasDiscount
-      ? "error.main"
-      : hasMultibuy
-        ? "primary.main"
-        : "primary.main";
+    // The countdown badge always uses the fixed promotion/urgency color.
+    // It must never depend on discount, multibuy, price, or any other
+    // category/product attribute — only on the promotion having a time limit.
+    const badgeColor = "error.main";
 
     // If promotion hasn't started yet
     if (starts && now < starts) {

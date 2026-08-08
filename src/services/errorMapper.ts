@@ -15,9 +15,15 @@ export function mapAxiosError(error: AxiosError<DRFErrorResponse>) {
   }
 
   const { data, status } = error.response;
+  // DRF wraps ValidationError details in a list even for a single message
+  // (e.g. {"error": ["texto"]}). react-toastify's toast() silently no-ops
+  // when given anything that isn't a string/element/function/number, so an
+  // unwrapped array here means the error toast never renders. Unwrap it.
+  const rawMessage = data?.error || data?.detail || data?.message;
+  const message = Array.isArray(rawMessage) ? rawMessage[0] : rawMessage;
+
   return {
-    message:
-      data?.error || data?.detail || data?.message || "Ha ocurrido un error",
+    message: message || "Ha ocurrido un error",
     status: status,
     success: data?.success !== undefined ? data?.success : false,
     errors: !(data?.error || data?.detail) ? data : null,

@@ -167,7 +167,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
             onChange={(e) => onMultiPresentationChange(e.target.checked)}
           />
         }
-        label="Activar multi presentaciones"
+        label="Activar presentaciones múltiples"
       />
       {multiPresentation && (
         <FieldArray name="variants">
@@ -301,7 +301,25 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                   </Box>
                 </Box>
               ))}
-              <Box sx={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: 4,
+                  cursor:
+                    values.variants.length >= maxItems ? "default" : "pointer",
+                }}
+                onClick={() => {
+                  if (values.variants.length >= maxItems) return;
+                  push({
+                    id: Date.now(),
+                    name: "",
+                    description: "",
+                    price: "",
+                    image: null,
+                  });
+                }}
+              >
                 <Box
                   sx={{
                     px: 2,
@@ -313,18 +331,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                 >
                   <Add fontSize="large" color="primary" sx={{ mt: 1 }} />
                 </Box>
-                <Button
-                  onClick={() =>
-                    push({
-                      id: Date.now(),
-                      name: "",
-                      description: "",
-                      price: "",
-                      image: null,
-                    })
-                  }
-                  disabled={values.variants.length >= maxItems}
-                >
+                <Button disabled={values.variants.length >= maxItems}>
                   Añadir otra presentación
                 </Button>
               </Box>

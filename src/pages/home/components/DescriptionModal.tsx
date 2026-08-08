@@ -57,7 +57,7 @@ const DescriptionModal = ({
         initialValues={{ description: initialDescription || "" }}
         validationSchema={Yup.object({
           description: Yup.string()
-            .max(634, "La descripción no puede superar los 634 caracteres")
+            .max(100, "La descripción no puede superar los 100 caracteres")
             .required("La descripción es obligatoria"),
         })}
         onSubmit={(values) => {
@@ -85,13 +85,13 @@ const DescriptionModal = ({
               >
                 <FormLabel>Descripción</FormLabel>
                 <Typography>
-                  {634 - (values.description?.length || 0)}
+                  {values.description?.length || 0}/100
                 </Typography>
               </Box>
               <TextField
                 sx={{ mt: 2 }}
                 name="description"
-                placeholder="Describa su comercio..."
+                placeholder="Ej. Pastelería artesanal con café de especialidad."
                 variant="outlined"
                 fullWidth
                 multiline
@@ -100,13 +100,14 @@ const DescriptionModal = ({
                 onChange={handleChange}
                 error={touched.description && Boolean(errors.description)}
                 helperText={touched.description && errors.description}
+                inputProps={{ maxLength: 100 }}
               />
               <Typography
                 variant="body2"
                 sx={{ mt: 4, color: colors.light.grey[900] }}
               >
-                Sea creativo, informativo, descriptivo. Lo que desee. Será la
-                introducción pública de su comercio.
+                Escribe una bio breve para presentar tu negocio en el perfil
+                público. Máximo 100 caracteres.
               </Typography>
             </DialogContent>
             <DialogActions

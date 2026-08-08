@@ -27,6 +27,8 @@ import Input from "../../../components/Input";
 import XButton from "../../../components/XButton";
 import { useApiMutation } from "../../../hooks/useApiMutation";
 import { updateSocialMediaLinks } from "../../../services/businessService";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
+import { normalizeWebsiteUrl, isValidWebsiteUrl } from "../../../utils/websiteUrl";
 
 // --- tipos ---
 export type ChannelKey = "instagram" | "facebook" | "whatsapp" | "website";
@@ -66,15 +68,27 @@ const CHANNEL_URL_PREFIXES: Partial<Record<ChannelKey, string>> = {
 };
 
 const stripChannelPrefix = (chan: ChannelKey, value: string): string => {
+  if (!value) return value;
+  if (chan === "website") {
+    // buildChannelValue always stores websites with a scheme; strip it back
+    // off so the field round-trips to the bare-domain format shown by its
+    // "www.sitio.com" placeholder.
+    return value.replace(/^https?:\/\//i, "");
+  }
   const prefix = CHANNEL_URL_PREFIXES[chan];
-  if (!prefix || !value) return value;
+  if (!prefix) return value;
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 };
 
 const buildChannelValue = (chan: ChannelKey, value: string): string => {
   const prefix = CHANNEL_URL_PREFIXES[chan];
-  if (!prefix || !value) return value;
-  return value.startsWith(prefix) ? value : `${prefix}${value}`;
+  if (prefix && value) {
+    return value.startsWith(prefix) ? value : `${prefix}${value}`;
+  }
+  if (chan === "website" && value) {
+    return normalizeWebsiteUrl(value);
+  }
+  return value;
 };
 
 export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
@@ -87,6 +101,12 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   // Step 1: bienvenida, 2: selector, 3: admin
   const [step, setStep] = useState(1);
   const [selectedChannels, setSelectedChannels] = useState<ChannelKey[]>([]);
+
+  // Número actual de la cuenta (no el de sesión, que puede quedar
+  // desactualizado tras editarlo en Configuración de cuenta), para
+  // precargar WhatsApp.
+  const { data: accountInfo } = useBusinessAccountInfo();
+  const currentPhone = accountInfo?.phone_number;
 
   // Get query client to invalidate cache
   const queryClient = useQueryClient();
@@ -133,9 +153,13 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
     }
   }, [initialDataMap]);
 
-  // 3) Y finalmente los initialValues de Formik:
+  // 3) Y finalmente los initialValues de Formik: si no hay un WhatsApp ya
+  // configurado, se precarga con el número usado durante el registro.
   const initialValues: ChannelsFormValues = {
-    channelsData: { ...initialDataMap },
+    channelsData: {
+      ...initialDataMap,
+      whatsapp: initialDataMap.whatsapp || currentPhone || "",
+    },
   };
 
   const phoneSchema = Yup.string()
@@ -155,8 +179,12 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
     );
 
   const urlSchema = Yup.string()
-    .url("URL inválida")
-    .required("El campo es obligatorio");
+    .required("El campo es obligatorio")
+    .test(
+      "is-valid-website",
+      "Ingresa un sitio web válido. Ejemplo: www.sitio.com",
+      isValidWebsiteUrl
+    );
 
   const usernameSchema = Yup.string()
     .required("El campo es obligatorio")
@@ -394,9 +422,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                           <Field
                             key={chan}
                             placeholder={
-                              prefix
-                                ? "usuario"
-                                : `www.${label.toLocaleLowerCase()}.com`
+                              prefix ? "usuario" : "www.sitio.com"
                             }
                             name={fieldName}
                             value={values.channelsData[chan]}
@@ -405,7 +431,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                             }}
                             component={Input}
                             label={label}
-                            type={prefix ? "text" : "url"}
+                            type="text"
                             required
                             error={fieldTouched && !!fieldError}
                             helperText={fieldTouched ? fieldError : ""}

@@ -46,7 +46,10 @@ import { Category } from "../services/categoriesService";
 import { buildBusinessProfilePayload } from "./Configuration.payload";
 import { useSessionStore } from "../stores/sessionStore";
 import colors from "../themes/utils/colors";
-import { sanitizeBusinessId } from "../utils/sanitizeBusinessId";
+import {
+  sanitizeBusinessId,
+  sanitizeBusinessIdLive,
+} from "../utils/sanitizeBusinessId";
 import { ShowNotification } from "../utils/utils";
 
 const CustomConnector = styled(StepConnector)(({ theme }) => ({
@@ -456,6 +459,7 @@ const Configuration = () => {
             <Box
               sx={{
                 marginTop: theme.spacing(8),
+                paddingBottom: "90px",
                 width: {
                   xs: "100%",
                   md: "50%",
@@ -495,9 +499,8 @@ const Configuration = () => {
                       {/* =================== PASO 1 =================== */}
                       {activeStep === 0 && (
                         <>
-                          <Field
+                          <Input
                             name="business_id"
-                            component={Input}
                             maxLength={24}
                             placeholder="Escribe tu usuario..."
                             label="Nombre de Usuario"
@@ -506,10 +509,16 @@ const Configuration = () => {
                             onChange={(e: React.ChangeEvent<any>) => {
                               setFieldValue(
                                 "business_id",
-                                sanitizeBusinessId(e.target.value),
+                                sanitizeBusinessIdLive(e.target.value),
                               );
                             }}
-                            onBlur={handleBlur}
+                            onBlur={(e: React.FocusEvent<any>) => {
+                              setFieldValue(
+                                "business_id",
+                                sanitizeBusinessId(e.target.value),
+                              );
+                              handleBlur(e);
+                            }}
                             // onBlur={async (
                             //   e: React.FocusEvent<HTMLInputElement>
                             // ) => {
@@ -538,15 +547,14 @@ const Configuration = () => {
                             //     }
                             //   }
                             // }}
-                            fullWidth
-                            variant="outlined"
-                            margin="normal"
                             error={
                               !!touched.business_id &&
                               Boolean(errors.business_id)
                             }
                             helperText={
-                              !!touched.business_id && errors.business_id
+                              touched.business_id
+                                ? errors.business_id
+                                : undefined
                             }
                           />
                           {/*  */}

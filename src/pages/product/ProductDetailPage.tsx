@@ -40,6 +40,7 @@ const ProductDetailPage: React.FC = () => {
         sx={{
           flex: 1,
           px: 3,
+          pb: "100px",
           mt: 16,
           mx: "auto",
           minWidth: "85%",

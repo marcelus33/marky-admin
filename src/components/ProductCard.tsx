@@ -24,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
-import { formatPrice } from "../utils/format";
+import { formatPrice, truncateText } from "../utils/format";
 import { useUpdateProductAvailability } from "../hooks/useProductMutations";
 import ProductStopperTag from "./ProductStopperTag";
 
@@ -258,13 +258,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const starts = promotionStarts ? new Date(promotionStarts) : null;
     const ends = new Date(promotionEnds);
 
-    const hasDiscount = !!discountNumber && discountNumber > 0;
-    const hasMultibuyLocal = !!product.multibuyOption;
-    const badgeColor = hasDiscount
-      ? "error.main"
-      : hasMultibuyLocal
-        ? "primary.main"
-        : "primary.main";
+    // The countdown badge always uses the fixed promotion/urgency color.
+    // It must never depend on discount, multibuy, price, or any other
+    // product attribute — only on the promotion having a time limit.
+    const badgeColor = "error.main";
 
     // If promotion hasn't started yet (empieza en)
     if (starts && now < starts) {
@@ -474,14 +471,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Promotion badge: above the description but below the optional tags */}
         {renderPromotionBadge()}
-        {/* Description (clamped to 3 lines) */}
+        {/* Description summary: truncated to 60 chars, full text on hover */}
         {product.description && (
           <Tooltip title={product.description} arrow>
             <LineClamp
               variant="body2"
               sx={{ mt: 1, mb: 1, color: "text.secondary" }}
             >
-              {product.description}
+              {truncateText(product.description, 60)}
             </LineClamp>
           </Tooltip>
         )}
