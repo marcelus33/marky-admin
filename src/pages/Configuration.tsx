@@ -456,6 +456,7 @@ const Configuration = () => {
             <Box
               sx={{
                 marginTop: theme.spacing(8),
+                paddingBottom: "90px",
                 width: {
                   xs: "100%",
                   md: "50%",

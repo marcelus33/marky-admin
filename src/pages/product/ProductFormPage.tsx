@@ -147,7 +147,7 @@ const ProductFormPage = () => {
   // ExtrasSection) so they survive tab switches: switching tabs unmounts the
   // previously selected section component, which would otherwise reset any
   // local state back to its default value on every remount.
-  const [multiPresentation, setMultiPresentation] = useState(true);
+  const [multiPresentation, setMultiPresentation] = useState(false);
   const [showExtras, setShowExtras] = useState(true);
 
   const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
@@ -278,6 +278,7 @@ const ProductFormPage = () => {
             category: product.category?.id,
           };
           setInitialValues(initialValues);
+          setMultiPresentation(mappedVariants.length > 0);
           if (product.category) {
             setSelectedCategory({
               id: product.category.id,
@@ -298,6 +299,7 @@ const ProductFormPage = () => {
     if (!id && (location.state as any)?.duplicatedProduct) {
       const dp = (location.state as any).duplicatedProduct as Product;
       setInitialValues(dp);
+      setMultiPresentation((dp.variants?.length ?? 0) > 0);
       if (dp.category) {
         // dp.category may be a number or an object; normalize to id
         const categoryId =

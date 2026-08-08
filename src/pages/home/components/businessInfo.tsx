@@ -112,7 +112,15 @@ export const BusinessInfo: React.FC<{
             },
           }}
         >
-          <Avatar src={profileImageSrc} sx={{ width: 100, height: 100 }} />
+          <Avatar
+            src={profileImageSrc}
+            sx={{
+              width: 100,
+              height: 100,
+              border: "1px solid #D1D5DB",
+              backgroundColor: "#F3F4F6",
+            }}
+          />
           <Box
             className="edit-icon"
             sx={{
