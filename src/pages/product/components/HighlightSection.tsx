@@ -60,7 +60,7 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
         label="Activar Stopper"
       />
       <Typography variant="body1" color="textDisabled">
-        Puede destacar con un stopper solo 2 productos por categoría.
+        Solo puede haber un producto "Favorito del mes" por categoría.
       </Typography>
 
       {!!values.stopper && (

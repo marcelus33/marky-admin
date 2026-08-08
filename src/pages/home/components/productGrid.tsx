@@ -19,6 +19,8 @@ import CategoryPromotionModal from "../../../components/CategoryPromotionModal";
 import ProductPromotionModal from "../../../components/ProductPromotionModal";
 import CategoryFilterModal, { Category } from "./CategoryFilterModal";
 import FilterSection from "./FilterSection";
+import EmptyProducts from "./EmptyProducts";
+import { useHomePageData } from "../../../hooks/useHomePageData";
 
 interface FilterValues {
   search: string;
@@ -97,6 +99,8 @@ export const ProductGrid: React.FC = () => {
   }, [categoriesWithProductsRaw, filters.search]);
 
   const productCount = categoriesWithProducts?.products_count || 0;
+  const { data: homePageData } = useHomePageData();
+  const showEmptyState = !hasFiltered && !isLoading && productCount === 0;
 
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openCategoryAdminModal, setOpenCategoryAdminModal] = useState(false);
@@ -194,27 +198,29 @@ export const ProductGrid: React.FC = () => {
         </Box>
       </Box>
       {/* Filtros: Search y selects */}
-      <Box mb={4}>
-        <FilterSection
-          values={filters}
-          onFilterChange={handleFilterChange}
-          setOpenCategoryModal={() => setOpenCategoryModal(true)}
-        />
-        {hasFiltered && (
-          <Typography
-            variant="body2"
-            sx={{
-              display: { xs: "none", md: "block" },
-              mt: 2,
-              textAlign: "left",
-            }}
-          >
-            {productCount === 0
-              ? "No se han encontrado productos"
-              : `Encontramos ${productCount} productos`}
-          </Typography>
-        )}
-      </Box>
+      {!showEmptyState && (
+        <Box mb={4}>
+          <FilterSection
+            values={filters}
+            onFilterChange={handleFilterChange}
+            setOpenCategoryModal={() => setOpenCategoryModal(true)}
+          />
+          {hasFiltered && (
+            <Typography
+              variant="body2"
+              sx={{
+                display: { xs: "none", md: "block" },
+                mt: 2,
+                textAlign: "left",
+              }}
+            >
+              {productCount === 0
+                ? "No se han encontrado productos"
+                : `Encontramos ${productCount} productos`}
+            </Typography>
+          )}
+        </Box>
+      )}
       {/* Modal de filtrado de categorías */}
       <Box>
         <CategoryFilterModal
@@ -238,7 +244,10 @@ export const ProductGrid: React.FC = () => {
         />
       </Box>
       {/* Cuadrícula de productos */}
-      {categoriesWithProducts?.results.map((cat) => (
+      {showEmptyState && (
+        <EmptyProducts businessName={homePageData?.business_name} />
+      )}
+      {!showEmptyState && categoriesWithProducts?.results.map((cat) => (
         <CategoryGroup
           key={cat.id}
           category={cat}

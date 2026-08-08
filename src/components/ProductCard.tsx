@@ -258,13 +258,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const starts = promotionStarts ? new Date(promotionStarts) : null;
     const ends = new Date(promotionEnds);
 
-    const hasDiscount = !!discountNumber && discountNumber > 0;
-    const hasMultibuyLocal = !!product.multibuyOption;
-    const badgeColor = hasDiscount
-      ? "error.main"
-      : hasMultibuyLocal
-        ? "primary.main"
-        : "primary.main";
+    // The countdown badge always uses the fixed promotion/urgency color.
+    // It must never depend on discount, multibuy, price, or any other
+    // product attribute — only on the promotion having a time limit.
+    const badgeColor = "error.main";
 
     // If promotion hasn't started yet (empieza en)
     if (starts && now < starts) {
