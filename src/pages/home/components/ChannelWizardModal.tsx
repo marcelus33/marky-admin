@@ -27,6 +27,7 @@ import Input from "../../../components/Input";
 import XButton from "../../../components/XButton";
 import { useApiMutation } from "../../../hooks/useApiMutation";
 import { updateSocialMediaLinks } from "../../../services/businessService";
+import { useSessionStore } from "../../../stores/sessionStore";
 
 // --- tipos ---
 export type ChannelKey = "instagram" | "facebook" | "whatsapp" | "website";
@@ -71,10 +72,34 @@ const stripChannelPrefix = (chan: ChannelKey, value: string): string => {
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 };
 
+// Los usuarios suelen escribir su dominio sin protocolo (www.marky.one); se
+// completa con https:// para guardar una URL válida.
+const normalizeWebsiteUrl = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+const isValidWebsiteUrl = (value = ""): boolean => {
+  if (!value.trim()) return false;
+  try {
+    // eslint-disable-next-line no-new
+    new URL(normalizeWebsiteUrl(value));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const buildChannelValue = (chan: ChannelKey, value: string): string => {
   const prefix = CHANNEL_URL_PREFIXES[chan];
-  if (!prefix || !value) return value;
-  return value.startsWith(prefix) ? value : `${prefix}${value}`;
+  if (prefix && value) {
+    return value.startsWith(prefix) ? value : `${prefix}${value}`;
+  }
+  if (chan === "website" && value) {
+    return normalizeWebsiteUrl(value);
+  }
+  return value;
 };
 
 export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
@@ -87,6 +112,11 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   // Step 1: bienvenida, 2: selector, 3: admin
   const [step, setStep] = useState(1);
   const [selectedChannels, setSelectedChannels] = useState<ChannelKey[]>([]);
+
+  // Número usado durante el registro de la cuenta, para precargar WhatsApp.
+  const registrationPhone = useSessionStore(
+    (state: any) => state.user?.phone_number
+  ) as string | undefined;
 
   // Get query client to invalidate cache
   const queryClient = useQueryClient();
@@ -133,9 +163,13 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
     }
   }, [initialDataMap]);
 
-  // 3) Y finalmente los initialValues de Formik:
+  // 3) Y finalmente los initialValues de Formik: si no hay un WhatsApp ya
+  // configurado, se precarga con el número usado durante el registro.
   const initialValues: ChannelsFormValues = {
-    channelsData: { ...initialDataMap },
+    channelsData: {
+      ...initialDataMap,
+      whatsapp: initialDataMap.whatsapp || registrationPhone || "",
+    },
   };
 
   const phoneSchema = Yup.string()
@@ -155,8 +189,12 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
     );
 
   const urlSchema = Yup.string()
-    .url("URL inválida")
-    .required("El campo es obligatorio");
+    .required("El campo es obligatorio")
+    .test(
+      "is-valid-website",
+      "Ingresa un sitio web válido. Ejemplo: www.sitio.com",
+      isValidWebsiteUrl
+    );
 
   const usernameSchema = Yup.string()
     .required("El campo es obligatorio")
@@ -394,9 +432,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                           <Field
                             key={chan}
                             placeholder={
-                              prefix
-                                ? "usuario"
-                                : `www.${label.toLocaleLowerCase()}.com`
+                              prefix ? "usuario" : "www.sitio.com"
                             }
                             name={fieldName}
                             value={values.channelsData[chan]}
@@ -405,7 +441,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                             }}
                             component={Input}
                             label={label}
-                            type={prefix ? "text" : "url"}
+                            type="text"
                             required
                             error={fieldTouched && !!fieldError}
                             helperText={fieldTouched ? fieldError : ""}

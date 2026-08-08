@@ -57,7 +57,9 @@ import { ReactComponent as DestacarMenuIcon } from "../../assets/icons/product-f
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required("El nombre del producto es requerido"),
-  description: Yup.string().required("La descripción es requerida"),
+  description: Yup.string()
+    .max(300, "La descripción no puede superar los 300 caracteres")
+    .required("La descripción es requerida"),
   price: Yup.number()
     .required("El precio es requerido")
     .positive("El precio debe ser un número positivo"),

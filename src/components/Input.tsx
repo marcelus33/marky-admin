@@ -14,6 +14,8 @@ interface InputProps {
   // explicit error flag (overrides formik error if provided)
   error?: boolean;
   maxLength?: number;
+  // "remaining" (default) shows characters left; "fraction" shows current/max
+  counterFormat?: "remaining" | "fraction";
   helperText?: string;
   disabled?: boolean;
   placeholder?: string;
@@ -39,6 +41,7 @@ const Input: React.FC<InputProps> = ({
   error: errorProp = false,
   helperText: helperTextProp,
   maxLength,
+  counterFormat = "remaining",
   disabled = false,
   placeholder,
   value: valueProp,
@@ -91,7 +94,9 @@ const Input: React.FC<InputProps> = ({
       {maxLength !== undefined && (
         <InputAdornment position="end">
           <Typography variant="caption" color="textSecondary">
-            {maxLength - (currentValue?.length || 0)}
+            {counterFormat === "fraction"
+              ? `${currentValue?.length || 0}/${maxLength}`
+              : maxLength - (currentValue?.length || 0)}
           </Typography>
         </InputAdornment>
       )}
