@@ -27,7 +27,8 @@ import Input from "../../../components/Input";
 import XButton from "../../../components/XButton";
 import { useApiMutation } from "../../../hooks/useApiMutation";
 import { updateSocialMediaLinks } from "../../../services/businessService";
-import { useSessionStore } from "../../../stores/sessionStore";
+import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
+import { normalizeWebsiteUrl, isValidWebsiteUrl } from "../../../utils/websiteUrl";
 
 // --- tipos ---
 export type ChannelKey = "instagram" | "facebook" | "whatsapp" | "website";
@@ -67,28 +68,16 @@ const CHANNEL_URL_PREFIXES: Partial<Record<ChannelKey, string>> = {
 };
 
 const stripChannelPrefix = (chan: ChannelKey, value: string): string => {
-  const prefix = CHANNEL_URL_PREFIXES[chan];
-  if (!prefix || !value) return value;
-  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
-};
-
-// Los usuarios suelen escribir su dominio sin protocolo (www.marky.one); se
-// completa con https:// para guardar una URL válida.
-const normalizeWebsiteUrl = (value: string): string => {
-  const trimmed = value.trim();
-  if (!trimmed) return trimmed;
-  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-};
-
-const isValidWebsiteUrl = (value = ""): boolean => {
-  if (!value.trim()) return false;
-  try {
-    // eslint-disable-next-line no-new
-    new URL(normalizeWebsiteUrl(value));
-    return true;
-  } catch {
-    return false;
+  if (!value) return value;
+  if (chan === "website") {
+    // buildChannelValue always stores websites with a scheme; strip it back
+    // off so the field round-trips to the bare-domain format shown by its
+    // "www.sitio.com" placeholder.
+    return value.replace(/^https?:\/\//i, "");
   }
+  const prefix = CHANNEL_URL_PREFIXES[chan];
+  if (!prefix) return value;
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 };
 
 const buildChannelValue = (chan: ChannelKey, value: string): string => {
@@ -113,10 +102,11 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   const [step, setStep] = useState(1);
   const [selectedChannels, setSelectedChannels] = useState<ChannelKey[]>([]);
 
-  // Número usado durante el registro de la cuenta, para precargar WhatsApp.
-  const registrationPhone = useSessionStore(
-    (state: any) => state.user?.phone_number
-  ) as string | undefined;
+  // Número actual de la cuenta (no el de sesión, que puede quedar
+  // desactualizado tras editarlo en Configuración de cuenta), para
+  // precargar WhatsApp.
+  const { data: accountInfo } = useBusinessAccountInfo();
+  const currentPhone = accountInfo?.phone_number;
 
   // Get query client to invalidate cache
   const queryClient = useQueryClient();
@@ -168,7 +158,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   const initialValues: ChannelsFormValues = {
     channelsData: {
       ...initialDataMap,
-      whatsapp: initialDataMap.whatsapp || registrationPhone || "",
+      whatsapp: initialDataMap.whatsapp || currentPhone || "",
     },
   };
 
