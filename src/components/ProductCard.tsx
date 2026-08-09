@@ -3,6 +3,7 @@ import {
   Card,
   CardContent,
   CardMedia,
+  CircularProgress,
   Typography,
   Tooltip,
   IconButton,
@@ -19,6 +20,7 @@ import { ProductGridItem } from "../types/product";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import FileCopyIcon from "@mui/icons-material/FileCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
@@ -26,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import { formatPrice, truncateText } from "../utils/format";
 import { useUpdateProductAvailability } from "../hooks/useProductMutations";
+import useDuplicateProduct from "../hooks/useDuplicateProduct";
 import ProductStopperTag from "./ProductStopperTag";
 
 interface ProductCardProps {
@@ -49,6 +52,7 @@ const DropdownMenu: React.FC<{
 }> = ({ product, onPromotionClick, onDeleteClick }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const updateAvailability = useUpdateProductAvailability();
+  const duplicateProduct = useDuplicateProduct();
 
   // derive initial availability from product payload (may be snake_case or camelCase)
   const initialIsAvailable = Boolean(
@@ -114,6 +118,25 @@ const DropdownMenu: React.FC<{
         >
           <EditIcon fontSize="small" sx={{ mr: 4 }} />
           Editar
+        </MenuItem>
+        <MenuItem
+          disabled={duplicateProduct.isPending}
+          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+            event.stopPropagation();
+            // Menu stays open (not handleClose()) while the fetch is in
+            // flight so the spinner below is visible; on success the
+            // hook navigates away, on error the toast fires and the item
+            // re-enables so the user can retry or dismiss the menu.
+            duplicateProduct.mutate(Number(product.id));
+          }}
+          sx={{ py: 4, borderRadius: 2 }}
+        >
+          {duplicateProduct.isPending ? (
+            <CircularProgress size={20} sx={{ mr: 4 }} />
+          ) : (
+            <FileCopyIcon fontSize="small" sx={{ mr: 4 }} />
+          )}
+          Duplicar
         </MenuItem>
         <MenuItem
           onClick={(event: React.MouseEvent<HTMLLIElement>) => {

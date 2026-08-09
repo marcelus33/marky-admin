@@ -31,6 +31,7 @@ import { getProductById } from "../../services/productService";
 import { Category } from "../../types/category";
 import { Product } from "../../types/product";
 import { objectToFormData } from "../../utils/formData";
+import { buildDuplicatedProduct } from "../../utils/buildDuplicatedProduct";
 import AssignCategoryModal from "./components/AssignCategoryModal";
 import ExtrasSection from "./components/ExtrasSection";
 import HighlightSection from "./components/HighlightSection";
@@ -655,36 +656,9 @@ const ProductFormPage = () => {
                   formik={formikProps}
                   onDeleteClick={() => setOpenDeleteDialog(true)}
                   onDuplicateClick={() => {
-                    // build duplicated product from current form values
-                    const values = formikProps.values as any;
-                    const duplicated: Product = {
-                      ...values,
-                      // clear top-level id if present
-                      id: undefined as any,
-                      // set name with suffix
-                      name: `${values.name} (copia)`,
-                      // remove media entirely to avoid URL/file complications
-                      media: [],
-                      // duplicates should not keep DB ids for variants/addons
-                      variants: (values.variants || []).map((v: any) => ({
-                        name: v.name,
-                        description: v.description,
-                        price: Number(v.price) || 0,
-                        image: undefined,
-                      })),
-                      addons: (values.addons || []).map((a: any) => ({
-                        name: a.name,
-                        price: Number(a.price) || 0,
-                      })),
-                    };
-
-                    // ensure category is an id (it might be object)
-                    if (
-                      duplicated.category &&
-                      typeof duplicated.category === "object"
-                    ) {
-                      duplicated.category = (duplicated.category as any).id;
-                    }
+                    const duplicated = buildDuplicatedProduct(
+                      formikProps.values as Product,
+                    );
 
                     attemptNavigate(() =>
                       navigate(ROUTES.PRODUCT_CREATE, {
