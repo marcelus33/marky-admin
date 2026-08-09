@@ -228,6 +228,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
       ? String(discountNumber)
       : String(discountNumber)
     : null;
+  // Matches ProductDetailPricing's hasDiscount: also treat presence of
+  // backend "with discount" labels as a discount signal, so the grid and
+  // detail views stay consistent even if discountPercent reads as 0.
+  const hasPriceDiscount =
+    showDiscount ||
+    !!product.primaryPriceWithDiscount ||
+    !!product.secondaryPriceWithDiscount;
   const hasMultibuy = !!product.multibuyOption;
 
   // Helper to format a remaining duration (ms) into a detailed Spanish string
@@ -484,9 +491,32 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Prices: prefer formatted labels from backend (primaryPrice / secondaryPrice)
-            otherwise fall back to numeric price / priceAlt formatted with formatPrice */}
+            otherwise fall back to numeric price / priceAlt formatted with formatPrice.
+            When an active percentage discount applies (and it's not a 2x1/3x2-style
+            multibuy promotion), show the discounted price as primary and the
+            original price struck through below it. */}
         <Box mt={1}>
-          {product.primaryPrice ? (
+          {hasPriceDiscount && !hasMultibuy && product.primaryPriceWithDiscount ? (
+            <>
+              <Typography color="primary" fontWeight="bold">
+                {product.primaryPriceWithDiscount}
+              </Typography>
+              {product.primaryPrice && (
+                <Typography
+                  variant="body2"
+                  color="grey.500"
+                  sx={{ textDecoration: "line-through" }}
+                >
+                  Antes {product.primaryPrice}
+                </Typography>
+              )}
+              {product.secondaryPriceWithDiscount && (
+                <Typography variant="body2" color="grey.500">
+                  {product.secondaryPriceWithDiscount}
+                </Typography>
+              )}
+            </>
+          ) : product.primaryPrice ? (
             <>
               <Typography color="primary" fontWeight="bold">
                 {product.primaryPrice}
