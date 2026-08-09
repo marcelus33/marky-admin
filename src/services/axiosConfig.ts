@@ -1,6 +1,10 @@
 import axios from "axios";
 import { useSessionStore } from "../stores/sessionStore";
 import { mapAxiosError } from "./errorMapper";
+import { ShowNotification } from "../utils/utils";
+
+const SESSION_EXPIRED_MESSAGE =
+  "Tu sesión expiró. Guarda o copia la información antes de volver a iniciar sesión.";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL, // URL base desde el .env
@@ -32,9 +36,18 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         // No hay refresh token disponible (p. ej. tras recargar la página):
-        // cerrar sesión y redirigir al login en lugar de quedar "atascado".
+        // cerrar sesión. NO usamos window.location.href aquí: es una
+        // navegación dura de página completa, que dispara el diálogo nativo
+        // `beforeunload` cuando hay un formulario con cambios sin guardar
+        // (p. ej. subiendo un video en /product/edit/:id). clearSession()
+        // se ejecuta de forma síncrona ANTES de que el navegador resuelva
+        // ese diálogo, así que aunque el usuario presione "Cancelar" para
+        // quedarse, la sesión ya quedó destruida. App.tsx ya redirige a
+        // /login de forma reactiva en cuanto `isAuthenticated()` pasa a
+        // false (ver rutas protegidas), así que basta con limpiar la
+        // sesión y avisar al usuario.
         clearSession();
-        window.location.href = "/login";
+        ShowNotification({ message: SESSION_EXPIRED_MESSAGE, type: "warning" });
       } else {
         try {
           const { data } = await axios.post(
@@ -44,11 +57,14 @@ api.interceptors.response.use(
             }
           );
 
-          // Actualiza los tokens en el store preservando el usuario actual
+          // Actualiza los tokens en el store preservando el usuario actual.
+          // El backend tiene ROTATE_REFRESH_TOKENS activado: cada refresh
+          // devuelve un refresh token nuevo y el usado queda inválido, así
+          // que hay que guardar data.refresh (no seguir reusando el viejo).
           const { user } = useSessionStore.getState();
           setSession({
             accessToken: data.access,
-            refreshToken,
+            refreshToken: data.refresh,
             user,
           });
 
@@ -57,8 +73,10 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch (refreshError) {
           console.error("Error al refrescar el token:", refreshError);
+          // Mismo motivo que arriba: sin window.location.href. La
+          // redirección la maneja App.tsx reactivamente.
           clearSession(); // Limpia la sesión si el refresh falla
-          window.location.href = "/login"; // Redirige al login
+          ShowNotification({ message: SESSION_EXPIRED_MESSAGE, type: "warning" });
         }
       }
     }
