@@ -80,13 +80,32 @@ const NumberInput: React.FC<
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let newDisplay = e.target.value;
-    // Permitir solo dígitos, puntos y comas
+    // Permitir solo dígitos, puntos y comas (sin signo negativo)
     newDisplay = newDisplay.replace(/[^0-9.,]/g, "");
-    // Limitar a 2 decimales tras la coma (backend: DecimalField decimal_places=2)
-    const [intPart, ...decParts] = newDisplay.split(",");
-    if (decParts.length > 0) {
-      newDisplay = `${intPart},${decParts.join("").slice(0, 2)}`;
+
+    // El usuario puede escribir el separador decimal con coma o con punto
+    // (ver ticket "Unificar formato decimal en campos de precio"). Se toma
+    // el ÚLTIMO separador ingresado como decimal; cualquier separador
+    // anterior se descarta. Antes, un "." se trataba siempre como
+    // separador de miles y se eliminaba al guardar, así que escribir
+    // "0.8" terminaba guardándose como "08" (8) en vez de 0.8.
+    const lastSeparatorIndex = Math.max(
+      newDisplay.lastIndexOf(","),
+      newDisplay.lastIndexOf("."),
+    );
+
+    if (lastSeparatorIndex === -1) {
+      newDisplay = newDisplay.replace(/[.,]/g, "");
+    } else {
+      const intPart = newDisplay.slice(0, lastSeparatorIndex).replace(/[.,]/g, "");
+      // Limitar a 2 decimales tras el separador (backend: DecimalField decimal_places=2)
+      const decPart = newDisplay
+        .slice(lastSeparatorIndex + 1)
+        .replace(/[.,]/g, "")
+        .slice(0, 2);
+      newDisplay = `${intPart},${decPart}`;
     }
+
     setDisplayValue(newDisplay);
     const newRaw = formatToRaw(newDisplay);
     form.setFieldValue(field.name, newRaw);
@@ -94,6 +113,14 @@ const NumberInput: React.FC<
 
   const handleBlur = () => {
     form.setFieldTouched(field.name, true);
+    // Normaliza el valor visible a 2 decimales al perder foco, p. ej.
+    // "0,4" -> "0,40", "1" -> "1,00", "0.8" -> "0,80".
+    if (!displayValue) return;
+    const numeric = Number(formatToRaw(displayValue));
+    if (Number.isNaN(numeric)) return;
+    const paddedRaw = numeric.toFixed(2);
+    setDisplayValue(formatToDisplay(paddedRaw));
+    form.setFieldValue(field.name, paddedRaw);
   };
 
   return (
