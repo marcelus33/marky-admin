@@ -21,6 +21,7 @@ import ImageCropModal from "../../../components/ImageCropModal";
 import { useImageCropper } from "../../../hooks/useImageCropper";
 import { MediaItemLocal, Product } from "../../../types/product";
 import { generateThumbnail } from "../../../utils/media";
+import { validateMedia } from "../../../utils/mediaValidation";
 import { ShowNotification } from "../../../utils/utils";
 import { SortableImageItem } from "./SortableImageItem";
 import { ThumbnailItem } from "./ThumbnailItem";
@@ -120,7 +121,8 @@ const ProductImageGallery = () => {
       if (!files) return;
 
       const newMedia = Array.from(files);
-      const validationError = validateMedia(newMedia);
+      const activeMedia = media.filter((m) => !m._delete);
+      const validationError = validateMedia(newMedia, activeMedia);
       if (validationError) {
         ShowNotification({ message: validationError, type: "error" });
         return;
@@ -148,34 +150,6 @@ const ProductImageGallery = () => {
         type: "error",
       });
     }
-  };
-
-  const validateMedia = (files: File[]): string | null => {
-    const activeMedia = media.filter((m) => !m._delete);
-    const totalFiles = activeMedia.length + files.length;
-    if (totalFiles > 4)
-      return "No se pueden seleccionar más de 4 archivos en total.";
-
-    const imageCount =
-      activeMedia.filter((item: any) => item.media_type === "image").length +
-      files.filter((file) => file.type.startsWith("image/")).length;
-    if (imageCount > 3) return "No se pueden seleccionar más de 3 imágenes.";
-
-    const videoCount =
-      activeMedia.filter((item: any) => item.media_type === "video").length +
-      files.filter((file) => file.type.startsWith("video/")).length;
-    if (videoCount > 1) return "No se puede seleccionar más de 1 video.";
-
-    for (const file of files) {
-      if (file.type.startsWith("image/") && file.size > 2 * 1024 * 1024) {
-        return `La imagen ${file.name} excede el tamaño máximo de 2MB.`;
-      }
-      if (file.type.startsWith("video/") && file.size > 10 * 1024 * 1024) {
-        return `El video ${file.name} excede el tamaño máximo de 10MB.`;
-      }
-    }
-
-    return null;
   };
 
   function handleDragEnd(event: DragEndEvent) {

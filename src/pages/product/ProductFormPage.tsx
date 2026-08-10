@@ -9,6 +9,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { AxiosProgressEvent } from "axios";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -31,6 +32,7 @@ import { getProductById } from "../../services/productService";
 import { Category } from "../../types/category";
 import { Product } from "../../types/product";
 import { objectToFormData } from "../../utils/formData";
+import { buildDuplicatedProduct } from "../../utils/buildDuplicatedProduct";
 import AssignCategoryModal from "./components/AssignCategoryModal";
 import ExtrasSection from "./components/ExtrasSection";
 import HighlightSection from "./components/HighlightSection";
@@ -153,6 +155,14 @@ const ProductFormPage = () => {
   const [showExtras, setShowExtras] = useState(true);
 
   const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
+  // Percentage of the create/update request's body uploaded so far (mostly
+  // meaningful when the product carries a video). null = no upload in flight.
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const handleUploadProgress = (progressEvent: AxiosProgressEvent) => {
+    if (progressEvent.total) {
+      setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+    }
+  };
 
   const [initialValues, setInitialValues] = useState<Product>({
     name: "",
@@ -566,21 +576,27 @@ const ProductFormPage = () => {
         // 7) submit using your existing mutations
         const handleSuccess = () => {
           setSubmitting(false);
+          setUploadProgress(null);
           // clear dirty flag after successful submit
           setIsFormDirty(false);
           navigate(ROUTES.HOME);
         };
+        const handleError = () => {
+          setSubmitting(false);
+          setUploadProgress(null);
+        };
 
+        setUploadProgress(0);
         if (id) {
           updateProductMutation.mutate(
-            { id: Number(id), product: formData },
-            { onSuccess: handleSuccess, onError: () => setSubmitting(false) },
+            { id: Number(id), product: formData, onUploadProgress: handleUploadProgress },
+            { onSuccess: handleSuccess, onError: handleError },
           );
         } else {
-          createProductMutation.mutate(formData, {
-            onSuccess: handleSuccess,
-            onError: () => setSubmitting(false),
-          });
+          createProductMutation.mutate(
+            { formData, onUploadProgress: handleUploadProgress },
+            { onSuccess: handleSuccess, onError: handleError },
+          );
         }
       }}
     >
@@ -655,36 +671,9 @@ const ProductFormPage = () => {
                   formik={formikProps}
                   onDeleteClick={() => setOpenDeleteDialog(true)}
                   onDuplicateClick={() => {
-                    // build duplicated product from current form values
-                    const values = formikProps.values as any;
-                    const duplicated: Product = {
-                      ...values,
-                      // clear top-level id if present
-                      id: undefined as any,
-                      // set name with suffix
-                      name: `${values.name} (copia)`,
-                      // remove media entirely to avoid URL/file complications
-                      media: [],
-                      // duplicates should not keep DB ids for variants/addons
-                      variants: (values.variants || []).map((v: any) => ({
-                        name: v.name,
-                        description: v.description,
-                        price: Number(v.price) || 0,
-                        image: undefined,
-                      })),
-                      addons: (values.addons || []).map((a: any) => ({
-                        name: a.name,
-                        price: Number(a.price) || 0,
-                      })),
-                    };
-
-                    // ensure category is an id (it might be object)
-                    if (
-                      duplicated.category &&
-                      typeof duplicated.category === "object"
-                    ) {
-                      duplicated.category = (duplicated.category as any).id;
-                    }
+                    const duplicated = buildDuplicatedProduct(
+                      formikProps.values as Product,
+                    );
 
                     attemptNavigate(() =>
                       navigate(ROUTES.PRODUCT_CREATE, {
@@ -797,6 +786,7 @@ const ProductFormPage = () => {
                   <SubmitSection
                     onSectionSelect={handleSectionSelect}
                     isSubmitting={isSaving}
+                    uploadProgress={uploadProgress}
                   />
                 </Box>
               </Box>

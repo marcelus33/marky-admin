@@ -237,7 +237,7 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
         multibuy_option:
           dataToSubmit.promotionOption === "oferta"
             ? dataToSubmit.multibuyOption
-            : undefined,
+            : null,
         promotion_starts_at: dataToSubmit.promotionStartsAt,
         promotion_ends_at: dataToSubmit.promotionEndsAt,
       };

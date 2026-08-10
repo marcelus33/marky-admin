@@ -3,16 +3,30 @@ import { mapAxiosError } from "./errorMapper";
 import { DRFErrorResponse } from "./types";
 
 const buildError = (
-  response?: AxiosError<DRFErrorResponse>["response"]
+  response?: AxiosError<DRFErrorResponse>["response"],
+  code?: string
 ): AxiosError<DRFErrorResponse> =>
-  ({ response } as AxiosError<DRFErrorResponse>);
+  ({ response, code } as AxiosError<DRFErrorResponse>);
 
 describe("mapAxiosError", () => {
   it("returns a network-error shape when there is no response", () => {
     const result = mapAxiosError(buildError(undefined));
 
     expect(result).toEqual({
-      message: "Error de conexión o respuesta no recibida",
+      message:
+        "No se pudo completar la carga. Revisa tu conexión e intenta nuevamente.",
+      status: 0,
+      success: false,
+      errors: null,
+    });
+  });
+
+  it("returns a timeout-specific message when the request was aborted (ECONNABORTED)", () => {
+    const result = mapAxiosError(buildError(undefined, "ECONNABORTED"));
+
+    expect(result).toEqual({
+      message:
+        "No se pudo completar la carga: se agotó el tiempo de espera. Revisa tu conexión e intenta nuevamente.",
       status: 0,
       success: false,
       errors: null,
@@ -58,12 +72,41 @@ describe("mapAxiosError", () => {
   it("falls back to a generic message when nothing is present", () => {
     const result = mapAxiosError(
       buildError({
+        status: 400,
+        data: {} as DRFErrorResponse,
+      } as AxiosError<DRFErrorResponse>["response"])
+    );
+
+    expect(result.message).toBe("Ha ocurrido un error");
+  });
+
+  it("falls back to the generic message on 5xx with no message either (not upload-specific, since this mapper is shared app-wide)", () => {
+    const result = mapAxiosError(
+      buildError({
         status: 500,
         data: {} as DRFErrorResponse,
       } as AxiosError<DRFErrorResponse>["response"])
     );
 
     expect(result.message).toBe("Ha ocurrido un error");
+  });
+
+  it("extracts a nested DRF field error when there is no top-level error/detail/message (e.g. product media validation)", () => {
+    const data = {
+      media: [{ file: ["El video supera el peso máximo permitido. Máximo permitido: 80MB."] }],
+    } as unknown as DRFErrorResponse;
+
+    const result = mapAxiosError(
+      buildError({
+        status: 400,
+        data,
+      } as AxiosError<DRFErrorResponse>["response"])
+    );
+
+    expect(result.message).toBe(
+      "El video supera el peso máximo permitido. Máximo permitido: 80MB."
+    );
+    expect(result.errors).toEqual(data);
   });
 
   it("defaults success to false when data.success is undefined", () => {

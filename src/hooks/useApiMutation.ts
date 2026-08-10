@@ -39,7 +39,10 @@ export const useApiMutation = <
       onSuccess?.(data, variables);
     },
     onError: (error: any, variables, context) => {
-      if (showErrorNotification) {
+      // Un 401 ya fue notificado por el interceptor de axiosConfig.ts
+      // ("Tu sesión expiró..."), que también dispara el redirect a /login.
+      // Mostrar acá un segundo toast genérico sería redundante/confuso.
+      if (showErrorNotification && error?.status !== 401) {
         const message = errorMessage || error.message || "Ha ocurrido un error";
         ShowNotification({
           message,

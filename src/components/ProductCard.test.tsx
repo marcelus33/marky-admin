@@ -45,6 +45,56 @@ const renderProductCard = (
   );
 };
 
+describe("ProductCard discounted price rendering", () => {
+  it("shows the discounted price with a struck-through original price when discountPercent > 0", () => {
+    const discountedProduct: ProductGridItem = {
+      ...product,
+      discountPercent: 20,
+      primaryPrice: "$2.00",
+      primaryPriceWithDiscount: "$1.60",
+      secondaryPriceWithDiscount: "US$1.60",
+    };
+    renderProductCard({ product: discountedProduct });
+
+    expect(screen.getByText("$1.60")).toBeInTheDocument();
+    expect(screen.getByText("Antes $2.00")).toBeInTheDocument();
+    expect(screen.getByText("US$1.60")).toBeInTheDocument();
+  });
+
+  it("falls back to the plain price when there is a multibuy offer, even with a discount", () => {
+    const multibuyProduct: ProductGridItem = {
+      ...product,
+      discountPercent: 20,
+      multibuyOption: "2x1",
+      primaryPrice: "$2.00",
+      primaryPriceWithDiscount: "$1.60",
+    };
+    renderProductCard({ product: multibuyProduct });
+
+    expect(screen.getByText("$2.00")).toBeInTheDocument();
+    expect(screen.queryByText("$1.60")).not.toBeInTheDocument();
+  });
+
+  it("shows the discounted price when priceWithDiscount fields are present even if discountPercent reads as 0", () => {
+    const staleDiscountPercentProduct: ProductGridItem = {
+      ...product,
+      discountPercent: 0,
+      primaryPrice: "$2.00",
+      primaryPriceWithDiscount: "$1.60",
+    };
+    renderProductCard({ product: staleDiscountPercentProduct });
+
+    expect(screen.getByText("$1.60")).toBeInTheDocument();
+    expect(screen.getByText("Antes $2.00")).toBeInTheDocument();
+  });
+
+  it("shows the plain price when there is no discount signal at all", () => {
+    renderProductCard();
+
+    expect(screen.getByText("2,00")).toBeInTheDocument();
+  });
+});
+
 describe("ProductCard 'Eliminar' menu action (Home page card)", () => {
   it("calls onDeleteClick with the product when 'Eliminar' is clicked", () => {
     const onDeleteClick = jest.fn();

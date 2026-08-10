@@ -62,6 +62,9 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
       <Typography variant="body1" color="textDisabled">
         Solo puede haber un producto "Favorito del mes" por categoría.
       </Typography>
+      <Typography variant="body1" color="textDisabled">
+        Solo puede haber un producto "Recomendado" por categoría.
+      </Typography>
 
       {!!values.stopper && (
         <Box display="flex" flexDirection="column" ml={4} mt={2}>

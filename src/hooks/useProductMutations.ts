@@ -1,12 +1,19 @@
+import { AxiosProgressEvent } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiMutation } from "./useApiMutation";
 import { createProduct, updateProduct } from "../services/productService";
 import { Product } from "../types/product";
 
+interface CreateProductVariables {
+  formData: FormData;
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
+}
+
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
-  return useApiMutation<Product, Error, FormData>({
-    mutationFn: createProduct,
+  return useApiMutation<Product, Error, CreateProductVariables>({
+    mutationFn: ({ formData, onUploadProgress }) =>
+      createProduct(formData, onUploadProgress),
     successMessage: "Producto creado exitosamente",
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -16,10 +23,17 @@ export const useCreateProduct = () => {
   });
 };
 
+interface UpdateProductVariables {
+  id: number;
+  product: FormData;
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
+}
+
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
-  return useApiMutation<Product, Error, { id: number; product: FormData }>({
-    mutationFn: ({ id, product }) => updateProduct(id, product),
+  return useApiMutation<Product, Error, UpdateProductVariables>({
+    mutationFn: ({ id, product, onUploadProgress }) =>
+      updateProduct(id, product, onUploadProgress),
     successMessage: "Producto actualizado exitosamente",
     onSuccess: () => {
       queryClient.invalidateQueries({

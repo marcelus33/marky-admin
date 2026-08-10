@@ -1,8 +1,13 @@
+import { AxiosProgressEvent } from "axios";
 import { CategoryWithProducts } from "../types/categoryWithProducts";
 import { Product } from "../types/product";
 import api from "./axiosConfig";
 import { PaginatedProductCategoriesResponse, PaginatedResponse } from "./types";
 import { mapCategoryWithProducts, mapProduct } from "../mappers/productMapper";
+
+// Product create/update requests can carry a video file (up to 80MB), so they
+// need a much longer timeout than the default 30s used for regular requests.
+const PRODUCT_SAVE_TIMEOUT_MS = 240_000;
 
 export interface ProductCategory {
   id: number;
@@ -99,9 +104,14 @@ export const updateProductCategoryOrder = async (
   await api.post(`${categoryBaseURL}/update_order/`, { categories });
 };
 
-export const createProduct = async (formData: FormData): Promise<Product> => {
+export const createProduct = async (
+  formData: FormData,
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void,
+): Promise<Product> => {
   const response = await api.post(`${productBaseURL}/`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
+    timeout: PRODUCT_SAVE_TIMEOUT_MS,
+    onUploadProgress,
   });
   return response.data;
 };
@@ -109,9 +119,17 @@ export const createProduct = async (formData: FormData): Promise<Product> => {
 export const updateProduct = async (
   id: number,
   formData: FormData,
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void,
 ): Promise<Product> => {
   const response = await api.patch(`${productBaseURL}/${id}/`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
+    // Only the full product-form save passes onUploadProgress and can carry
+    // a large video, so only that call gets the longer timeout. Lightweight
+    // callers (availability toggle, promotion fields) fall back to the
+    // axios instance's default 30s instead of waiting up to 4 minutes on a
+    // genuinely hung request.
+    timeout: onUploadProgress ? PRODUCT_SAVE_TIMEOUT_MS : undefined,
+    onUploadProgress,
   });
   return response.data;
 };

@@ -24,6 +24,10 @@ export interface ProductGridItem {
   primaryPrice?: string;
   /** Fully formatted secondary price coming from the backend (e.g. "USD 10,53") */
   secondaryPrice?: string;
+  /** Fully formatted primary price with an active discount applied (e.g. "PYG 60.000,00") */
+  primaryPriceWithDiscount?: string;
+  /** Fully formatted secondary price with an active discount applied (e.g. "USD 7,89") */
+  secondaryPriceWithDiscount?: string;
   isRecommended?: boolean;
   isFavorite?: boolean;
   discountPercent?: number;

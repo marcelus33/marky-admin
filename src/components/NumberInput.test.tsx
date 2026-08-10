@@ -26,3 +26,53 @@ describe("NumberInput decimal limit (Configuration Step 3 exchange rate)", () =>
     expect(input).toHaveValue("1,50");
   });
 });
+
+describe("NumberInput accepts dot or comma as decimal separator (ticket: unify decimal price format)", () => {
+  it("treats a dot as the decimal separator instead of a thousands separator", () => {
+    renderField();
+    const input = screen.getByRole("textbox");
+    // Previously "0.8" was stripped of its dot and saved as "08" (8) instead of 0.8.
+    fireEvent.change(input, { target: { value: "0.8" } });
+    expect(input).toHaveValue("0,8");
+  });
+
+  it("truncates dot-separated input to 2 decimal digits", () => {
+    renderField();
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "667.05678" } });
+    expect(input).toHaveValue("667,05");
+  });
+
+  it("only honors the last separator typed, discarding earlier ones", () => {
+    renderField();
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "1.234,5" } });
+    expect(input).toHaveValue("1234,5");
+  });
+});
+
+describe("NumberInput normalizes the display on blur", () => {
+  it("pads a comma value to 2 decimals on blur", () => {
+    renderField();
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "0,4" } });
+    fireEvent.blur(input);
+    expect(input).toHaveValue("0,40");
+  });
+
+  it("pads a dot value to 2 decimals on blur", () => {
+    renderField();
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "0.8" } });
+    fireEvent.blur(input);
+    expect(input).toHaveValue("0,80");
+  });
+
+  it("pads an integer to 2 decimals on blur", () => {
+    renderField();
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "1" } });
+    fireEvent.blur(input);
+    expect(input).toHaveValue("1,00");
+  });
+});
