@@ -6,6 +6,7 @@ import {
   CircularProgress,
   ClickAwayListener,
   Grow,
+  LinearProgress,
   MenuItem,
   MenuList,
   Paper,
@@ -29,12 +30,19 @@ interface SubmitSectionProps {
   // clicks while waiting for the response don't fire multiple submissions
   // and create duplicate products.
   isSubmitting?: boolean;
+  // 0-100 while the request body (which may include a product video) is
+  // being sent; null once nothing is uploading. Once it hits 100 the browser
+  // is still waiting on the server, so the label falls back to "Publicando...".
+  uploadProgress?: number | null;
 }
 
 const SubmitSection: React.FC<SubmitSectionProps> = ({
   onSectionSelect,
   isSubmitting = false,
+  uploadProgress = null,
 }) => {
+  const isUploading =
+    isSubmitting && uploadProgress !== null && uploadProgress < 100;
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef<HTMLDivElement>(null);
 
@@ -90,7 +98,14 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
           de productos en Marky.
         </Typography>
       </Box>
-      <Box>
+      <Box sx={{ minWidth: 160 }}>
+        {isUploading && (
+          <LinearProgress
+            variant="determinate"
+            value={uploadProgress ?? 0}
+            sx={{ mb: 0.5 }}
+          />
+        )}
         <ButtonGroup
           variant="contained"
           ref={anchorRef}
@@ -107,7 +122,11 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
               ) : undefined
             }
           >
-            {isSubmitting ? "Publicando..." : "Publicar"}
+            {isSubmitting
+              ? isUploading
+                ? `Subiendo... ${uploadProgress}%`
+                : "Publicando..."
+              : "Publicar"}
           </Button>
           <Button
             size="small"

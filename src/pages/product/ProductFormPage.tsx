@@ -9,6 +9,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { AxiosProgressEvent } from "axios";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -154,6 +155,14 @@ const ProductFormPage = () => {
   const [showExtras, setShowExtras] = useState(true);
 
   const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
+  // Percentage of the create/update request's body uploaded so far (mostly
+  // meaningful when the product carries a video). null = no upload in flight.
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const handleUploadProgress = (progressEvent: AxiosProgressEvent) => {
+    if (progressEvent.total) {
+      setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+    }
+  };
 
   const [initialValues, setInitialValues] = useState<Product>({
     name: "",
@@ -567,21 +576,27 @@ const ProductFormPage = () => {
         // 7) submit using your existing mutations
         const handleSuccess = () => {
           setSubmitting(false);
+          setUploadProgress(null);
           // clear dirty flag after successful submit
           setIsFormDirty(false);
           navigate(ROUTES.HOME);
         };
+        const handleError = () => {
+          setSubmitting(false);
+          setUploadProgress(null);
+        };
 
+        setUploadProgress(0);
         if (id) {
           updateProductMutation.mutate(
-            { id: Number(id), product: formData },
-            { onSuccess: handleSuccess, onError: () => setSubmitting(false) },
+            { id: Number(id), product: formData, onUploadProgress: handleUploadProgress },
+            { onSuccess: handleSuccess, onError: handleError },
           );
         } else {
-          createProductMutation.mutate(formData, {
-            onSuccess: handleSuccess,
-            onError: () => setSubmitting(false),
-          });
+          createProductMutation.mutate(
+            { formData, onUploadProgress: handleUploadProgress },
+            { onSuccess: handleSuccess, onError: handleError },
+          );
         }
       }}
     >
@@ -771,6 +786,7 @@ const ProductFormPage = () => {
                   <SubmitSection
                     onSectionSelect={handleSectionSelect}
                     isSubmitting={isSaving}
+                    uploadProgress={uploadProgress}
                   />
                 </Box>
               </Box>
