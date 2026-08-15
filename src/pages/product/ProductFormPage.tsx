@@ -157,6 +157,12 @@ const SECTION_FIELDS: Record<string, string[]> = {
   ],
 };
 
+// Maps a `?section=` deep-link query value (used by notification links) to
+// the side-nav section name it should preselect.
+const SECTION_SLUGS: Record<string, string> = {
+  destacar: "Destacar producto",
+};
+
 const sectionHasError = (
   sectionName: string,
   errors: FormikErrors<Product>,
@@ -268,6 +274,17 @@ const ProductFormPage = () => {
       action();
     }
   };
+
+  // Preselect a side-nav section when arriving via a deep link (e.g. from a
+  // notification pointing at "?section=destacar"). Runs once on mount.
+  useEffect(() => {
+    const sectionSlug = new URLSearchParams(location.search).get("section");
+    const sectionName = sectionSlug ? SECTION_SLUGS[sectionSlug] : undefined;
+    if (sectionName) {
+      setSelectedSection(sectionName);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (id) {
