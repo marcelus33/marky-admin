@@ -26,3 +26,8 @@ export interface PaginatedProductCategoriesResponse<T>
   extends PaginatedResponse<T> {
   products_count: number;
 }
+
+export interface PaginatedNotificationsResponse<T>
+  extends PaginatedResponse<T> {
+  unread_count: number;
+}

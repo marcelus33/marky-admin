@@ -1,4 +1,3 @@
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import {
@@ -20,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import defaultUserAvatar from "../assets/images/user_default.png";
 import { useSessionStore } from "../stores/sessionStore";
+import NotificationsMenu from "./NotificationsMenu";
 
 export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -50,9 +50,7 @@ export const Header: React.FC = () => {
             style={{ height: 50, marginRight: theme.spacing(1) }}
           />
         </Box>
-        <IconButton color="inherit">
-          <NotificationsIcon sx={{ color: "#9E9EA6" }} />
-        </IconButton>
+        <NotificationsMenu />
         <IconButton
           color="inherit"
           onClick={handleProfileClick}
