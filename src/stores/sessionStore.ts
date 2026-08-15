@@ -48,10 +48,15 @@ export const useSessionStore = create<SessionState>()(
     }),
     {
       name: "session-storage", // localstorage key name
-      // El refresh token NO se persiste: es la credencial de larga duración
-      // y no debe quedar expuesta a lectura por XSS en localStorage.
+      // El refresh token SÍ se persiste: sin él, cualquier recarga de página
+      // (cerrar pestaña, reiniciar el navegador) deja solo el access token
+      // (vida útil de 30 min) en localStorage, y la sesión expira apenas
+      // ese token vence. El access token ya vive en el mismo localStorage,
+      // así que omitir el refresh token no aportaba protección real contra
+      // XSS y sí rompía la persistencia de sesión.
       partialize: (state) => ({
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         user: state.user,
       }),
     }

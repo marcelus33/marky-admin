@@ -82,7 +82,7 @@ describe("sessionStore", () => {
     expect(useSessionStore.getState().user).toBeNull();
   });
 
-  it("persists accessToken and user but NOT refreshToken to localStorage", () => {
+  it("persists accessToken, refreshToken and user to localStorage", () => {
     useSessionStore.getState().setSession({
       accessToken: "access-123",
       refreshToken: "refresh-456",
@@ -91,7 +91,7 @@ describe("sessionStore", () => {
 
     const stored = JSON.parse(localStorage.getItem("session-storage") || "{}");
     expect(stored.state.accessToken).toBe("access-123");
+    expect(stored.state.refreshToken).toBe("refresh-456");
     expect(stored.state.user).toEqual(testUser);
-    expect(stored.state.refreshToken).toBeUndefined();
   });
 });

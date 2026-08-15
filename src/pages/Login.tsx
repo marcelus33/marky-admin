@@ -7,7 +7,6 @@ import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import loginIllustration from "../assets/images/login-illustration.png";
 import AuthAside from "../components/AuthAside";
-import CheckboxWithLabel from "../components/CheckboxWithLabel";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
@@ -20,7 +19,6 @@ const Login: React.FC = () => {
   const initialValues = {
     email: "",
     password: "",
-    rememberMe: false,
   };
 
   const validationSchema = Yup.object().shape({
@@ -171,7 +169,6 @@ const Login: React.FC = () => {
                   handleSubmit,
                   setFieldValue,
                   values,
-                  handleChange,
                   errors,
                   touched,
                 }) => (
@@ -216,29 +213,12 @@ const Login: React.FC = () => {
                     {/*  */}
                     <Box
                       display={"flex"}
-                      flexDirection={{ xs: "column", sm: "row" }}
-                      alignItems={{ xs: "flex-start", sm: "center" }}
-                      justifyContent={{ xs: "flex-start", sm: "space-between" }}
+                      justifyContent={"flex-end"}
                       sx={{
                         marginBottom: { xs: "32px", sm: theme.spacing(8) },
                       }}
                     >
-                      <Field
-                        name="rememberMe"
-                        id="rememberMe"
-                        type="checkbox"
-                        checked={values.rememberMe}
-                        onChange={handleChange}
-                        as={CheckboxWithLabel}
-                        label="Mantener la sesión iniciada"
-                      />
-                      <Link
-                        to={`${ROUTES.RECOVER_PASSWORD}`}
-                        sx={{
-                          alignSelf: { xs: "flex-end", sm: "auto" },
-                          marginTop: { xs: "12px", sm: 0 },
-                        }}
-                      >
+                      <Link to={`${ROUTES.RECOVER_PASSWORD}`}>
                         <Typography variant="link">
                           ¿Olvidaste tu contraseña?
                         </Typography>
