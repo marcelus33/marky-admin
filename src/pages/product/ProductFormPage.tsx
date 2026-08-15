@@ -9,9 +9,18 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { AxiosProgressEvent } from "axios";
-import { Form, Formik, FormikHelpers, FormikProps } from "formik";
-import { useEffect, useRef, useState } from "react";
+import {
+  Form,
+  Formik,
+  FormikErrors,
+  FormikHelpers,
+  FormikProps,
+  getIn,
+  setNestedObjectValues,
+} from "formik";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useNavigate,
   useParams,
@@ -33,6 +42,11 @@ import { Category } from "../../types/category";
 import { Product } from "../../types/product";
 import { objectToFormData } from "../../utils/formData";
 import { buildDuplicatedProduct } from "../../utils/buildDuplicatedProduct";
+import {
+  splitIsoDateTime,
+  buildProductPromotionFields,
+} from "../../utils/promotionForm";
+import { ShowNotification } from "../../utils/utils";
 import AssignCategoryModal from "./components/AssignCategoryModal";
 import ExtrasSection from "./components/ExtrasSection";
 import HighlightSection from "./components/HighlightSection";
@@ -57,71 +71,105 @@ import { ReactComponent as DestacarMenuIcon } from "../../assets/icons/product-f
 // We'll implement a local navigation guard (pendingNavigationRef +
 // document click / popstate interception) instead.
 
-const validationSchema = Yup.object().shape({
-  name: Yup.string().required("El nombre del producto es requerido"),
-  description: Yup.string()
-    .max(300, "La descripción no puede superar los 300 caracteres")
-    .required("La descripción es requerida"),
+const variantItemSchema = Yup.object().shape({
+  name: Yup.string().required("El nombre de la presentación es requerido"),
+  description: Yup.string(),
   price: Yup.number()
     .required("El precio es requerido")
     .positive("El precio debe ser un número positivo"),
-  // Category is optional: the backend allows products without a category
-  // (ForeignKey is null=True/blank=True), so requiring it here used to
-  // block saving a brand-new product before the user had a chance to
-  // assign one from the "Producto" tab.
-  category: Yup.number().nullable(),
-  variants: Yup.array().of(
-    Yup.object().shape({
-      name: Yup.string().required("El nombre de la presentación es requerido"),
-      description: Yup.string(),
-      price: Yup.number()
-        .required("El precio es requerido")
-        .positive("El precio debe ser un número positivo"),
-    }),
-  ),
-  addons: Yup.array().of(
-    Yup.object().shape({
-      name: Yup.string().required("El nombre del adicional es requerido"),
-      price: Yup.number()
-        .required("El precio es requerido")
-        .positive("El precio debe ser un número positivo"),
-    }),
-  ),
-  stopper: Yup.string(),
-  isPromotionActive: Yup.boolean(),
-  promotionOption: Yup.string(),
-  discountPercentage: Yup.number().min(0).max(100),
-  multibuyOption: Yup.string().nullable(),
-  countdownActive: Yup.boolean(),
-  promotionStartDate: Yup.string().when("countdownActive", {
-    is: true,
-    then: (schema) => schema.required("La fecha de inicio es requerida"),
-    otherwise: (schema) => schema.nullable(),
-  }),
-  promotionStartTime: Yup.string().when("countdownActive", {
-    is: true,
-    then: (schema) => schema.required("La hora de inicio es requerida"),
-    otherwise: (schema) => schema.nullable(),
-  }),
-  promotionEndDate: Yup.string().when("countdownActive", {
-    is: true,
-    then: (schema) => schema.required("La fecha de fin es requerida"),
-    otherwise: (schema) => schema.nullable(),
-  }),
-  promotionEndTime: Yup.string().when("countdownActive", {
-    is: true,
-    then: (schema) => schema.required("La hora de fin es requerida"),
-    otherwise: (schema) => schema.nullable(),
-  }),
 });
 
-const parseDateTime = (dateTimeStr: string | undefined) => {
-  if (!dateTimeStr) return { date: "", time: "" };
-  const date = new Date(dateTimeStr);
-  const dateStr = date.toISOString().split("T")[0];
-  const timeStr = date.toTimeString().split(" ")[0].substring(0, 5);
-  return { date: dateStr, time: timeStr };
+const addonItemSchema = Yup.object().shape({
+  name: Yup.string().required("El nombre del adicional es requerido"),
+  price: Yup.number()
+    .required("El precio es requerido")
+    .positive("El precio debe ser un número positivo"),
+});
+
+// variants/addons are only validated when their section is toggled on.
+// Built as a function (instead of a static schema) so the "Variaciones"/
+// "Adicionales o extras" sub-schemas can be swapped in/out based on the
+// multiPresentation/showExtras toggles — which live in plain component
+// state, not as Formik fields — without leftover/invalid rows in a
+// disabled section blocking publish or flagging that section as incomplete.
+const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) =>
+  Yup.object().shape({
+    name: Yup.string().required("El nombre del producto es requerido"),
+    description: Yup.string()
+      .max(300, "La descripción no puede superar los 300 caracteres")
+      .required("La descripción es requerida"),
+    price: Yup.number()
+      .required("El precio es requerido")
+      .positive("El precio debe ser un número positivo"),
+    // Category is optional: the backend allows products without a category
+    // (ForeignKey is null=True/blank=True), so requiring it here used to
+    // block saving a brand-new product before the user had a chance to
+    // assign one from the "Producto" tab.
+    category: Yup.number().nullable(),
+    variants: multiPresentation
+      ? Yup.array().of(variantItemSchema)
+      : Yup.array(),
+    addons: showExtras ? Yup.array().of(addonItemSchema) : Yup.array(),
+    stopper: Yup.string(),
+    isPromotionActive: Yup.boolean(),
+    promotionOption: Yup.string(),
+    discountPercentage: Yup.number().min(0).max(100),
+    multibuyOption: Yup.string().nullable(),
+    countdownActive: Yup.boolean(),
+    promotionStartDate: Yup.string().when("countdownActive", {
+      is: true,
+      then: (schema) => schema.required("La fecha de inicio es requerida"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    promotionStartTime: Yup.string().when("countdownActive", {
+      is: true,
+      then: (schema) => schema.required("La hora de inicio es requerida"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    promotionEndDate: Yup.string().when("countdownActive", {
+      is: true,
+      then: (schema) => schema.required("La fecha de fin es requerida"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    promotionEndTime: Yup.string().when("countdownActive", {
+      is: true,
+      then: (schema) => schema.required("La hora de fin es requerida"),
+      otherwise: (schema) => schema.nullable(),
+    }),
+  });
+
+const parseDateTime = splitIsoDateTime;
+
+// Maps each side-nav section to the Yup field(s) whose errors belong to it,
+// so "Publicar" can flag exactly which sections are incomplete. Category is
+// deliberately excluded (see the comment on the `category` schema field
+// above), and "Destacar producto" only lists the countdown fields since
+// those are the only ones with a `required` rule today.
+const SECTION_FIELDS: Record<string, string[]> = {
+  Producto: ["name", "description", "price"],
+  Variaciones: ["variants"],
+  "Adicionales o extras": ["addons"],
+  "Destacar producto": [
+    "promotionStartDate",
+    "promotionStartTime",
+    "promotionEndDate",
+    "promotionEndTime",
+  ],
 };
+
+// Maps a `?section=` deep-link query value (used by notification links) to
+// the side-nav section name it should preselect.
+const SECTION_SLUGS: Record<string, string> = {
+  destacar: "Destacar producto",
+};
+
+const sectionHasError = (
+  sectionName: string,
+  errors: FormikErrors<Product>,
+): boolean =>
+  (SECTION_FIELDS[sectionName] ?? []).some(
+    (field) => getIn(errors, field) !== undefined,
+  );
 
 const ProductFormPage = () => {
   const { id } = useParams();
@@ -152,7 +200,20 @@ const ProductFormPage = () => {
   // previously selected section component, which would otherwise reset any
   // local state back to its default value on every remount.
   const [multiPresentation, setMultiPresentation] = useState(false);
-  const [showExtras, setShowExtras] = useState(true);
+  const [showExtras, setShowExtras] = useState(false);
+
+  // Only decorate the side-nav with red error indicators after the user has
+  // tried to publish at least once — otherwise a brand-new, untouched form
+  // would show every required section as "incomplete" on first render.
+  const [hasAttemptedPublish, setHasAttemptedPublish] = useState(false);
+
+  // Rebuilt only when multiPresentation/showExtras actually change, so
+  // Formik's validationSchema prop keeps a stable identity across renders
+  // that don't affect validation (e.g. typing in an unrelated field).
+  const validationSchema = useMemo(
+    () => buildValidationSchema(multiPresentation, showExtras),
+    [multiPresentation, showExtras],
+  );
 
   const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
   // Percentage of the create/update request's body uploaded so far (mostly
@@ -214,6 +275,17 @@ const ProductFormPage = () => {
     }
   };
 
+  // Preselect a side-nav section when arriving via a deep link (e.g. from a
+  // notification pointing at "?section=destacar"). Runs once on mount.
+  useEffect(() => {
+    const sectionSlug = new URLSearchParams(location.search).get("section");
+    const sectionName = sectionSlug ? SECTION_SLUGS[sectionSlug] : undefined;
+    if (sectionName) {
+      setSelectedSection(sectionName);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (id) {
       setIsLoadingProduct(true);
@@ -225,6 +297,7 @@ const ProductFormPage = () => {
             promotionEndDate: promotionEndsAt,
             multibuyOption,
             discountPercentage,
+            promotionStatus,
           } = product;
 
           const { date: promotionStartDate, time: promotionStartTime } =
@@ -232,9 +305,16 @@ const ProductFormPage = () => {
           const { date: promotionEndDate, time: promotionEndTime } =
             parseDateTime(promotionEndsAt);
 
-          const isPromotionActive =
-            !!multibuyOption ||
-            (!!discountPercentage && Number(discountPercentage) > 0);
+          // Keep the switch ON whenever a promo is configured, even if it
+          // has already expired (kept as history — see the "ya finalizó"
+          // notice below) — otherwise it silently flips off and misleadingly
+          // reads as "nothing configured". promotionStatus (derived
+          // server-side) is the reliable source; fall back to the raw
+          // fields only if it's missing (e.g. stale cached data).
+          const isPromotionActive = promotionStatus
+            ? promotionStatus !== "inactive"
+            : !!multibuyOption ||
+              (!!discountPercentage && Number(discountPercentage) > 0);
           const promotionOption = multibuyOption
             ? "oferta"
             : discountPercentage
@@ -261,6 +341,12 @@ const ProductFormPage = () => {
               description: v.description,
               image: v.image, // URL string for existing
             })) ?? [];
+          const mappedAddons =
+            product.addons?.map((a: any) => ({
+              id: a.id,
+              name: a.name,
+              price: Number(a.price),
+            })) ?? [];
           //
           const initialValues: Product = {
             ...productTemp,
@@ -270,12 +356,7 @@ const ProductFormPage = () => {
             //
             media: mappedMedia,
             variants: mappedVariants,
-            addons:
-              product.addons?.map((a: any) => ({
-                id: a.id,
-                name: a.name,
-                price: Number(a.price),
-              })) ?? [],
+            addons: mappedAddons,
             //
             isPromotionActive,
             promotionOption,
@@ -291,6 +372,7 @@ const ProductFormPage = () => {
           };
           setInitialValues(initialValues);
           setMultiPresentation(mappedVariants.length > 0);
+          setShowExtras(mappedAddons.length > 0);
           if (product.category) {
             setSelectedCategory({
               id: product.category.id,
@@ -312,6 +394,7 @@ const ProductFormPage = () => {
       const dp = (location.state as any).duplicatedProduct as Product;
       setInitialValues(dp);
       setMultiPresentation((dp.variants?.length ?? 0) > 0);
+      setShowExtras((dp.addons?.length ?? 0) > 0);
       if (dp.category) {
         // dp.category may be a number or an object; normalize to id
         const categoryId =
@@ -415,6 +498,41 @@ const ProductFormPage = () => {
     (section) => section.name === selectedSection,
   )?.component;
 
+  // Validates every section (without submitting) so we can block "Publicar"
+  // and point the user at exactly which sections are incomplete, instead of
+  // relying on Formik's default submit-then-block behavior which has no
+  // concept of the side-nav sections.
+  const handlePublishClick = () => {
+    const formik = formikRef.current;
+    if (!formik) return;
+
+    formik.validateForm().then((errors) => {
+      setHasAttemptedPublish(true);
+      const hasErrors = Object.keys(errors).length > 0;
+
+      if (hasErrors) {
+        // Mark every field touched (the same thing Formik's own submit flow
+        // does internally) so field-level red states show immediately once
+        // the user lands on an errored section, without requiring them to
+        // blur each field first.
+        formik.setTouched(setNestedObjectValues(formik.values, true));
+        ShowNotification({
+          message:
+            "Completa los campos obligatorios pendientes para poder publicar el producto",
+          type: "error",
+        });
+        const firstErroredSection = sections.find((section) =>
+          sectionHasError(section.name, errors),
+        );
+        if (firstErroredSection) {
+          handleSectionSelect(firstErroredSection.name);
+        }
+      } else {
+        formik.submitForm();
+      }
+    });
+  };
+
   // While we're fetching an existing product (edit flow), avoid rendering
   // the Formik form with its blank/"create new product" defaults — that
   // briefly flashes an empty form before the real data replaces it. Show a
@@ -449,26 +567,7 @@ const ProductFormPage = () => {
         }
         console.log("submitting.....", values);
 
-        // 1) Build promotion ISO strings as before
-        const {
-          promotionStartDate,
-          promotionStartTime,
-          promotionEndDate,
-          promotionEndTime,
-        } = values;
-
-        const promotionStartsAt =
-          promotionStartDate && promotionStartTime
-            ? new Date(
-                `${promotionStartDate}T${promotionStartTime}`,
-              ).toISOString()
-            : null;
-        const promotionEndsAt =
-          promotionEndDate && promotionEndTime
-            ? new Date(`${promotionEndDate}T${promotionEndTime}`).toISOString()
-            : null;
-
-        // 2) Basic cleaned copy (map category to id if object)
+        // 1) Basic cleaned copy (map category to id if object)
         const submissionValues: any = {
           ...values,
           media: values.media?.map((item: any) => {
@@ -482,25 +581,21 @@ const ProductFormPage = () => {
             values.category && typeof values.category === "object"
               ? ((values.category as any).id ?? null)
               : (values.category ?? null),
-          promotion_starts_at: promotionStartsAt,
-          promotion_ends_at: promotionEndsAt,
-          // coerce discount safely
-          discount_percentage:
-            values.discountPercentage &&
-            !isNaN(Number(values.discountPercentage))
-              ? Number(values.discountPercentage)
-              : 0,
-          // coerce multibuy_option to a plain string (pick first if array)
-          multibuy_option:
-            Array.isArray(values.multibuyOption) &&
-            values.multibuyOption.length > 0
-              ? String(values.multibuyOption[0])
-              : values.multibuyOption
-                ? String(values.multibuyOption)
-                : "",
         };
 
-        // 3) Prevent duplicate camelCase + snake_case fields being sent:
+        // Only touch promo fields when the "Destacar producto" section was
+        // actually edited (see buildProductPromotionFields). Editing is
+        // only meaningful once a product exists (id) — for a brand-new
+        // product there's no prior promo to preserve, so always include
+        // them. Without this gate, saving an unrelated field (e.g. price)
+        // would unconditionally overwrite any promo configured via the
+        // quick modal with these defaults.
+        Object.assign(
+          submissionValues,
+          buildProductPromotionFields(values, initialValues, !!id),
+        );
+
+        // 2) Prevent duplicate camelCase + snake_case fields being sent:
         //    remove camelCase variants so objectToFormData only sees snake_case keys.
         delete submissionValues.multibuyOption;
         delete submissionValues.discountPercentage;
@@ -511,6 +606,7 @@ const ProductFormPage = () => {
         delete submissionValues.isPromotionActive;
         delete submissionValues.promotionOption;
         delete submissionValues.countdownActive;
+        delete submissionValues.promotionStatus;
 
         // 4) Variants: only include `image` if it's an actual File/Blob.
         //    If image is a URL string (existing image), remove `image` from that variant.
@@ -526,6 +622,18 @@ const ProductFormPage = () => {
               return rest;
             },
           );
+        }
+
+        // Variaciones/Adicionales toggled off = section contributes nothing,
+        // same rule the validation applies. Without this, a variant/addon
+        // row left over from before the user disabled the toggle (which the
+        // UI no longer renders, so the user has no way to fix it) would
+        // still be sent and rejected by the backend's own field validation.
+        if (!multiPresentation) {
+          submissionValues.variants = [];
+        }
+        if (!showExtras) {
+          submissionValues.addons = [];
         }
 
         // 5) Media: keep objects but allow _delete, keep id for existing, send file for File objects
@@ -703,26 +811,47 @@ const ProductFormPage = () => {
                     >
                       <Box>
                         <List>
-                          {sections.map((section) => (
-                            <ListItemButton
-                              key={section.name}
-                              selected={selectedSection === section.name}
-                              onClick={() => handleSectionSelect(section.name)}
-                              sx={{
-                                borderRadius: 2,
-                                mb: 1,
-                                "&.Mui-selected": {
-                                  backgroundColor: "rgba(0, 0, 0, 0.08)",
-                                },
-                                "&.Mui-selected:hover": {
-                                  backgroundColor: "rgba(0, 0, 0, 0.12)",
-                                },
-                              }}
-                            >
-                              <ListItemIcon>{section.icon}</ListItemIcon>
-                              <ListItemText primary={section.name} />
-                            </ListItemButton>
-                          ))}
+                          {sections.map((section) => {
+                            const hasError =
+                              hasAttemptedPublish &&
+                              sectionHasError(
+                                section.name,
+                                formikProps.errors,
+                              );
+                            return (
+                              <ListItemButton
+                                key={section.name}
+                                selected={selectedSection === section.name}
+                                onClick={() =>
+                                  handleSectionSelect(section.name)
+                                }
+                                sx={{
+                                  borderRadius: 2,
+                                  mb: 1,
+                                  "&.Mui-selected": {
+                                    backgroundColor: "rgba(0, 0, 0, 0.08)",
+                                  },
+                                  "&.Mui-selected:hover": {
+                                    backgroundColor: "rgba(0, 0, 0, 0.12)",
+                                  },
+                                }}
+                              >
+                                <ListItemIcon>{section.icon}</ListItemIcon>
+                                <ListItemText
+                                  primary={section.name}
+                                  primaryTypographyProps={
+                                    hasError ? { color: "error" } : undefined
+                                  }
+                                />
+                                {hasError && (
+                                  <ErrorOutlineIcon
+                                    color="error"
+                                    fontSize="small"
+                                  />
+                                )}
+                              </ListItemButton>
+                            );
+                          })}
                         </List>
                       </Box>
                     </Drawer>
@@ -743,26 +872,42 @@ const ProductFormPage = () => {
                         Información
                       </Typography>
                       <List>
-                        {sections.map((section) => (
-                          <ListItemButton
-                            key={section.name}
-                            selected={selectedSection === section.name}
-                            onClick={() => handleSectionSelect(section.name)}
-                            sx={{
-                              borderRadius: 2,
-                              mb: 1,
-                              "&.Mui-selected": {
-                                backgroundColor: "grey.400",
-                              },
-                              "&.Mui-selected:hover": {
-                                backgroundColor: "grey.400",
-                              },
-                            }}
-                          >
-                            <ListItemIcon>{section.icon}</ListItemIcon>
-                            <ListItemText primary={section.name} />
-                          </ListItemButton>
-                        ))}
+                        {sections.map((section) => {
+                          const hasError =
+                            hasAttemptedPublish &&
+                            sectionHasError(section.name, formikProps.errors);
+                          return (
+                            <ListItemButton
+                              key={section.name}
+                              selected={selectedSection === section.name}
+                              onClick={() => handleSectionSelect(section.name)}
+                              sx={{
+                                borderRadius: 2,
+                                mb: 1,
+                                "&.Mui-selected": {
+                                  backgroundColor: "grey.400",
+                                },
+                                "&.Mui-selected:hover": {
+                                  backgroundColor: "grey.400",
+                                },
+                              }}
+                            >
+                              <ListItemIcon>{section.icon}</ListItemIcon>
+                              <ListItemText
+                                primary={section.name}
+                                primaryTypographyProps={
+                                  hasError ? { color: "error" } : undefined
+                                }
+                              />
+                              {hasError && (
+                                <ErrorOutlineIcon
+                                  color="error"
+                                  fontSize="small"
+                                />
+                              )}
+                            </ListItemButton>
+                          );
+                        })}
                       </List>
                     </Box>
                   )}
@@ -785,6 +930,7 @@ const ProductFormPage = () => {
                   </Box>
                   <SubmitSection
                     onSectionSelect={handleSectionSelect}
+                    onPublish={handlePublishClick}
                     isSubmitting={isSaving}
                     uploadProgress={uploadProgress}
                   />

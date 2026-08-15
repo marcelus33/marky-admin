@@ -17,6 +17,9 @@ import { CategoryWithProducts } from "../../../types/categoryWithProducts";
 import CategoryAdminModal from "./CategoryAdminModal";
 import CategoryPromotionModal from "../../../components/CategoryPromotionModal";
 import ProductPromotionModal from "../../../components/ProductPromotionModal";
+import MoveToCategoryModal, {
+  MoveToCategoryModalCurrentCategory,
+} from "../../product/components/MoveToCategoryModal";
 import CategoryFilterModal, { Category } from "./CategoryFilterModal";
 import FilterSection from "./FilterSection";
 import EmptyProducts from "./EmptyProducts";
@@ -111,6 +114,10 @@ export const ProductGrid: React.FC = () => {
     useState(false);
   const [selectedPromotionProduct, setSelectedPromotionProduct] =
     useState<any>(null);
+  const [openMoveModal, setOpenMoveModal] = useState(false);
+  const [selectedMoveProduct, setSelectedMoveProduct] = useState<any>(null);
+  const [selectedMoveCurrentCategory, setSelectedMoveCurrentCategory] =
+    useState<MoveToCategoryModalCurrentCategory | null>(null);
   const deleteCategoryMutation = useDeleteProductCategory();
   const updateCategoryAvailability = useUpdateProductCategoryAvailability();
   const [openDeleteCategoryDialog, setOpenDeleteCategoryDialog] =
@@ -276,6 +283,11 @@ export const ProductGrid: React.FC = () => {
             setSelectedProductToDelete(product);
             setOpenDeleteProductDialog(true);
           }}
+          onProductMoveClick={(product, currentCategory) => {
+            setSelectedMoveProduct(product);
+            setSelectedMoveCurrentCategory(currentCategory);
+            setOpenMoveModal(true);
+          }}
         />
       ))}
       <ConfirmationDialog
@@ -372,6 +384,16 @@ export const ProductGrid: React.FC = () => {
         onClose={() => {
           setOpenProductPromotionModal(false);
           setSelectedPromotionProduct(null);
+        }}
+      />
+      <MoveToCategoryModal
+        open={openMoveModal}
+        product={selectedMoveProduct}
+        currentCategory={selectedMoveCurrentCategory}
+        onClose={() => {
+          setOpenMoveModal(false);
+          setSelectedMoveProduct(null);
+          setSelectedMoveCurrentCategory(null);
         }}
       />
     </Box>

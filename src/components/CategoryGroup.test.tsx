@@ -57,6 +57,48 @@ const renderCategoryGroup = (
   );
 };
 
+describe("CategoryGroup promotion countdown badge", () => {
+  it("shows 'Finaliza en ...' when promotion_status is active", () => {
+    const activeCategory: CategoryWithProducts = {
+      ...category,
+      promotion_status: "active",
+      promotion_starts_at: new Date(Date.now() - 3600000).toISOString(),
+      promotion_ends_at: new Date(Date.now() + 25 * 3600000).toISOString(),
+    };
+    renderCategoryGroup({ category: activeCategory });
+
+    expect(
+      screen.getByText(/Finaliza en 1 día : \d+ horas? : \d+ min/),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no badge when promotion_status is scheduled, even with dates present", () => {
+    // A promotion that hasn't reached promotion_starts_at yet must not be
+    // shown as if it were already live.
+    const scheduledCategory: CategoryWithProducts = {
+      ...category,
+      promotion_status: "scheduled",
+      promotion_starts_at: new Date(Date.now() + 2 * 3600000).toISOString(),
+      promotion_ends_at: new Date(Date.now() + 26 * 3600000).toISOString(),
+    };
+    renderCategoryGroup({ category: scheduledCategory });
+
+    expect(screen.queryByText(/Empieza en|Finaliza en/)).not.toBeInTheDocument();
+  });
+
+  it("shows no badge when promotion_status is expired, even with dates present", () => {
+    const expiredCategory: CategoryWithProducts = {
+      ...category,
+      promotion_status: "expired",
+      promotion_starts_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      promotion_ends_at: new Date(Date.now() - 86400000).toISOString(),
+    };
+    renderCategoryGroup({ category: expiredCategory });
+
+    expect(screen.queryByText(/Empieza en|Finaliza en/)).not.toBeInTheDocument();
+  });
+});
+
 describe("CategoryGroup product delete propagation", () => {
   it("calls onProductDeleteClick with the product when 'Eliminar' is clicked in the product card menu", () => {
     const onProductDeleteClick = jest.fn();

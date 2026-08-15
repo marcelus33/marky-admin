@@ -21,8 +21,9 @@ export const mapProductGridItem = (productData: any): ProductGridItem => {
       productData.secondaryPriceWithDiscount,
     isRecommended: productData.is_recommended ?? productData.isRecommended,
     isFavorite: productData.is_favorite ?? productData.isFavorite,
-    promotionStartsAt: productData.promotion_starts_at,
-    promotionEndsAt: productData.promotion_ends_at,
+    promotionStartsAt: productData.promotion_starts_at ?? productData.promotionStartsAt,
+    promotionEndsAt: productData.promotion_ends_at ?? productData.promotionEndsAt,
+    promotionStatus: productData.promotion_status ?? productData.promotionStatus,
     // Map discount_percentage (could be string or number) to a number
     discountPercent:
       productData.discount_percentage !== undefined &&
@@ -54,6 +55,7 @@ export const mapProduct = (productData: any): Product => {
     discountPercentage: productData.discount_percentage,
     promotionStartDate: productData.promotion_starts_at,
     promotionEndDate: productData.promotion_ends_at,
+    promotionStatus: productData.promotion_status ?? productData.promotionStatus,
     primaryPrice: productData.primary_price ?? productData.primaryPrice,
     secondaryPrice: productData.secondary_price ?? productData.secondaryPrice,
     primaryPriceWithDiscount:

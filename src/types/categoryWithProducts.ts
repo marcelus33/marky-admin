@@ -1,4 +1,4 @@
-import { ProductGridItem } from "./product";
+import { ProductGridItem, PromotionStatus } from "./product";
 
 export interface CategoryWithProducts {
   id: number;
@@ -8,6 +8,7 @@ export interface CategoryWithProducts {
   discount_percentage: string;
   promotion_starts_at: string | null;
   promotion_ends_at: string | null;
+  promotion_status?: PromotionStatus;
   is_available: boolean;
   products: ProductGridItem[];
 }

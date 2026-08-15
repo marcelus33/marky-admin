@@ -241,6 +241,18 @@ const ProductImageGallery = () => {
     }
   };
 
+  const activeMedia = media.filter((item: any) => !item._delete);
+  const imageCount = activeMedia.filter(
+    (item: any) => item.media_type === "image",
+  ).length;
+  const videoCount = activeMedia.filter(
+    (item: any) => item.media_type === "video",
+  ).length;
+  // The two caps (3 images / 1 video) apply independently, so the button
+  // only fully disables once both are maxed out — otherwise the user can
+  // still add whichever type has room left.
+  const isGalleryFull = imageCount >= 3 && videoCount >= 1;
+
   const itemsWithUrls = React.useMemo(() => {
     return media
       .filter((item: any) => !item._delete)
@@ -314,6 +326,7 @@ const ProductImageGallery = () => {
           <Button
             variant="contained"
             color="secondary"
+            disabled={isGalleryFull}
             sx={{
               width: { xs: "100%", md: "auto" },
               padding: "8px 12px 8px 12px",
@@ -324,7 +337,9 @@ const ProductImageGallery = () => {
             startIcon={<AddPhotoIcon />}
             onClick={() => fileInputRef.current?.click()}
           >
-            Agregar contenido multimedia
+            {isGalleryFull
+              ? "Máximo de archivos alcanzado"
+              : "Agregar contenido multimedia"}
           </Button>
         )}
       </Box>

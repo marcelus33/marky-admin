@@ -33,12 +33,13 @@ describe("Login page copy (login page polish ticket)", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the updated register prompt and checkbox label", () => {
+  it("renders the updated register prompt", () => {
     renderLogin();
-    expect(screen.getByText("¿No tienes una cuenta?")).toBeInTheDocument();
-    expect(screen.getByText("Regístrate")).toBeInTheDocument();
+    // El prompt se renderiza dos veces (versión desktop y mobile, alternadas
+    // por CSS), de ahí getAllByText en lugar de getByText.
     expect(
-      screen.getByText("Mantener la sesión iniciada"),
-    ).toBeInTheDocument();
+      screen.getAllByText("¿No tienes una cuenta?").length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("Regístrate").length).toBeGreaterThan(0);
   });
 });

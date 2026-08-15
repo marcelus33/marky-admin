@@ -4,16 +4,18 @@ import { TypeOptions } from "react-toastify/dist/types";
 type ShowNotificationProps = {
   message: string | undefined;
   type: TypeOptions | undefined;
+  toastId?: string;
 };
 
 export const ShowNotification = ({
   message,
   type,
+  toastId,
 }: ShowNotificationProps): void => {
   const otherProps = {
     theme: "dark",
   };
-  toast(message, { type: type, ...otherProps });
+  toast(message, { type: type, toastId, ...otherProps });
 };
 
 export const displayFormikFormErrors = (error: any, setFieldError: any) => {

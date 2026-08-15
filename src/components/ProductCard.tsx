@@ -23,19 +23,31 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import { formatPrice, truncateText } from "../utils/format";
 import { useUpdateProductAvailability } from "../hooks/useProductMutations";
 import useDuplicateProduct from "../hooks/useDuplicateProduct";
+import { usePromotionCountdown } from "../hooks/usePromotionCountdown";
 import ProductStopperTag from "./ProductStopperTag";
+
+interface ProductCategoryRef {
+  id: number | null;
+  name: string;
+}
 
 interface ProductCardProps {
   product: ProductGridItem;
+  currentCategory?: ProductCategoryRef;
   onClick?: () => void;
   onPromotionClick?: (product: ProductGridItem) => void;
   onDeleteClick?: (product: ProductGridItem) => void;
+  onMoveClick?: (
+    product: ProductGridItem,
+    currentCategory?: ProductCategoryRef,
+  ) => void;
 }
 
 const LineClamp = styled(Typography)({
@@ -47,9 +59,20 @@ const LineClamp = styled(Typography)({
 
 const DropdownMenu: React.FC<{
   product: ProductGridItem;
+  currentCategory?: ProductCategoryRef;
   onPromotionClick?: (product: ProductGridItem) => void;
   onDeleteClick?: (product: ProductGridItem) => void;
-}> = ({ product, onPromotionClick, onDeleteClick }) => {
+  onMoveClick?: (
+    product: ProductGridItem,
+    currentCategory?: ProductCategoryRef,
+  ) => void;
+}> = ({
+  product,
+  currentCategory,
+  onPromotionClick,
+  onDeleteClick,
+  onMoveClick,
+}) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const updateAvailability = useUpdateProductAvailability();
   const duplicateProduct = useDuplicateProduct();
@@ -137,6 +160,17 @@ const DropdownMenu: React.FC<{
             <FileCopyIcon fontSize="small" sx={{ mr: 4 }} />
           )}
           Duplicar
+        </MenuItem>
+        <MenuItem
+          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+            event.stopPropagation();
+            onMoveClick?.(product, currentCategory);
+            handleClose();
+          }}
+          sx={{ py: 4, borderRadius: 2 }}
+        >
+          <DriveFileMoveOutlinedIcon fontSize="small" sx={{ mr: 4 }} />
+          Mover a categoría
         </MenuItem>
         <MenuItem
           onClick={(event: React.MouseEvent<HTMLLIElement>) => {
@@ -240,9 +274,11 @@ const styles = {
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  currentCategory,
   onClick,
   onPromotionClick,
   onDeleteClick,
+  onMoveClick,
 }) => {
   const discountNumber = Number(product.discountPercent ?? 0);
   const showDiscount = !isNaN(discountNumber) && discountNumber > 0;
@@ -260,72 +296,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
     !!product.secondaryPriceWithDiscount;
   const hasMultibuy = !!product.multibuyOption;
 
-  // Helper to format a remaining duration (ms) into a detailed Spanish string
-  // Example: "10 días : 11 horas : 30 min"
-  const formatRemainingDetailed = (ms: number) => {
-    if (ms <= 0) return "0 min";
-    const totalSeconds = Math.floor(ms / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-
-    const daysPart = `${days} ${days === 1 ? "día" : "días"}`;
-    const hoursPart = `${hours} ${hours === 1 ? "hora" : "horas"}`;
-    const minutesPart = `${minutes} min`;
-
-    return `${daysPart} : ${hoursPart} : ${minutesPart}`;
-  };
+  const promotionCountdown = usePromotionCountdown({
+    status: product.promotionStatus,
+    endsAt: product.promotionEndsAt,
+  });
 
   const renderPromotionBadge = () => {
-    // Prefer mapped camelCase fields from the product mapper, but fall back to
-    // original snake_case if needed.
-    const promotionStarts = product.promotionStartsAt;
-    const promotionEnds = product.promotionEndsAt;
-
-    if (!promotionEnds) return null;
-
-    const now = new Date();
-    const starts = promotionStarts ? new Date(promotionStarts) : null;
-    const ends = new Date(promotionEnds);
+    if (!promotionCountdown) return null;
 
     // The countdown badge always uses the fixed promotion/urgency color.
     // It must never depend on discount, multibuy, price, or any other
     // product attribute — only on the promotion having a time limit.
-    const badgeColor = "error.main";
-
-    // If promotion hasn't started yet (empieza en)
-    if (starts && now < starts) {
-      const diff = starts.getTime() - now.getTime();
-      return (
-        <Box
-          sx={{
-            backgroundColor: badgeColor,
-            color: "white",
-            px: 2,
-            py: 0.5,
-            borderRadius: 1,
-            fontSize: 14,
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            mt: 1,
-            width: "fit-content",
-          }}
-        >
-          {formatRemainingDetailed(diff)}
-        </Box>
-      );
-    }
-
-    // If promotion already ended
-    if (now >= ends) return null;
-
-    // Promotion active (finaliza en)
-    const diff = ends.getTime() - now.getTime();
     return (
       <Box
         sx={{
-          backgroundColor: badgeColor,
+          backgroundColor: "error.main",
           color: "white",
           px: 2,
           py: 0.5,
@@ -338,7 +323,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           width: "fit-content",
         }}
       >
-        {formatRemainingDetailed(diff)}
+        {promotionCountdown.label}
       </Box>
     );
   };
@@ -379,18 +364,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Image and discount tag */}
       <Box position="relative">
-        <CardMedia
-          component="img"
-          image={product.image || defaultImage}
-          alt={product.name}
-          loading="lazy"
+        <Box
           sx={{
+            border: "1px solid",
+            borderColor: "grey.200",
             borderRadius: 2,
-            width: "100%",
-            aspectRatio: "1 / 1",
-            objectFit: "cover",
+            overflow: "hidden",
           }}
-        />
+        >
+          <CardMedia
+            component="img"
+            image={product.image || defaultImage}
+            alt={product.name}
+            loading="lazy"
+            sx={{
+              width: "100%",
+              aspectRatio: "1 / 1",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        </Box>
         {/* Badges container (top-left) */}
         <Box
           sx={{
@@ -471,8 +465,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <DropdownMenu
         product={product}
+        currentCategory={currentCategory}
         onPromotionClick={onPromotionClick}
         onDeleteClick={onDeleteClick}
+        onMoveClick={onMoveClick}
       />
 
       <CardContent sx={{ p: 2, backgroundColor: "transparent", mt: 2 }}>

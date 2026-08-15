@@ -39,6 +39,34 @@ describe("mapProductGridItem", () => {
     });
   });
 
+  it("maps promotion_status to promotionStatus", () => {
+    const result = mapProductGridItem({
+      id: 1,
+      name: "Pizza",
+      price: 100,
+      promotion_status: "active",
+    });
+    expect(result.promotionStatus).toBe("active");
+  });
+
+  it("falls back to the camelCase promo fields when re-mapping an already-mapped object", () => {
+    // Regression: an object that already went through mapProductGridItem
+    // (e.g. re-run through the mapper via an optimistic cache merge) must
+    // not lose its countdown fields just because it has no snake_case keys.
+    const result = mapProductGridItem({
+      id: 1,
+      name: "Pizza",
+      price: 100,
+      promotionStartsAt: "2024-01-01T00:00:00Z",
+      promotionEndsAt: "2024-01-31T00:00:00Z",
+      promotionStatus: "active",
+    });
+
+    expect(result.promotionStartsAt).toBe("2024-01-01T00:00:00Z");
+    expect(result.promotionEndsAt).toBe("2024-01-31T00:00:00Z");
+    expect(result.promotionStatus).toBe("active");
+  });
+
   it("falls back to is_active when is_available is missing", () => {
     const result = mapProductGridItem({
       id: 1,
@@ -95,6 +123,18 @@ describe("mapProduct", () => {
       primaryPrice: "PYG 50.000",
       secondaryPrice: "USD 7,00",
     });
+  });
+
+  it("maps promotion_status to promotionStatus", () => {
+    const result = mapProduct({
+      id: 1,
+      name: "Pizza",
+      description: "desc",
+      price: 100,
+      is_active: true,
+      promotion_status: "expired",
+    });
+    expect(result.promotionStatus).toBe("expired");
   });
 
   it("defaults variants to an empty array when missing", () => {

@@ -95,6 +95,60 @@ describe("ProductCard discounted price rendering", () => {
   });
 });
 
+describe("ProductCard promotion countdown badge", () => {
+  it("shows the countdown when promotionStatus is active", () => {
+    const activeProduct: ProductGridItem = {
+      ...product,
+      promotionStatus: "active",
+      promotionEndsAt: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(),
+    };
+    renderProductCard({ product: activeProduct });
+
+    expect(screen.getByText(/1 día : \d+ horas? : \d+ min/)).toBeInTheDocument();
+  });
+
+  it("does not show the countdown when promotionStatus is scheduled, even with dates present", () => {
+    // A promotion that hasn't reached promotionStartsAt yet must not render
+    // a badge — it would look identical to an already-active countdown.
+    const scheduledProduct: ProductGridItem = {
+      ...product,
+      promotionStatus: "scheduled",
+      promotionStartsAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      promotionEndsAt: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
+    };
+    renderProductCard({ product: scheduledProduct });
+
+    expect(screen.queryByText(/día|hora|min/)).not.toBeInTheDocument();
+  });
+
+  it("does not show the countdown when promotionStatus is expired, even with dates present", () => {
+    const expiredProduct: ProductGridItem = {
+      ...product,
+      promotionStatus: "expired",
+      promotionStartsAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+      promotionEndsAt: new Date(Date.now() - 86400000).toISOString(),
+    };
+    renderProductCard({ product: expiredProduct });
+
+    expect(screen.queryByText(/día|hora|min/)).not.toBeInTheDocument();
+  });
+
+  it("does not show the countdown when promotionStatus is inactive", () => {
+    const inactiveProduct: ProductGridItem = {
+      ...product,
+      promotionStatus: "inactive",
+    };
+    renderProductCard({ product: inactiveProduct });
+
+    expect(screen.queryByText(/día|hora|min/)).not.toBeInTheDocument();
+  });
+
+  it("does not show the countdown when promotionStatus is missing", () => {
+    renderProductCard();
+    expect(screen.queryByText(/día|hora|min/)).not.toBeInTheDocument();
+  });
+});
+
 describe("ProductCard 'Eliminar' menu action (Home page card)", () => {
   it("calls onDeleteClick with the product when 'Eliminar' is clicked", () => {
     const onDeleteClick = jest.fn();
