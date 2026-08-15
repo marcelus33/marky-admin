@@ -379,18 +379,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Image and discount tag */}
       <Box position="relative">
-        <CardMedia
-          component="img"
-          image={product.image || defaultImage}
-          alt={product.name}
-          loading="lazy"
+        <Box
           sx={{
+            border: "1px solid",
+            borderColor: "grey.200",
             borderRadius: 2,
-            width: "100%",
-            aspectRatio: "1 / 1",
-            objectFit: "cover",
+            overflow: "hidden",
           }}
-        />
+        >
+          <CardMedia
+            component="img"
+            image={product.image || defaultImage}
+            alt={product.name}
+            loading="lazy"
+            sx={{
+              width: "100%",
+              aspectRatio: "1 / 1",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        </Box>
         {/* Badges container (top-left) */}
         <Box
           sx={{

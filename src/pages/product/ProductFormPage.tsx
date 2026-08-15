@@ -152,7 +152,7 @@ const ProductFormPage = () => {
   // previously selected section component, which would otherwise reset any
   // local state back to its default value on every remount.
   const [multiPresentation, setMultiPresentation] = useState(false);
-  const [showExtras, setShowExtras] = useState(true);
+  const [showExtras, setShowExtras] = useState(false);
 
   const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
   // Percentage of the create/update request's body uploaded so far (mostly
@@ -261,6 +261,12 @@ const ProductFormPage = () => {
               description: v.description,
               image: v.image, // URL string for existing
             })) ?? [];
+          const mappedAddons =
+            product.addons?.map((a: any) => ({
+              id: a.id,
+              name: a.name,
+              price: Number(a.price),
+            })) ?? [];
           //
           const initialValues: Product = {
             ...productTemp,
@@ -270,12 +276,7 @@ const ProductFormPage = () => {
             //
             media: mappedMedia,
             variants: mappedVariants,
-            addons:
-              product.addons?.map((a: any) => ({
-                id: a.id,
-                name: a.name,
-                price: Number(a.price),
-              })) ?? [],
+            addons: mappedAddons,
             //
             isPromotionActive,
             promotionOption,
@@ -291,6 +292,7 @@ const ProductFormPage = () => {
           };
           setInitialValues(initialValues);
           setMultiPresentation(mappedVariants.length > 0);
+          setShowExtras(mappedAddons.length > 0);
           if (product.category) {
             setSelectedCategory({
               id: product.category.id,
@@ -312,6 +314,7 @@ const ProductFormPage = () => {
       const dp = (location.state as any).duplicatedProduct as Product;
       setInitialValues(dp);
       setMultiPresentation((dp.variants?.length ?? 0) > 0);
+      setShowExtras((dp.addons?.length ?? 0) > 0);
       if (dp.category) {
         // dp.category may be a number or an object; normalize to id
         const categoryId =

@@ -145,7 +145,19 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                   </Box>
                 </Box>
               ))}
-              <Box sx={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: 4,
+                  cursor:
+                    values.addons.length >= maxItems ? "default" : "pointer",
+                }}
+                onClick={() => {
+                  if (values.addons.length >= maxItems) return;
+                  push({ id: Date.now(), name: "", price: "" });
+                }}
+              >
                 <Box
                   sx={{
                     px: 2,
@@ -157,10 +169,7 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                 >
                   <Add fontSize="large" color="primary" sx={{ mt: 1 }} />
                 </Box>
-                <Button
-                  onClick={() => push({ id: Date.now(), name: "", price: "" })}
-                  disabled={values.addons.length >= maxItems}
-                >
+                <Button disabled={values.addons.length >= maxItems}>
                   Añadir otro extra
                 </Button>
               </Box>
