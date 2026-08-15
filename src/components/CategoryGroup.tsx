@@ -18,6 +18,7 @@ import categoryIcons from "../assets/icons/category/categoryIcons";
 import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";
 import { ROUTES } from "../routes/paths";
 import { CategoryWithProducts } from "../types/categoryWithProducts";
+import { usePromotionCountdown } from "../hooks/usePromotionCountdown";
 import ProductCard from "./ProductCard";
 
 interface CategoryGroupProps {
@@ -47,42 +48,23 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   const isUnavailable = !category.is_available;
   const navigate = useNavigate();
 
-  // Helper to format a remaining duration (ms) into a detailed Spanish string
-  // Example: "10 días : 11 horas : 30 min"
-  const formatRemainingDetailed = (ms: number) => {
-    if (ms <= 0) return "0 min";
-    const totalSeconds = Math.floor(ms / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-
-    const daysPart = `${days} ${days === 1 ? "día" : "días"}`;
-    const hoursPart = `${hours} ${hours === 1 ? "hora" : "horas"}`;
-    const minutesPart = `${minutes} min`;
-
-    return `${daysPart} : ${hoursPart} : ${minutesPart}`;
-  };
+  const promotionCountdown = usePromotionCountdown({
+    status: category.promotion_status,
+    startsAt: category.promotion_starts_at,
+    endsAt: category.promotion_ends_at,
+  });
 
   const renderPromotionBadge = () => {
-    const { promotion_starts_at, promotion_ends_at } = category;
-    if (!promotion_ends_at) return null;
-
-    const now = new Date();
-    const starts = promotion_starts_at ? new Date(promotion_starts_at) : null;
-    const ends = new Date(promotion_ends_at);
+    if (!promotionCountdown) return null;
 
     // The countdown badge always uses the fixed promotion/urgency color.
     // It must never depend on discount, multibuy, price, or any other
     // category/product attribute — only on the promotion having a time limit.
-    const badgeColor = "error.main";
-
-    // If promotion hasn't started yet
-    if (starts && now < starts) {
-      const diff = starts.getTime() - now.getTime();
+    if (promotionCountdown.phase === "scheduled") {
       return (
         <Box
           sx={{
-            backgroundColor: badgeColor,
+            backgroundColor: "error.main",
             color: "white",
             px: 1.5,
             py: 0.5,
@@ -93,20 +75,15 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
             ml: 2,
           }}
         >
-          Empieza en {formatRemainingDetailed(diff)}
+          Empieza en {promotionCountdown.label}
         </Box>
       );
     }
 
-    // If promotion already ended
-    if (now >= ends) return null;
-
-    // Promotion active
-    const diff = ends.getTime() - now.getTime();
     return (
       <Box
         sx={{
-          backgroundColor: badgeColor,
+          backgroundColor: "error.main",
           color: "white",
           px: 2,
           py: 0.5,
@@ -118,7 +95,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
           ml: 2,
         }}
       >
-        Finaliza en {formatRemainingDetailed(diff)}
+        Finaliza en {promotionCountdown.label}
       </Box>
     );
   };

@@ -1,5 +1,11 @@
 export type MediaType = "image" | "video";
 
+// Derived server-side (products/promotions.py) from promotion_starts_at /
+// promotion_ends_at / whether a discount or multibuy is configured — never
+// stored as a separate flag. See Asana ticket #8: this is the single source
+// of truth every promo surface (card, quick modal, edit form) renders from.
+export type PromotionStatus = "active" | "scheduled" | "expired" | "inactive";
+
 export interface MediaItemLocal {
   id?: number; // present for existing media
   file: File | string; // File when new, string URL when existing
@@ -37,6 +43,7 @@ export interface ProductGridItem {
   // mapped promotion dates (from productMapper)
   promotionStartsAt?: string | null;
   promotionEndsAt?: string | null;
+  promotionStatus?: PromotionStatus;
   // availability fields forwarded from backend mapper
   is_available?: boolean;
   is_active?: boolean;
@@ -83,6 +90,7 @@ export interface Product {
   promotionStartTime?: string;
   promotionEndDate?: string;
   promotionEndTime?: string;
+  promotionStatus?: PromotionStatus;
   media?: MediaItemLocal[];
   primaryPrice?: string;
   secondaryPrice?: string;

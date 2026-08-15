@@ -4,6 +4,7 @@ import XButton from "./XButton";
 import { Formik, Form, useFormikContext } from "formik";
 import * as Yup from "yup";
 import {
+  Alert,
   Box,
   Typography,
   FormControlLabel,
@@ -19,6 +20,11 @@ import {
 import Input from "./Input";
 import { ProductGridItem } from "../types/product";
 import useUpdateProductPromotion from "../hooks/useUpdateProductPromotion";
+import {
+  toIsoDateTime,
+  splitIsoDateTime,
+  buildPromotionClearPayload,
+} from "../utils/promotionForm";
 
 interface Props {
   open: boolean;
@@ -121,8 +127,14 @@ const ProductInitializer: React.FC<{ product?: ProductGridItem | null }> = ({
   useEffect(() => {
     if (!product) return;
 
+    // Also hydrate a countdown-only promo (dates set, no discount/multibuy
+    // configured) — without this a promo with only a countdown never
+    // populates the modal on reopen, and resaving silently wipes the dates.
     const hasPromotion = !!(
-      product.multibuyOption || (product.discountPercent ?? 0) !== 0
+      product.multibuyOption ||
+      (product.discountPercent ?? 0) !== 0 ||
+      product.promotionStartsAt ||
+      product.promotionEndsAt
     );
 
     if (hasPromotion) {
@@ -136,16 +148,13 @@ const ProductInitializer: React.FC<{ product?: ProductGridItem | null }> = ({
         setFieldValue("discountPercentage", Number(product.discountPercent));
       }
 
-      if (
-        (product as any).promotionStartsAt &&
-        (product as any).promotionEndsAt
-      ) {
-        const [startDate, startTime] = (product as any).promotionStartsAt
-          .split("T")
-          .map((v: string, i: number) => (i === 1 ? v.slice(0, 5) : v));
-        const [endDate, endTime] = (product as any).promotionEndsAt
-          .split("T")
-          .map((v: string, i: number) => (i === 1 ? v.slice(0, 5) : v));
+      if (product.promotionStartsAt && product.promotionEndsAt) {
+        const { date: startDate, time: startTime } = splitIsoDateTime(
+          product.promotionStartsAt,
+        );
+        const { date: endDate, time: endTime } = splitIsoDateTime(
+          product.promotionEndsAt,
+        );
 
         setFieldValue("countdownActive", true);
         setFieldValue("promotionDateStart", startDate);
@@ -161,56 +170,46 @@ const ProductInitializer: React.FC<{ product?: ProductGridItem | null }> = ({
 
 const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
   const updateProductPromotion = useUpdateProductPromotion();
+  const hasExistingPromotion = !!(
+    product?.multibuyOption ||
+    (product?.discountPercent ?? 0) !== 0 ||
+    product?.promotionStartsAt ||
+    product?.promotionEndsAt
+  );
 
   const onSubmitLocal = (values: any) => {
-    let dataToSubmit = { ...values };
+    let promotionPayload: ReturnType<typeof buildPromotionClearPayload>;
 
     if (!values.isPromotionActive) {
-      dataToSubmit = {
-        isPromotionActive: false,
-        promotionOption: "",
-        discountPercentage: null,
-        multibuyOption: "",
-        countdownActive: false,
-        promotionDateStart: "",
-        promotionTimeStart: "",
-        promotionDateEnd: "",
-        promotionTimeEnd: "",
-      };
-    } else if (values.countdownActive) {
-      const start = `${values.promotionDateStart}T${values.promotionTimeStart}`;
-      const end = `${values.promotionDateEnd}T${values.promotionTimeEnd}`;
-
-      dataToSubmit.promotionStartsAt = start;
-      dataToSubmit.promotionEndsAt = end;
-    }
-
-    delete dataToSubmit.promotionDateStart;
-    delete dataToSubmit.promotionTimeStart;
-    delete dataToSubmit.promotionDateEnd;
-    delete dataToSubmit.promotionTimeEnd;
-
-    let promotionPayload: any;
-
-    if (!values.isPromotionActive) {
-      promotionPayload = {
-        discount_percentage: "0",
-        multibuy_option: null,
-        promotion_starts_at: null,
-        promotion_ends_at: null,
-      };
+      promotionPayload = buildPromotionClearPayload();
     } else {
+      // "" (not null) for anything not selected/enabled — objectToFormData
+      // drops null/undefined silently, so only an explicit empty string
+      // actually clears a previous value server-side (see utils/formData.ts
+      // and ProductInputSerializer.to_internal_value).
+      const dates = values.countdownActive
+        ? {
+            promotion_starts_at:
+              toIsoDateTime(
+                values.promotionDateStart,
+                values.promotionTimeStart,
+              ) ?? "",
+            promotion_ends_at:
+              toIsoDateTime(
+                values.promotionDateEnd,
+                values.promotionTimeEnd,
+              ) ?? "",
+          }
+        : { promotion_starts_at: "", promotion_ends_at: "" };
+
       promotionPayload = {
         discount_percentage:
-          dataToSubmit.promotionOption === "descuento"
-            ? String(dataToSubmit.discountPercentage)
-            : "0",
+          values.promotionOption === "descuento"
+            ? Number(values.discountPercentage)
+            : 0,
         multibuy_option:
-          dataToSubmit.promotionOption === "oferta"
-            ? dataToSubmit.multibuyOption
-            : null,
-        promotion_starts_at: dataToSubmit.promotionStartsAt ?? null,
-        promotion_ends_at: dataToSubmit.promotionEndsAt ?? null,
+          values.promotionOption === "oferta" ? values.multibuyOption : "",
+        ...dates,
       };
     }
 
@@ -278,6 +277,12 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                     }
                     label="Activar promoción"
                   />
+
+                  {product?.promotionStatus === "expired" && (
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      Esta promoción ya finalizó.
+                    </Alert>
+                  )}
 
                   {values.isPromotionActive && (
                     <Box
@@ -452,7 +457,9 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                     >
                       {updateProductPromotion.isPending
                         ? "Guardando..."
-                        : "Guardar/Crear"}
+                        : hasExistingPromotion
+                          ? "Guardar cambios"
+                          : "Crear promoción"}
                     </Button>
                   </Box>
                 </Box>

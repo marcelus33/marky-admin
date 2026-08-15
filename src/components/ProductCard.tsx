@@ -30,6 +30,7 @@ import { ROUTES } from "../routes/paths";
 import { formatPrice, truncateText } from "../utils/format";
 import { useUpdateProductAvailability } from "../hooks/useProductMutations";
 import useDuplicateProduct from "../hooks/useDuplicateProduct";
+import { usePromotionCountdown } from "../hooks/usePromotionCountdown";
 import ProductStopperTag from "./ProductStopperTag";
 
 interface ProductCategoryRef {
@@ -295,72 +296,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
     !!product.secondaryPriceWithDiscount;
   const hasMultibuy = !!product.multibuyOption;
 
-  // Helper to format a remaining duration (ms) into a detailed Spanish string
-  // Example: "10 días : 11 horas : 30 min"
-  const formatRemainingDetailed = (ms: number) => {
-    if (ms <= 0) return "0 min";
-    const totalSeconds = Math.floor(ms / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-
-    const daysPart = `${days} ${days === 1 ? "día" : "días"}`;
-    const hoursPart = `${hours} ${hours === 1 ? "hora" : "horas"}`;
-    const minutesPart = `${minutes} min`;
-
-    return `${daysPart} : ${hoursPart} : ${minutesPart}`;
-  };
+  const promotionCountdown = usePromotionCountdown({
+    status: product.promotionStatus,
+    startsAt: product.promotionStartsAt,
+    endsAt: product.promotionEndsAt,
+  });
 
   const renderPromotionBadge = () => {
-    // Prefer mapped camelCase fields from the product mapper, but fall back to
-    // original snake_case if needed.
-    const promotionStarts = product.promotionStartsAt;
-    const promotionEnds = product.promotionEndsAt;
-
-    if (!promotionEnds) return null;
-
-    const now = new Date();
-    const starts = promotionStarts ? new Date(promotionStarts) : null;
-    const ends = new Date(promotionEnds);
+    if (!promotionCountdown) return null;
 
     // The countdown badge always uses the fixed promotion/urgency color.
     // It must never depend on discount, multibuy, price, or any other
     // product attribute — only on the promotion having a time limit.
-    const badgeColor = "error.main";
-
-    // If promotion hasn't started yet (empieza en)
-    if (starts && now < starts) {
-      const diff = starts.getTime() - now.getTime();
-      return (
-        <Box
-          sx={{
-            backgroundColor: badgeColor,
-            color: "white",
-            px: 2,
-            py: 0.5,
-            borderRadius: 1,
-            fontSize: 14,
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            mt: 1,
-            width: "fit-content",
-          }}
-        >
-          {formatRemainingDetailed(diff)}
-        </Box>
-      );
-    }
-
-    // If promotion already ended
-    if (now >= ends) return null;
-
-    // Promotion active (finaliza en)
-    const diff = ends.getTime() - now.getTime();
     return (
       <Box
         sx={{
-          backgroundColor: badgeColor,
+          backgroundColor: "error.main",
           color: "white",
           px: 2,
           py: 0.5,
@@ -373,7 +324,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           width: "fit-content",
         }}
       >
-        {formatRemainingDetailed(diff)}
+        {promotionCountdown.label}
       </Box>
     );
   };

@@ -42,6 +42,10 @@ import { Category } from "../../types/category";
 import { Product } from "../../types/product";
 import { objectToFormData } from "../../utils/formData";
 import { buildDuplicatedProduct } from "../../utils/buildDuplicatedProduct";
+import {
+  splitIsoDateTime,
+  buildProductPromotionFields,
+} from "../../utils/promotionForm";
 import { ShowNotification } from "../../utils/utils";
 import AssignCategoryModal from "./components/AssignCategoryModal";
 import ExtrasSection from "./components/ExtrasSection";
@@ -134,13 +138,7 @@ const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) 
     }),
   });
 
-const parseDateTime = (dateTimeStr: string | undefined) => {
-  if (!dateTimeStr) return { date: "", time: "" };
-  const date = new Date(dateTimeStr);
-  const dateStr = date.toISOString().split("T")[0];
-  const timeStr = date.toTimeString().split(" ")[0].substring(0, 5);
-  return { date: dateStr, time: timeStr };
-};
+const parseDateTime = splitIsoDateTime;
 
 // Maps each side-nav section to the Yup field(s) whose errors belong to it,
 // so "Publicar" can flag exactly which sections are incomplete. Category is
@@ -282,6 +280,7 @@ const ProductFormPage = () => {
             promotionEndDate: promotionEndsAt,
             multibuyOption,
             discountPercentage,
+            promotionStatus,
           } = product;
 
           const { date: promotionStartDate, time: promotionStartTime } =
@@ -289,9 +288,16 @@ const ProductFormPage = () => {
           const { date: promotionEndDate, time: promotionEndTime } =
             parseDateTime(promotionEndsAt);
 
-          const isPromotionActive =
-            !!multibuyOption ||
-            (!!discountPercentage && Number(discountPercentage) > 0);
+          // Keep the switch ON whenever a promo is configured, even if it
+          // has already expired (kept as history — see the "ya finalizó"
+          // notice below) — otherwise it silently flips off and misleadingly
+          // reads as "nothing configured". promotionStatus (derived
+          // server-side) is the reliable source; fall back to the raw
+          // fields only if it's missing (e.g. stale cached data).
+          const isPromotionActive = promotionStatus
+            ? promotionStatus !== "inactive"
+            : !!multibuyOption ||
+              (!!discountPercentage && Number(discountPercentage) > 0);
           const promotionOption = multibuyOption
             ? "oferta"
             : discountPercentage
@@ -544,26 +550,7 @@ const ProductFormPage = () => {
         }
         console.log("submitting.....", values);
 
-        // 1) Build promotion ISO strings as before
-        const {
-          promotionStartDate,
-          promotionStartTime,
-          promotionEndDate,
-          promotionEndTime,
-        } = values;
-
-        const promotionStartsAt =
-          promotionStartDate && promotionStartTime
-            ? new Date(
-                `${promotionStartDate}T${promotionStartTime}`,
-              ).toISOString()
-            : null;
-        const promotionEndsAt =
-          promotionEndDate && promotionEndTime
-            ? new Date(`${promotionEndDate}T${promotionEndTime}`).toISOString()
-            : null;
-
-        // 2) Basic cleaned copy (map category to id if object)
+        // 1) Basic cleaned copy (map category to id if object)
         const submissionValues: any = {
           ...values,
           media: values.media?.map((item: any) => {
@@ -577,25 +564,21 @@ const ProductFormPage = () => {
             values.category && typeof values.category === "object"
               ? ((values.category as any).id ?? null)
               : (values.category ?? null),
-          promotion_starts_at: promotionStartsAt,
-          promotion_ends_at: promotionEndsAt,
-          // coerce discount safely
-          discount_percentage:
-            values.discountPercentage &&
-            !isNaN(Number(values.discountPercentage))
-              ? Number(values.discountPercentage)
-              : 0,
-          // coerce multibuy_option to a plain string (pick first if array)
-          multibuy_option:
-            Array.isArray(values.multibuyOption) &&
-            values.multibuyOption.length > 0
-              ? String(values.multibuyOption[0])
-              : values.multibuyOption
-                ? String(values.multibuyOption)
-                : "",
         };
 
-        // 3) Prevent duplicate camelCase + snake_case fields being sent:
+        // Only touch promo fields when the "Destacar producto" section was
+        // actually edited (see buildProductPromotionFields). Editing is
+        // only meaningful once a product exists (id) — for a brand-new
+        // product there's no prior promo to preserve, so always include
+        // them. Without this gate, saving an unrelated field (e.g. price)
+        // would unconditionally overwrite any promo configured via the
+        // quick modal with these defaults.
+        Object.assign(
+          submissionValues,
+          buildProductPromotionFields(values, initialValues, !!id),
+        );
+
+        // 2) Prevent duplicate camelCase + snake_case fields being sent:
         //    remove camelCase variants so objectToFormData only sees snake_case keys.
         delete submissionValues.multibuyOption;
         delete submissionValues.discountPercentage;
@@ -606,6 +589,7 @@ const ProductFormPage = () => {
         delete submissionValues.isPromotionActive;
         delete submissionValues.promotionOption;
         delete submissionValues.countdownActive;
+        delete submissionValues.promotionStatus;
 
         // 4) Variants: only include `image` if it's an actual File/Blob.
         //    If image is a URL string (existing image), remove `image` from that variant.

@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Alert,
   Box,
   Typography,
   FormControlLabel,
@@ -114,6 +115,11 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
         }
         label="Activar producto en promoción"
       />
+      {values.promotionStatus === "expired" && (
+        <Alert severity="info" sx={{ mt: 1, mb: 1 }}>
+          Esta promoción ya finalizó.
+        </Alert>
+      )}
       {values.isPromotionActive && (
         <Box ml={4}>
           <Box display={"flex"} flexDirection={"column"}>
