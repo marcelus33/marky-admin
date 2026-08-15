@@ -2,13 +2,10 @@ import { PromotionStatus } from "../types/product";
 
 export interface PromotionCountdownInput {
   status?: PromotionStatus;
-  startsAt?: string | null;
   endsAt?: string | null;
 }
 
 export interface PromotionCountdown {
-  /** "scheduled" = promo hasn't started yet ("empieza en"); "active" = counting down to the end ("finaliza en"). */
-  phase: "scheduled" | "active";
   /** e.g. "10 días : 11 horas : 30 min" */
   label: string;
 }
@@ -33,27 +30,19 @@ const formatRemainingDetailed = (ms: number): string => {
  * `promotion_status` (products/promotions.py) rather than re-deriving
  * "now >= end" locally — this is what keeps the card, category header, and
  * quick modal in agreement instead of each computing it independently
- * (Asana ticket #8). Returns null for expired/inactive/missing status, so
- * callers render nothing rather than a stale or contradictory badge.
+ * (Asana ticket #8). Only shows a countdown while the promotion is actually
+ * `active`: a `scheduled` promotion (now < promotion_starts_at) must not be
+ * visually indistinguishable from a live one, so it renders nothing until
+ * the backend reports `active`. Returns null for scheduled/expired/inactive/
+ * missing status, so callers render nothing rather than a stale or
+ * contradictory badge.
  */
 export const usePromotionCountdown = ({
   status,
-  startsAt,
   endsAt,
 }: PromotionCountdownInput): PromotionCountdown | null => {
-  if (status !== "active" && status !== "scheduled") return null;
+  if (status !== "active" || !endsAt) return null;
 
-  const now = new Date();
-
-  if (status === "scheduled" && startsAt) {
-    const diff = new Date(startsAt).getTime() - now.getTime();
-    return { phase: "scheduled", label: formatRemainingDetailed(diff) };
-  }
-
-  if (status === "active" && endsAt) {
-    const diff = new Date(endsAt).getTime() - now.getTime();
-    return { phase: "active", label: formatRemainingDetailed(diff) };
-  }
-
-  return null;
+  const diff = new Date(endsAt).getTime() - Date.now();
+  return { label: formatRemainingDetailed(diff) };
 };

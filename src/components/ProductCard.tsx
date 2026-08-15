@@ -298,7 +298,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const promotionCountdown = usePromotionCountdown({
     status: product.promotionStatus,
-    startsAt: product.promotionStartsAt,
     endsAt: product.promotionEndsAt,
   });
 

@@ -72,7 +72,9 @@ describe("CategoryGroup promotion countdown badge", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows 'Empieza en ...' when promotion_status is scheduled", () => {
+  it("shows no badge when promotion_status is scheduled, even with dates present", () => {
+    // A promotion that hasn't reached promotion_starts_at yet must not be
+    // shown as if it were already live.
     const scheduledCategory: CategoryWithProducts = {
       ...category,
       promotion_status: "scheduled",
@@ -81,7 +83,7 @@ describe("CategoryGroup promotion countdown badge", () => {
     };
     renderCategoryGroup({ category: scheduledCategory });
 
-    expect(screen.getByText(/Empieza en 0 días : \d+ horas? : \d+ min/)).toBeInTheDocument();
+    expect(screen.queryByText(/Empieza en|Finaliza en/)).not.toBeInTheDocument();
   });
 
   it("shows no badge when promotion_status is expired, even with dates present", () => {
