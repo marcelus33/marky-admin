@@ -23,6 +23,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
@@ -31,11 +32,21 @@ import { useUpdateProductAvailability } from "../hooks/useProductMutations";
 import useDuplicateProduct from "../hooks/useDuplicateProduct";
 import ProductStopperTag from "./ProductStopperTag";
 
+interface ProductCategoryRef {
+  id: number | null;
+  name: string;
+}
+
 interface ProductCardProps {
   product: ProductGridItem;
+  currentCategory?: ProductCategoryRef;
   onClick?: () => void;
   onPromotionClick?: (product: ProductGridItem) => void;
   onDeleteClick?: (product: ProductGridItem) => void;
+  onMoveClick?: (
+    product: ProductGridItem,
+    currentCategory?: ProductCategoryRef,
+  ) => void;
 }
 
 const LineClamp = styled(Typography)({
@@ -47,9 +58,20 @@ const LineClamp = styled(Typography)({
 
 const DropdownMenu: React.FC<{
   product: ProductGridItem;
+  currentCategory?: ProductCategoryRef;
   onPromotionClick?: (product: ProductGridItem) => void;
   onDeleteClick?: (product: ProductGridItem) => void;
-}> = ({ product, onPromotionClick, onDeleteClick }) => {
+  onMoveClick?: (
+    product: ProductGridItem,
+    currentCategory?: ProductCategoryRef,
+  ) => void;
+}> = ({
+  product,
+  currentCategory,
+  onPromotionClick,
+  onDeleteClick,
+  onMoveClick,
+}) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const updateAvailability = useUpdateProductAvailability();
   const duplicateProduct = useDuplicateProduct();
@@ -137,6 +159,17 @@ const DropdownMenu: React.FC<{
             <FileCopyIcon fontSize="small" sx={{ mr: 4 }} />
           )}
           Duplicar
+        </MenuItem>
+        <MenuItem
+          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+            event.stopPropagation();
+            onMoveClick?.(product, currentCategory);
+            handleClose();
+          }}
+          sx={{ py: 4, borderRadius: 2 }}
+        >
+          <DriveFileMoveOutlinedIcon fontSize="small" sx={{ mr: 4 }} />
+          Mover a categoría
         </MenuItem>
         <MenuItem
           onClick={(event: React.MouseEvent<HTMLLIElement>) => {
@@ -240,9 +273,11 @@ const styles = {
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  currentCategory,
   onClick,
   onPromotionClick,
   onDeleteClick,
+  onMoveClick,
 }) => {
   const discountNumber = Number(product.discountPercent ?? 0);
   const showDiscount = !isNaN(discountNumber) && discountNumber > 0;
@@ -480,8 +515,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <DropdownMenu
         product={product}
+        currentCategory={currentCategory}
         onPromotionClick={onPromotionClick}
         onDeleteClick={onDeleteClick}
+        onMoveClick={onMoveClick}
       />
 
       <CardContent sx={{ p: 2, backgroundColor: "transparent", mt: 2 }}>

@@ -27,6 +27,10 @@ interface CategoryGroupProps {
   onToggleAvailability?: (checked: boolean) => void;
   onProductPromotionClick?: (product: any) => void;
   onProductDeleteClick?: (product: any) => void;
+  onProductMoveClick?: (
+    product: any,
+    currentCategory: { id: number | null; name: string },
+  ) => void;
 }
 
 const CategoryGroup: React.FC<CategoryGroupProps> = ({
@@ -36,6 +40,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   onToggleAvailability,
   onProductPromotionClick,
   onProductDeleteClick,
+  onProductMoveClick,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   // no local-only state: rely on query cache optimistic updates
@@ -298,11 +303,18 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
           <ProductCard
             key={product.id}
             product={product}
+            currentCategory={{ id: category.id, name: category.name }}
             onClick={() => {
               navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));
             }}
             onPromotionClick={onProductPromotionClick}
             onDeleteClick={onProductDeleteClick}
+            onMoveClick={(prod, currentCategory) =>
+              onProductMoveClick?.(
+                prod,
+                currentCategory ?? { id: category.id, name: category.name },
+              )
+            }
           />
         ))}
       </Box>

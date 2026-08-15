@@ -25,6 +25,11 @@ const options = [
 
 interface SubmitSectionProps {
   onSectionSelect: (section: string) => void;
+  // Validates every section and, if everything's complete, submits the
+  // form; otherwise blocks submission and points the user at the first
+  // incomplete section. Replaces native `type="submit"` so the page can run
+  // its own cross-section validation before Formik's submit flow fires.
+  onPublish: () => void;
   // True while the create/update mutation is in flight. Disables the
   // "Publicar" button (and the split-button dropdown) so impatient repeated
   // clicks while waiting for the response don't fire multiple submissions
@@ -38,6 +43,7 @@ interface SubmitSectionProps {
 
 const SubmitSection: React.FC<SubmitSectionProps> = ({
   onSectionSelect,
+  onPublish,
   isSubmitting = false,
   uploadProgress = null,
 }) => {
@@ -113,7 +119,8 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
           sx={{ display: "flex", gap: 0.5 }}
         >
           <Button
-            type="submit"
+            type="button"
+            onClick={onPublish}
             sx={{ px: 3 }}
             disabled={isSubmitting}
             startIcon={
