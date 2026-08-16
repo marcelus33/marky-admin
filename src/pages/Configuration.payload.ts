@@ -22,5 +22,6 @@ export const buildBusinessProfilePayload = (values: any) => {
     exchange_rate: values.enable_exchange_rate
       ? values.exchange_rate || null
       : null,
+    is_primary_to_secondary: values.is_primary_to_secondary,
   };
 };
