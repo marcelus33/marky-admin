@@ -148,6 +148,31 @@ describe("mapProduct", () => {
 
     expect(result.variants).toEqual([]);
   });
+
+  it("defaults addons to an empty array when missing", () => {
+    const result = mapProduct({
+      id: 1,
+      name: "Pizza",
+      description: "",
+      price: 0,
+      is_active: true,
+    });
+
+    expect(result.addons).toEqual([]);
+  });
+
+  it("preserves addons when present", () => {
+    const result = mapProduct({
+      id: 1,
+      name: "Pizza",
+      description: "",
+      price: 0,
+      is_active: true,
+      addons: [{ id: 1, name: "Queso extra", price: "2.00" }],
+    });
+
+    expect(result.addons).toEqual([{ id: 1, name: "Queso extra", price: "2.00" }]);
+  });
 });
 
 describe("mapCategoryWithProducts", () => {

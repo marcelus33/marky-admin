@@ -31,6 +31,7 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
   touched,
   handleChange,
   handleBlur,
+  setFieldValue,
   maxItems = 10,
   showExtras,
   onShowExtrasChange,
@@ -71,9 +72,13 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
       />
       {showExtras && (
         <FieldArray name="addons">
-          {({ push, remove }) => (
+          {({ push, remove }) => {
+            const visibleAddons = values.addons
+              .map((addon: any, index: number) => ({ addon, index }))
+              .filter(({ addon }: any) => !addon._delete);
+            return (
             <Box mt={2}>
-              {values.addons.map((addon: any, index: number) => (
+              {visibleAddons.map(({ addon, index }: any) => (
                 <Box
                   key={index}
                   sx={{
@@ -139,7 +144,19 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                     />
                   </Box>
                   <Box>
-                    <IconButton onClick={() => remove(index)}>
+                    <IconButton
+                      onClick={() => {
+                        // Persisted rows (real DB id) are soft-deleted so the
+                        // submit handler can send a { id, _delete: true }
+                        // tombstone the backend understands. Rows that were
+                        // never saved (no id yet) can just be spliced out.
+                        if (addon.id) {
+                          setFieldValue(`addons[${index}]._delete`, true);
+                        } else {
+                          remove(index);
+                        }
+                      }}
+                    >
                       <Delete />
                     </IconButton>
                   </Box>
@@ -151,11 +168,11 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                   alignItems: "center",
                   marginTop: 4,
                   cursor:
-                    values.addons.length >= maxItems ? "default" : "pointer",
+                    visibleAddons.length >= maxItems ? "default" : "pointer",
                 }}
                 onClick={() => {
-                  if (values.addons.length >= maxItems) return;
-                  push({ id: Date.now(), name: "", price: "" });
+                  if (visibleAddons.length >= maxItems) return;
+                  push({ name: "", price: "" });
                 }}
               >
                 <Box
@@ -169,12 +186,13 @@ const ExtrasSection: React.FC<ExtrasSectionProps> = ({
                 >
                   <Add fontSize="large" color="primary" sx={{ mt: 1 }} />
                 </Box>
-                <Button disabled={values.addons.length >= maxItems}>
+                <Button disabled={visibleAddons.length >= maxItems}>
                   Añadir otro extra
                 </Button>
               </Box>
             </Box>
-          )}
+            );
+          }}
         </FieldArray>
       )}
     </Box>
