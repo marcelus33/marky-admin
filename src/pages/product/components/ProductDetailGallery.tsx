@@ -3,12 +3,12 @@ import { useTheme } from "@mui/material/styles";
 import React from "react";
 import defaultImage from "../../../assets/images/default-product.png";
 import { Product } from "../../../types/product";
+import { VideoThumbnail } from "./VideoThumbnail";
 
 const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
-  const images =
-    product.media?.filter((m) => !m._delete && m.media_type === "image") ?? [];
+  const media = product.media?.filter((m) => !m._delete) ?? [];
   const [mainIndex, setMainIndex] = React.useState(0);
-  const mainImage = images.length > 0 ? images[mainIndex].file : defaultImage;
+  const mainMedia = media.length > 0 ? media[mainIndex] : null;
 
   // Normalize url or file to string safely
   const resolveUrl = (file: any) => {
@@ -42,9 +42,9 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
       <Grid container spacing={2}>
         <Grid item xs={2}>
           <Box display="flex" flexDirection="column" gap={2}>
-            {images.map((img: any, idx: number) => (
+            {media.map((item: any, idx: number) => (
               <Box
-                key={img.id || idx}
+                key={item.id || idx}
                 onClick={() => setMainIndex(idx)}
                 sx={{
                   width: 64,
@@ -56,11 +56,19 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
                   borderColor: idx === mainIndex ? "primary.main" : "grey.300",
                 }}
               >
-                <img
-                  src={resolveUrl(img.file)}
-                  alt={img.name || "thumb"}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
+                {item.media_type === "video" ? (
+                  <VideoThumbnail
+                    url={resolveUrl(item.file)}
+                    width={64}
+                    height={64}
+                  />
+                ) : (
+                  <img
+                    src={resolveUrl(item.file)}
+                    alt={item.name || "thumb"}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                )}
               </Box>
             ))}
           </Box>
@@ -99,16 +107,28 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
               </Box>
             )}
 
-            <img
-              src={resolveUrl(mainImage)}
-              alt={product.name}
-              style={{
-                maxWidth: "100%",
-                maxHeight: 420,
-                objectFit: "contain",
-                borderRadius: 10,
-              }}
-            />
+            {mainMedia?.media_type === "video" ? (
+              <video
+                src={resolveUrl(mainMedia.file)}
+                controls
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 420,
+                  borderRadius: 10,
+                }}
+              />
+            ) : (
+              <img
+                src={resolveUrl(mainMedia ? mainMedia.file : defaultImage)}
+                alt={product.name}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 420,
+                  objectFit: "contain",
+                  borderRadius: 10,
+                }}
+              />
+            )}
           </Box>
         </Grid>
       </Grid>

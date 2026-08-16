@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, IconButton } from "@mui/material";
-import { PlayCircleOutline } from "@mui/icons-material";
-import { generateThumbnail } from "../../../utils/media";
 import { Product } from "../../../types/product";
+import { VideoThumbnail } from "./VideoThumbnail";
 
 interface ThumbnailItemProps {
   item: NonNullable<Product["media"]>[0];
@@ -15,51 +14,41 @@ export const ThumbnailItem = ({
   onClick,
   isSelected,
 }: ThumbnailItemProps) => {
-  const [thumbnail, setThumbnail] = useState<string | undefined>();
+  const [fileUrl, setFileUrl] = useState<string | undefined>();
 
   useEffect(() => {
-    let isMounted = true;
-    const fileUrl =
+    const url =
       typeof item.file === "object"
         ? URL.createObjectURL(item.file as File)
         : item.file;
 
-    if (item.media_type === "video") {
-      generateThumbnail(fileUrl).then((thumb) => {
-        if (isMounted) {
-          setThumbnail(thumb);
-        }
-      });
-    } else {
-      setThumbnail(fileUrl);
-    }
+    setFileUrl(url);
 
     return () => {
-      isMounted = false;
-      if (fileUrl && fileUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(fileUrl);
+      if (url && url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
       }
     };
-  }, [item.file, item.media_type]);
+  }, [item.file]);
 
   return (
     <IconButton onClick={onClick} sx={{ p: 0, mb: 1, position: "relative" }}>
-      <Avatar
-        variant="rounded"
-        src={thumbnail}
-        sx={{
-          width: 56,
-          height: 56,
-          border: isSelected ? "2px solid" : "none",
-          borderColor: "primary.main",
-        }}
-      />
-      {item.media_type === "video" && (
-        <PlayCircleOutline
+      {item.media_type === "video" ? (
+        <VideoThumbnail
+          url={fileUrl || ""}
+          width={56}
+          height={56}
+          border={isSelected ? "2px solid" : "none"}
+        />
+      ) : (
+        <Avatar
+          variant="rounded"
+          src={fileUrl}
           sx={{
-            position: "absolute",
-            color: "white",
-            fontSize: "1.5rem",
+            width: 56,
+            height: 56,
+            border: isSelected ? "2px solid" : "none",
+            borderColor: "primary.main",
           }}
         />
       )}
