@@ -4,6 +4,7 @@ import {
   AppBar,
   Avatar,
   Box,
+  ButtonBase,
   IconButton,
   Menu,
   MenuItem,
@@ -18,6 +19,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import defaultUserAvatar from "../assets/images/user_default.png";
+import { ROUTES } from "../routes/paths";
 import { useSessionStore } from "../stores/sessionStore";
 import NotificationsMenu from "./NotificationsMenu";
 
@@ -46,9 +48,15 @@ export const Header: React.FC = () => {
     >
       <Toolbar>
         <Box display="flex" alignItems="center" flexGrow={1}>
-          <LogoMarkyBlack
-            style={{ height: 50, marginRight: theme.spacing(1) }}
-          />
+          <ButtonBase
+            onClick={() => navigate(ROUTES.HOME)}
+            sx={{ borderRadius: 1 }}
+            aria-label="Ir a inicio"
+          >
+            <LogoMarkyBlack
+              style={{ height: 50, marginRight: theme.spacing(1) }}
+            />
+          </ButtonBase>
         </Box>
         <NotificationsMenu />
         <IconButton

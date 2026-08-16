@@ -51,4 +51,30 @@ describe("buildBusinessProfilePayload (Configuration Step 3 exchange rate)", () 
     });
     expect(payload.secondary_currency).toBe(20);
   });
+
+  // Regression test: is_primary_to_secondary was silently dropped from the
+  // payload, so the backend always defaulted it to True on creation,
+  // corrupting the persisted rate direction (e.g. "1 USD = 6000 Gs" stored
+  // as "1 Gs = 6000 USD").
+  it("includes is_primary_to_secondary reflecting the toggled direction", () => {
+    const payload = buildBusinessProfilePayload({
+      ...baseValues,
+      enable_exchange_rate: true,
+      secondary_currency: [{ id: 20 }],
+      exchange_rate: "6000",
+      is_primary_to_secondary: false,
+    });
+    expect(payload).toHaveProperty("is_primary_to_secondary", false);
+  });
+
+  it("includes is_primary_to_secondary as true when not swapped", () => {
+    const payload = buildBusinessProfilePayload({
+      ...baseValues,
+      enable_exchange_rate: true,
+      secondary_currency: [{ id: 20 }],
+      exchange_rate: "6000",
+      is_primary_to_secondary: true,
+    });
+    expect(payload).toHaveProperty("is_primary_to_secondary", true);
+  });
 });

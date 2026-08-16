@@ -24,6 +24,7 @@ import {
   toIsoDateTime,
   splitIsoDateTime,
   buildPromotionClearPayload,
+  sanitizeDiscountInput,
 } from "../utils/promotionForm";
 
 interface Props {
@@ -46,17 +47,25 @@ const initialValues = {
 
 const validationSchema = Yup.object({
   isPromotionActive: Yup.boolean(),
-  // Not required: a promotion can consist of just a countdown (no
-  // descuento/oferta), so forcing this field blocked "Guardar/Crear"
-  // (it always showed as disabled) whenever the user only wanted to
-  // schedule a "cuenta regresiva" without picking a discount type.
-  promotionOption: Yup.string().notRequired(),
+  // Required whenever the promotion switch is enabled: "Descuento" or
+  // "Oferta" must be picked, otherwise the promotion has no actual effect
+  // (a countdown alone doesn't discount anything).
+  promotionOption: Yup.string().when("isPromotionActive", {
+    is: true,
+    then: (schema) => schema.required("Debes seleccionar Descuento u Oferta"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   discountPercentage: Yup.number()
     .transform((value, original) =>
       String(original).trim() === "" ? null : value,
     )
-    .when("promotionOption", {
-      is: "descuento",
+    // Gated on isPromotionActive too (not just promotionOption): otherwise a
+    // stale "descuento" left over from before the switch was turned off
+    // keeps this required forever, even though the field is hidden and the
+    // switch being off should lift the requirement entirely.
+    .when(["isPromotionActive", "promotionOption"], {
+      is: (isPromotionActive: boolean, promotionOption: string) =>
+        isPromotionActive && promotionOption === "descuento",
       then: (schema) =>
         schema
           .required("Debe ingresar un porcentaje")
@@ -64,8 +73,9 @@ const validationSchema = Yup.object({
           .max(100, "Máximo 100%"),
       otherwise: (schema) => schema.nullable(),
     }),
-  multibuyOption: Yup.string().when("promotionOption", {
-    is: "oferta",
+  multibuyOption: Yup.string().when(["isPromotionActive", "promotionOption"], {
+    is: (isPromotionActive: boolean, promotionOption: string) =>
+      isPromotionActive && promotionOption === "oferta",
     then: (schema) => schema.required("Debe seleccionar una opción de oferta"),
     otherwise: (schema) => schema.notRequired(),
   }),
@@ -195,10 +205,8 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                 values.promotionTimeStart,
               ) ?? "",
             promotion_ends_at:
-              toIsoDateTime(
-                values.promotionDateEnd,
-                values.promotionTimeEnd,
-              ) ?? "",
+              toIsoDateTime(values.promotionDateEnd, values.promotionTimeEnd) ??
+              "",
           }
         : { promotion_starts_at: "", promotion_ends_at: "" };
 
@@ -244,7 +252,7 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
           }}
         >
           <Box display={"flex"} alignItems="center">
-            <Box sx={{ pl: 1, display: "flex", alignItems: "center" }}>
+            <Box sx={{ pl: 4, py: 4, display: "flex", alignItems: "center" }}>
               <Box component="h2" sx={{ m: 0, fontSize: 18 }}>
                 Promoción del producto
               </Box>
@@ -261,7 +269,7 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
             onSubmit={onSubmitLocal}
             enableReinitialize
           >
-            {({ values, setFieldValue, isValid }) => (
+            {({ values, setFieldValue, setValues, isValid, errors }) => (
               <Form>
                 <ProductInitializer product={product} />
                 <Box sx={{ p: 2 }}>
@@ -270,9 +278,25 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       <Switch
                         name="isPromotionActive"
                         checked={values.isPromotionActive}
-                        onChange={(e) =>
-                          setFieldValue("isPromotionActive", e.target.checked)
-                        }
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          // A single setValues call, not two setFieldValue
+                          // calls: Formik resolves each setFieldValue's
+                          // validation against the pre-update state.values
+                          // snapshot plus only that one field, so two calls
+                          // in the same handler race — the second one's
+                          // validation doesn't see the first one's change
+                          // yet and can silently overwrite it with stale
+                          // (invalid) results.
+                          setValues((prev: any) => ({
+                            ...prev,
+                            isPromotionActive: checked,
+                            promotionOption:
+                              checked && !prev.promotionOption
+                                ? "descuento"
+                                : prev.promotionOption,
+                          }));
+                        }}
                       />
                     }
                     label="Activar promoción"
@@ -290,6 +314,11 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       mt={2}
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
+                      {errors.promotionOption && (
+                        <Typography variant="caption" color="error.main">
+                          {errors.promotionOption as string}
+                        </Typography>
+                      )}
                       <FormControlLabel
                         control={
                           <Radio
@@ -306,17 +335,16 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       {values.promotionOption === "descuento" && (
                         <TextField
                           placeholder="Porcentaje de descuento (0-100)"
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           name="discountPercentage"
                           variant="outlined"
                           size="small"
                           value={values.discountPercentage || ""}
-                          onChange={(e) =>
-                            setFieldValue(
-                              "discountPercentage",
-                              Number(e.target.value),
-                            )
-                          }
+                          onChange={(e) => setFieldValue(
+                            "discountPercentage",
+                            sanitizeDiscountInput(e.target.value),
+                          )}
                           inputProps={{
                             max: 100,
                             min: 0,
@@ -451,9 +479,7 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       color="primary"
                       type="submit"
                       fullWidth
-                      disabled={
-                        !isValid || updateProductPromotion.isPending
-                      }
+                      disabled={!isValid || updateProductPromotion.isPending}
                     >
                       {updateProductPromotion.isPending
                         ? "Guardando..."

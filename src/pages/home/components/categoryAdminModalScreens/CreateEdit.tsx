@@ -61,6 +61,12 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
             onSubmit(mappedData, true);
             formikHelpers.resetForm();
           },
+          onError: (error: any) => {
+            ShowNotification({
+              message: error?.message || "No se pudo editar la categoría",
+              type: "error",
+            });
+          },
         }
       );
     } else {
@@ -79,6 +85,12 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
           };
           onSubmit(mappedData, true);
           formikHelpers.resetForm();
+        },
+        onError: (error: any) => {
+          ShowNotification({
+            message: error?.message || "No se pudo crear la categoría",
+            type: "error",
+          });
         },
       });
     }
@@ -221,6 +233,13 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
                       ShowNotification({
                         message: `Categoría "${data.name}" creada con éxito`,
                         type: "success",
+                      });
+                    },
+                    onError: (error: any) => {
+                      ShowNotification({
+                        message:
+                          error?.message || "No se pudo crear la categoría",
+                        type: "error",
                       });
                     },
                   });

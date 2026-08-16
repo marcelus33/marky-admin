@@ -9,6 +9,7 @@ export interface BusinessProfile {
   primary_currency: number;
   secondary_currency?: number | null;
   exchange_rate: string;
+  is_primary_to_secondary?: boolean;
   // management_methods?: any;
   // display_methods?: any;
 }

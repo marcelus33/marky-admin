@@ -54,8 +54,6 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
     cat: Partial<Category>,
     backScreen: boolean = true,
   ) => {
-    const wasEditing = Boolean(categoryForm?.id);
-
     setCategories((prev) => {
       const exists = prev.some((c) => c.id === cat.id);
 
@@ -71,13 +69,10 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
     setCategoryForm(null);
 
     if (backScreen) {
-      if (wasEditing) {
-        // Al editar, vuelve al listado dentro del modal
-        setActiveScreen("main");
-      } else {
-        // Al crear, guarda y lleva de vuelta al Home
-        handleModalClose();
-      }
+      // Tanto al crear como al editar, vuelve al listado dentro del modal
+      // para que el usuario tenga confirmación visual de que la categoría
+      // (nueva o editada) quedó guardada.
+      setActiveScreen("main");
     }
   };
 

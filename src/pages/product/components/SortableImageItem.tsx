@@ -4,7 +4,6 @@ import {
   DeleteOutline,
   DragIndicator as DragIndicatorIcon,
   ModeEditOutline,
-  PlayCircleOutline,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -15,7 +14,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { generateThumbnail } from "../../../utils/media";
+import { VideoThumbnail } from "./VideoThumbnail";
 
 interface SortableImageItemProps {
   item: {
@@ -39,7 +38,6 @@ export const SortableImageItem = ({
   const [thumbnail, setThumbnail] = useState<string | undefined>();
 
   useEffect(() => {
-    let isMounted = true;
     let objectUrl: string | null = null;
 
     const createUrl = () => {
@@ -53,23 +51,9 @@ export const SortableImageItem = ({
       return typeof file === "string" ? file : "";
     };
 
-    const url = createUrl();
-
-    if (item.type === "video" && url) {
-      generateThumbnail(url)
-        .then((thumb) => {
-          if (isMounted) setThumbnail(thumb);
-        })
-        .catch((error) => {
-          console.error("Error generating thumbnail:", error);
-          if (isMounted) setThumbnail(url);
-        });
-    } else {
-      setThumbnail(url);
-    }
+    setThumbnail(createUrl());
 
     return () => {
-      isMounted = false;
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
       }
@@ -144,22 +128,14 @@ export const SortableImageItem = ({
         <DragIndicatorIcon />
       </IconButton>
       <ListItemAvatar sx={{ position: "relative" }}>
-        <Avatar
-          variant="rounded"
-          src={thumbnail || undefined}
-          alt={item.name}
-          sx={{ width: "50px", height: "50px" }}
-        />
-        {item.type === "video" && thumbnail && (
-          <PlayCircleOutline
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              color: "white",
-              fontSize: "1.5rem",
-            }}
+        {item.type === "video" ? (
+          <VideoThumbnail url={thumbnail || ""} width={50} height={50} />
+        ) : (
+          <Avatar
+            variant="rounded"
+            src={thumbnail || undefined}
+            alt={item.name}
+            sx={{ width: "50px", height: "50px" }}
           />
         )}
       </ListItemAvatar>

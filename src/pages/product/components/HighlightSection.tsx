@@ -16,10 +16,12 @@ import { FormikProps, Field } from "formik";
 import Input from "../../../components/Input";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import CustomRadioLabel from "../../../components/CustomRadioLabel";
+import { sanitizeDiscountInput } from "../../../utils/promotionForm";
 
 const HighlightSection: React.FC<FormikProps<any>> = ({
   values,
   setFieldValue,
+  setValues,
   errors,
   touched,
 }) => {
@@ -108,9 +110,28 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
           <Switch
             name="isPromotionActive"
             checked={values.isPromotionActive}
-            onChange={(e) =>
-              setFieldValue("isPromotionActive", e.target.checked)
-            }
+            onChange={(e) => {
+              const checked = e.target.checked;
+              // A single setValues call, not two setFieldValue calls: Formik
+              // resolves each setFieldValue's validation against the
+              // pre-update `state.values` snapshot plus only that one field,
+              // so two calls in the same handler race — the second one's
+              // validation run doesn't see the first one's change yet and
+              // can overwrite it with stale results (e.g. still-false
+              // isPromotionActive), silently invalidating the promo-type
+              // required rule below.
+              setValues((prev: any) => ({
+                ...prev,
+                isPromotionActive: checked,
+                // Default to a valid promotion type as soon as the switch is
+                // turned on, so an enabled promotion always has one selected
+                // instead of requiring the user to notice and pick one.
+                promotionOption:
+                  checked && !prev.promotionOption
+                    ? "descuento"
+                    : prev.promotionOption,
+              }));
+            }}
           />
         }
         label="Activar producto en promoción"
@@ -122,6 +143,11 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
       )}
       {values.isPromotionActive && (
         <Box ml={4}>
+          {errors.promotionOption && (
+            <Typography variant="caption" color="error.main" display="block" mb={1}>
+              {errors.promotionOption as string}
+            </Typography>
+          )}
           <Box display={"flex"} flexDirection={"column"}>
             <FormControlLabel
               control={
@@ -137,14 +163,16 @@ const HighlightSection: React.FC<FormikProps<any>> = ({
             {values.promotionOption === "descuento" && (
               <TextField
                 placeholder="Porcentaje de descuento (0-100)"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 name="discountPercentage"
                 variant="outlined"
                 size="small"
                 value={values.discountPercentage || ""}
-                onChange={(e) =>
-                  setFieldValue("discountPercentage", Number(e.target.value))
-                }
+                onChange={(e) => setFieldValue(
+                  "discountPercentage",
+                  sanitizeDiscountInput(e.target.value),
+                )}
                 inputProps={{
                   max: 100,
                   min: 0,

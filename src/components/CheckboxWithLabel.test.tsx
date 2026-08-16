@@ -3,23 +3,23 @@ import { ThemeProvider } from "@mui/material/styles";
 import lightTheme from "../themes/light";
 import CheckboxWithLabel from "./CheckboxWithLabel";
 
-const renderCheckbox = (checked: boolean, onChange = jest.fn()) => {
+const setupCheckbox = (checked: boolean, handleChange = jest.fn()) => {
   render(
     <ThemeProvider theme={lightTheme}>
       <CheckboxWithLabel
         label="Mantener la sesión iniciada"
         name="rememberMe"
         checked={checked}
-        onChange={onChange}
+        onChange={handleChange}
       />
     </ThemeProvider>,
   );
-  return onChange;
+  return handleChange;
 };
 
 describe("CheckboxWithLabel sizing (login page polish ticket)", () => {
   it("renders a 22x22 icon with the spec border when unchecked", () => {
-    renderCheckbox(false);
+    setupCheckbox(false);
     const icon = screen.getByTestId("checkbox-icon-unchecked");
     const style = getComputedStyle(icon);
     expect(style.width).toBe("22px");
@@ -35,7 +35,7 @@ describe("CheckboxWithLabel sizing (login page polish ticket)", () => {
   });
 
   it("renders a filled primary-colored icon when checked", () => {
-    renderCheckbox(true);
+    setupCheckbox(true);
     const icon = screen.getByTestId("checkbox-icon-checked");
     const style = getComputedStyle(icon);
     expect(style.width).toBe("22px");
@@ -44,8 +44,8 @@ describe("CheckboxWithLabel sizing (login page polish ticket)", () => {
   });
 
   it("still fires onChange when clicked", () => {
-    const onChange = renderCheckbox(false);
+    const handleChange = setupCheckbox(false);
     fireEvent.click(screen.getByRole("checkbox"));
-    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(handleChange).toHaveBeenCalledTimes(1);
   });
 });

@@ -73,6 +73,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
   errors,
   touched,
   setFieldValue,
+  setFieldTouched,
   handleChange,
   handleBlur,
   maxItems = 10,
@@ -101,6 +102,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
   } = useImageCropper((croppedImage) => {
     if (activeVariantIndex !== null) {
       setFieldValue(`variants[${activeVariantIndex}].image`, croppedImage);
+      setFieldTouched(`variants[${activeVariantIndex}].image`, true, false);
     }
   });
 
@@ -173,7 +175,11 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
         <FieldArray name="variants">
           {({ push, remove }) => (
             <Box mt={2}>
-              {values.variants.map((variant: any, index: number) => (
+              {values.variants.map((variant: any, index: number) => {
+                const imageError =
+                  getIn(touched, `variants[${index}].image`) &&
+                  getIn(errors, `variants[${index}].image`);
+                return (
                 <Box
                   key={index}
                   sx={{
@@ -192,13 +198,14 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                   <Box
                     sx={{
                       display: "flex",
+                      flexDirection: "column",
                       alignItems: "center",
                     }}
                   >
                     <Box
                       sx={{
                         border: "2px dashed",
-                        borderColor: "primary.main",
+                        borderColor: imageError ? "error.main" : "primary.main",
                         borderRadius: 1,
                         width: 80,
                         height: 80,
@@ -218,6 +225,14 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                         </IconButton>
                       )}
                     </Box>
+                    <Typography
+                      variant="caption"
+                      color={imageError ? "error.main" : "text.secondary"}
+                      textAlign="center"
+                      sx={{ mt: 0.5, maxWidth: 90 }}
+                    >
+                      {imageError ? "Imagen requerida" : "Imagen *"}
+                    </Typography>
                   </Box>
                   {/* INPUTS  */}
                   <Box
@@ -300,7 +315,8 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                     </IconButton>
                   </Box>
                 </Box>
-              ))}
+                );
+              })}
               <Box
                 sx={{
                   display: "flex",
