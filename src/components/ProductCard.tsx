@@ -356,6 +356,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card
+      data-testid="product-card"
       onClick={(event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
         onClick?.();

@@ -12,6 +12,12 @@ import lightTheme from "../../../themes/light";
 import { ProductGrid } from "./productGrid";
 import { CategoryWithProducts } from "../../../types/categoryWithProducts";
 
+import {
+  getProductCategoriesWithProducts,
+  deleteProduct,
+} from "../../../services/productService";
+import { getHomePageData } from "../../../services/businessService";
+
 // productService transitively imports axiosConfig -> axios, whose installed
 // version ships ESM-only and breaks CRA's default Jest transform. Mock it out
 // fully (no jest.requireActual) so the real axios-backed module never loads,
@@ -37,12 +43,6 @@ jest.mock("../../../services/productService", () => ({
 jest.mock("../../../services/businessService", () => ({
   getHomePageData: jest.fn(),
 }));
-
-import {
-  getProductCategoriesWithProducts,
-  deleteProduct,
-} from "../../../services/productService";
-import { getHomePageData } from "../../../services/businessService";
 
 const mockedGetCategories = getProductCategoriesWithProducts as jest.Mock;
 const mockedDeleteProduct = deleteProduct as jest.Mock;
@@ -99,8 +99,8 @@ describe("ProductGrid product delete flow (Home page)", () => {
   it("shows a confirmation dialog and calls deleteProduct with the right id after confirming 'Eliminar'", async () => {
     renderProductGrid();
 
-    const productName = await screen.findByText("Galleta de chocolate");
-    const card = productName.closest(".MuiCard-root") as HTMLElement;
+    await screen.findByText("Galleta de chocolate");
+    const card = await screen.findByTestId("product-card");
     const menuButton = within(card).getByRole("button");
     fireEvent.click(menuButton);
     fireEvent.click(screen.getByText("Eliminar"));
@@ -117,8 +117,8 @@ describe("ProductGrid product delete flow (Home page)", () => {
   it("does not call deleteProduct if the confirmation dialog is cancelled", async () => {
     renderProductGrid();
 
-    const productName = await screen.findByText("Galleta de chocolate");
-    const card = productName.closest(".MuiCard-root") as HTMLElement;
+    await screen.findByText("Galleta de chocolate");
+    const card = await screen.findByTestId("product-card");
     const menuButton = within(card).getByRole("button");
     fireEvent.click(menuButton);
     fireEvent.click(screen.getByText("Eliminar"));

@@ -5,6 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import lightTheme from "../themes/light";
 import NotificationsMenu from "./NotificationsMenu";
 
+import {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from "../services/notificationService";
+
 // notificationService transitively imports axiosConfig -> axios, whose
 // installed version ships ESM-only and breaks CRA's default Jest transform.
 // Mock it out fully (no jest.requireActual), same reasoning as
@@ -14,12 +20,6 @@ jest.mock("../services/notificationService", () => ({
   markNotificationRead: jest.fn(),
   markAllNotificationsRead: jest.fn(),
 }));
-
-import {
-  getNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-} from "../services/notificationService";
 
 const mockedGetNotifications = getNotifications as jest.Mock;
 const mockedMarkRead = markNotificationRead as jest.Mock;
@@ -56,7 +56,7 @@ describe("NotificationsMenu", () => {
 
     renderMenu();
 
-    await waitFor(() => expect(screen.getByText("2")).toBeInTheDocument());
+    await screen.findByText("2");
   });
 
   it("lists notifications when opened and marks one read on click", async () => {
@@ -83,9 +83,7 @@ describe("NotificationsMenu", () => {
 
     fireEvent.click(screen.getByLabelText("notifications"));
 
-    await waitFor(() =>
-      expect(screen.getByText("Promoción por finalizar")).toBeInTheDocument(),
-    );
+    await screen.findByText("Promoción por finalizar");
 
     fireEvent.click(screen.getByText("Promoción por finalizar"));
 
@@ -106,9 +104,7 @@ describe("NotificationsMenu", () => {
 
     fireEvent.click(screen.getByLabelText("notifications"));
 
-    await waitFor(() =>
-      expect(screen.getByText("No tienes notificaciones.")).toBeInTheDocument(),
-    );
+    await screen.findByText("No tienes notificaciones.");
   });
 
   it("marks all as read when the action is clicked", async () => {
@@ -135,7 +131,7 @@ describe("NotificationsMenu", () => {
 
     fireEvent.click(screen.getByLabelText("notifications"));
 
-    await waitFor(() => screen.getByText("Marcar todas como leídas"));
+    await screen.findByText("Marcar todas como leídas");
     fireEvent.click(screen.getByText("Marcar todas como leídas"));
 
     await waitFor(() => expect(mockedMarkAllRead).toHaveBeenCalled());
