@@ -7,6 +7,24 @@
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * Sanitizes raw "Descuento" percentage input at typing time: strips
+ * everything but digits and a decimal point, and collapses any point after
+ * the first one — so "12.5.6" becomes "12.56", not garbage. Kept as a
+ * string (not cast to Number) so an in-progress value like "12." isn't
+ * silently rounded down to "12" before the user can type the decimal
+ * digits — Yup's number schema casts the final string on validation/submit.
+ */
+export const sanitizeDiscountInput = (raw: string): string => {
+  const cleaned = raw.replace(/[^0-9.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot === -1) return cleaned;
+  return (
+    cleaned.slice(0, firstDot + 1) +
+    cleaned.slice(firstDot + 1).replace(/\./g, "")
+  );
+};
+
 /** Local date+time inputs -> ISO instant (UTC), or null if either is empty. */
 export const toIsoDateTime = (
   date: string | undefined,

@@ -74,6 +74,7 @@ import { ReactComponent as DestacarMenuIcon } from "../../assets/icons/product-f
 const variantItemSchema = Yup.object().shape({
   name: Yup.string().required("El nombre de la presentación es requerido"),
   description: Yup.string(),
+  image: Yup.mixed().required("La imagen de la presentación es requerida"),
   price: Yup.number()
     .required("El precio es requerido")
     .positive("El precio debe ser un número positivo"),
@@ -112,9 +113,34 @@ const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) 
     addons: showExtras ? Yup.array().of(addonItemSchema) : Yup.array(),
     stopper: Yup.string(),
     isPromotionActive: Yup.boolean(),
-    promotionOption: Yup.string(),
-    discountPercentage: Yup.number().min(0).max(100),
-    multibuyOption: Yup.string().nullable(),
+    promotionOption: Yup.string().when("isPromotionActive", {
+      is: true,
+      then: (schema) =>
+        schema.required("Debes seleccionar Descuento u Oferta"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+    discountPercentage: Yup.number()
+      .min(0)
+      .max(100)
+      // Gated on isPromotionActive too (not just promotionOption):
+      // otherwise a stale "descuento" left over from before the switch was
+      // turned off keeps this required forever, even though the field is
+      // hidden and the switch being off should lift the requirement.
+      .when(["isPromotionActive", "promotionOption"], {
+        is: (isPromotionActive: boolean, promotionOption: string) =>
+          isPromotionActive && promotionOption === "descuento",
+        then: (schema) => schema.required("Debe ingresar un porcentaje"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+    multibuyOption: Yup.string()
+      .nullable()
+      .when(["isPromotionActive", "promotionOption"], {
+        is: (isPromotionActive: boolean, promotionOption: string) =>
+          isPromotionActive && promotionOption === "oferta",
+        then: (schema) =>
+          schema.required("Debe seleccionar una opción de oferta"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
     countdownActive: Yup.boolean(),
     promotionStartDate: Yup.string().when("countdownActive", {
       is: true,
@@ -143,13 +169,15 @@ const parseDateTime = splitIsoDateTime;
 // Maps each side-nav section to the Yup field(s) whose errors belong to it,
 // so "Publicar" can flag exactly which sections are incomplete. Category is
 // deliberately excluded (see the comment on the `category` schema field
-// above), and "Destacar producto" only lists the countdown fields since
-// those are the only ones with a `required` rule today.
+// above).
 const SECTION_FIELDS: Record<string, string[]> = {
   Producto: ["name", "description", "price"],
   Variaciones: ["variants"],
   "Adicionales o extras": ["addons"],
   "Destacar producto": [
+    "promotionOption",
+    "discountPercentage",
+    "multibuyOption",
     "promotionStartDate",
     "promotionStartTime",
     "promotionEndDate",
