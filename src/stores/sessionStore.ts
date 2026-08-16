@@ -1,6 +1,7 @@
 // src/stores/sessionStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { queryClient } from "../queryClient";
 
 interface User {
   id: number;
@@ -36,8 +37,15 @@ export const useSessionStore = create<SessionState>()(
         set({ accessToken, refreshToken, user }),
 
       // logout
-      clearSession: () =>
-        set({ accessToken: null, refreshToken: null, user: null }),
+      clearSession: () => {
+        // Business-scoped query data (home page, product grid, etc.) must not
+        // survive an auth-context change: the QueryClient is a module-level
+        // singleton that outlives the SPA navigation between accounts, so
+        // without this a second business logging in on the same tab briefly
+        // (or up to staleTime) sees the previous business's cached data.
+        queryClient.clear();
+        set({ accessToken: null, refreshToken: null, user: null });
+      },
 
       isAuthenticated: () => !!get().accessToken,
 

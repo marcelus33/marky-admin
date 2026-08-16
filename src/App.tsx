@@ -7,19 +7,12 @@ import { publicRoutes } from "./routes/publicRoutes";
 import { CustomThemeProvider } from "./themes/ThemeContext";
 import { protectedRoutes } from "./routes/protectedRoutes";
 import { useSessionStore } from "./stores/sessionStore";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./queryClient";
 import { ROUTES } from "./routes/paths";
 import { CssBaseline } from "@mui/material";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import AppErrorBoundary from "./components/AppErrorBoundary";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
 
 const App = () => {
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated());
