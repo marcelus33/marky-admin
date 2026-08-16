@@ -173,9 +173,13 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
       />
       {multiPresentation && (
         <FieldArray name="variants">
-          {({ push, remove }) => (
+          {({ push, remove }) => {
+            const visibleVariants = values.variants
+              .map((variant: any, index: number) => ({ variant, index }))
+              .filter(({ variant }: any) => !variant._delete);
+            return (
             <Box mt={2}>
-              {values.variants.map((variant: any, index: number) => {
+              {visibleVariants.map(({ variant, index }: any) => {
                 const imageError =
                   getIn(touched, `variants[${index}].image`) &&
                   getIn(errors, `variants[${index}].image`);
@@ -310,7 +314,19 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                       p: 1,
                     }}
                   >
-                    <IconButton onClick={() => remove(index)}>
+                    <IconButton
+                      onClick={() => {
+                        // Persisted rows (real DB id) are soft-deleted so the
+                        // submit handler can send a { id, _delete: true }
+                        // tombstone the backend understands. Rows that were
+                        // never saved (no id yet) can just be spliced out.
+                        if (variant.id) {
+                          setFieldValue(`variants[${index}]._delete`, true);
+                        } else {
+                          remove(index);
+                        }
+                      }}
+                    >
                       <Delete />
                     </IconButton>
                   </Box>
@@ -323,12 +339,11 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                   alignItems: "center",
                   marginTop: 4,
                   cursor:
-                    values.variants.length >= maxItems ? "default" : "pointer",
+                    visibleVariants.length >= maxItems ? "default" : "pointer",
                 }}
                 onClick={() => {
-                  if (values.variants.length >= maxItems) return;
+                  if (visibleVariants.length >= maxItems) return;
                   push({
-                    id: Date.now(),
                     name: "",
                     description: "",
                     price: "",
@@ -347,12 +362,13 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                 >
                   <Add fontSize="large" color="primary" sx={{ mt: 1 }} />
                 </Box>
-                <Button disabled={values.variants.length >= maxItems}>
+                <Button disabled={visibleVariants.length >= maxItems}>
                   Añadir otra presentación
                 </Button>
               </Box>
             </Box>
-          )}
+            );
+          }}
         </FieldArray>
       )}
     </Box>

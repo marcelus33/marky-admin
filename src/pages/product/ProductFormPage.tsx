@@ -107,10 +107,20 @@ const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) 
     // block saving a brand-new product before the user had a chance to
     // assign one from the "Producto" tab.
     category: Yup.number().nullable(),
+    // Rows soft-deleted via the section's Delete button (see
+    // VariationsSection/ExtrasSection) are skipped: they no longer need to
+    // satisfy the item schema (e.g. a row the user blanked out before
+    // deleting it), since they're removed rather than saved.
     variants: multiPresentation
-      ? Yup.array().of(variantItemSchema)
+      ? Yup.array().of(
+          Yup.lazy((v: any) => (v?._delete ? Yup.object() : variantItemSchema)),
+        )
       : Yup.array(),
-    addons: showExtras ? Yup.array().of(addonItemSchema) : Yup.array(),
+    addons: showExtras
+      ? Yup.array().of(
+          Yup.lazy((a: any) => (a?._delete ? Yup.object() : addonItemSchema)),
+        )
+      : Yup.array(),
     stopper: Yup.string(),
     isPromotionActive: Yup.boolean(),
     promotionOption: Yup.string().when("isPromotionActive", {
@@ -165,6 +175,27 @@ const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) 
   });
 
 const parseDateTime = splitIsoDateTime;
+
+// Turns a Formik row list (variants or addons) into the nested payload the
+// backend's ProductInputSerializer expects: rows soft-deleted via the
+// section's Delete button become a { id, _delete: true } tombstone (dropped
+// entirely if never persisted, since there's nothing on the server to
+// delete); everything else is sent as-is minus the internal `_delete` flag.
+// `mapRow` lets callers post-process a kept row (e.g. the variant image
+// special-casing).
+const buildNestedItemsPayload = (
+  rows: any[] | undefined,
+  mapRow: (row: any) => any = (row) => row,
+) =>
+  (rows ?? []).reduce((acc: any[], row: any) => {
+    if (row?._delete) {
+      if (row.id) acc.push({ id: row.id, _delete: true });
+      return acc;
+    }
+    const { _delete, ...rest } = row ?? {};
+    acc.push(mapRow(rest));
+    return acc;
+  }, []);
 
 // Maps each side-nav section to the Yup field(s) whose errors belong to it,
 // so "Publicar" can flag exactly which sections are incomplete. Category is
@@ -636,32 +667,51 @@ const ProductFormPage = () => {
         delete submissionValues.countdownActive;
         delete submissionValues.promotionStatus;
 
-        // 4) Variants: only include `image` if it's an actual File/Blob.
-        //    If image is a URL string (existing image), remove `image` from that variant.
-        if (Array.isArray(submissionValues.variants)) {
-          submissionValues.variants = submissionValues.variants.map(
+        // 4) Variants/addons: rows soft-deleted in the section UI (see
+        //    VariationsSection/ExtrasSection) become a { id, _delete: true }
+        //    tombstone so the backend actually removes them — a persisted
+        //    row that's just missing from the array is otherwise left
+        //    untouched by the backend's nested-write logic. Rows that were
+        //    never saved are dropped outright instead of being sent as a
+        //    tombstone (there's nothing on the server to delete). Skipped
+        //    entirely when the section is toggled off — that case is fully
+        //    handled below (every persisted row gets tombstoned instead).
+        if (multiPresentation && Array.isArray(submissionValues.variants)) {
+          submissionValues.variants = buildNestedItemsPayload(
+            submissionValues.variants,
             (v: any) => {
-              const { image, ...rest } = v ?? {};
+              // only include `image` if it's an actual File/Blob; if it's a
+              // URL string (existing image, unchanged), drop it so the
+              // backend doesn't try to re-save a string into an ImageField.
+              const { image, ...rest } = v;
               if (image instanceof File || image instanceof Blob) {
                 return { ...rest, image };
               }
-              // if variant had no id (new) and image was string, ignore the image;
-              // typically new variants will provide File objects anyway.
               return rest;
             },
           );
         }
+        if (showExtras && Array.isArray(submissionValues.addons)) {
+          submissionValues.addons = buildNestedItemsPayload(
+            submissionValues.addons,
+          );
+        }
 
-        // Variaciones/Adicionales toggled off = section contributes nothing,
-        // same rule the validation applies. Without this, a variant/addon
-        // row left over from before the user disabled the toggle (which the
-        // UI no longer renders, so the user has no way to fix it) would
-        // still be sent and rejected by the backend's own field validation.
+        // Variaciones/Adicionales toggled off = every persisted row in that
+        // section gets tombstoned (a fresh product, or one where the section
+        // was never turned on, has no ids and this is a no-op). Without
+        // this, a variant/addon row left over from before the user disabled
+        // the toggle (which the UI no longer renders, so the user has no
+        // way to fix it) would keep living on the product untouched.
         if (!multiPresentation) {
-          submissionValues.variants = [];
+          submissionValues.variants = (values.variants ?? [])
+            .filter((v: any) => v.id)
+            .map((v: any) => ({ id: v.id, _delete: true }));
         }
         if (!showExtras) {
-          submissionValues.addons = [];
+          submissionValues.addons = (values.addons ?? [])
+            .filter((a: any) => a.id)
+            .map((a: any) => ({ id: a.id, _delete: true }));
         }
 
         // 5) Media: keep objects but allow _delete, keep id for existing, send file for File objects

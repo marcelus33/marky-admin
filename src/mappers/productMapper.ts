@@ -71,6 +71,7 @@ export const mapProduct = (productData: any): Product => {
           secondaryPrice: v.secondary_price ?? v.secondaryPrice,
         }))
       : [],
+    addons: Array.isArray(productData.addons) ? productData.addons : [],
   };
 };
 
