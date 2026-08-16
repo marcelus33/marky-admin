@@ -42,7 +42,7 @@ const components = {
   MuiCheckbox: {
     styleOverrides: {
       root: {
-        color: colors.light.grey[100],
+        color: colors.light.grey[800],
         "&.Mui-checked": {
           color: colors.light.primary,
         },

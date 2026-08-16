@@ -116,7 +116,7 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
           variant="contained"
           ref={anchorRef}
           aria-label="split button"
-          sx={{ display: "flex", gap: 0.5 }}
+          sx={{ display: "inline-flex", gap: 0.5 }}
         >
           <Button
             type="button"

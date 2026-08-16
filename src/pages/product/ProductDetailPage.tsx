@@ -1,6 +1,7 @@
 import { Box, Grid } from "@mui/material";
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import BackButton from "../../components/BackButton";
 import { Header } from "../../components/Header";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import useProductDetail from "../../hooks/useProductDetail";
@@ -11,6 +12,7 @@ import ProductDetailPricing from "./components/ProductDetailPricing";
 import ProductVariantsList from "./components/ProductVariantsList";
 
 const ProductDetailPage: React.FC = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const numericId = id ? Number(id) : undefined;
   const { data: product, isLoading, error } = useProductDetail(numericId);
@@ -46,6 +48,9 @@ const ProductDetailPage: React.FC = () => {
           minWidth: "85%",
         }}
       >
+        <Box sx={{ mb: 3 }}>
+          <BackButton onClick={() => navigate(-1)} />
+        </Box>
         <Grid container spacing={5}>
           {/* COLUMN 1 */}
           <Grid
