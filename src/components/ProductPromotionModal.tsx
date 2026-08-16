@@ -195,10 +195,8 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                 values.promotionTimeStart,
               ) ?? "",
             promotion_ends_at:
-              toIsoDateTime(
-                values.promotionDateEnd,
-                values.promotionTimeEnd,
-              ) ?? "",
+              toIsoDateTime(values.promotionDateEnd, values.promotionTimeEnd) ??
+              "",
           }
         : { promotion_starts_at: "", promotion_ends_at: "" };
 
@@ -244,7 +242,7 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
           }}
         >
           <Box display={"flex"} alignItems="center">
-            <Box sx={{ pl: 1, display: "flex", alignItems: "center" }}>
+            <Box sx={{ pl: 4, py: 4, display: "flex", alignItems: "center" }}>
               <Box component="h2" sx={{ m: 0, fontSize: 18 }}>
                 Promoción del producto
               </Box>
@@ -451,9 +449,7 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       color="primary"
                       type="submit"
                       fullWidth
-                      disabled={
-                        !isValid || updateProductPromotion.isPending
-                      }
+                      disabled={!isValid || updateProductPromotion.isPending}
                     >
                       {updateProductPromotion.isPending
                         ? "Guardando..."
