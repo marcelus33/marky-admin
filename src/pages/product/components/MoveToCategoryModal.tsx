@@ -136,6 +136,7 @@ const MoveToCategoryModal: React.FC<MoveToCategoryModalProps> = ({
                         variant="outlined"
                         disabled={moveToCategory.isPending}
                         onClick={() => handleMove(row)}
+                        sx={{ px: 2 }}
                       >
                         Mover aquí
                       </Button>

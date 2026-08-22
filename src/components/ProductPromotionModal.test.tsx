@@ -132,3 +132,82 @@ describe("ProductPromotionModal promotion type requirement", () => {
     await waitFor(() => expect(submitButton).not.toBeDisabled());
   });
 });
+
+describe("ProductPromotionModal dirty-state gating on an existing promotion", () => {
+  const productWithPromo: ProductGridItem = {
+    id: 12,
+    name: "Pizza",
+    price: "50000",
+    discountPercent: 30,
+    promotionStartsAt: "2026-08-15T10:00:00Z",
+    promotionEndsAt: "2026-08-16T23:59:00Z",
+  };
+
+  it("disables Guardar cambios immediately on open, and enables it once a real field changes", async () => {
+    renderModal({ product: productWithPromo });
+
+    const submitButton = await screen.findByRole("button", {
+      name: /Guardar cambios/,
+    });
+    expect(submitButton).toBeDisabled();
+
+    const countdownSwitch = screen.getByRole("checkbox", {
+      name: "Activar cuenta regresiva",
+    });
+    fireEvent.click(countdownSwitch);
+
+    await waitFor(() => expect(submitButton).not.toBeDisabled());
+  });
+
+  it("stays disabled if the modal is closed and reopened without any edits", async () => {
+    // Closing then reopening remounts the dialog's contents (MUI's Dialog
+    // isn't keepMounted), which is the scenario this simulates directly
+    // rather than toggling the `open` prop on one render tree.
+    const { unmount } = renderModal({ product: productWithPromo });
+    unmount();
+
+    renderModal({ product: productWithPromo });
+
+    const submitButton = await screen.findByRole("button", {
+      name: /Guardar cambios/,
+    });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it("hydrates a countdown-only promotion (no discount, no multibuy) without forcing a discount type", async () => {
+    // Regression: a naive hydration mapping (multibuyOption ? "oferta" :
+    // "descuento") would wrongly default this to "descuento" with an empty
+    // percentage, making the form permanently invalid/disabled.
+    const countdownOnlyProduct: ProductGridItem = {
+      id: 13,
+      name: "Sushi",
+      price: "20000",
+      promotionStartsAt: "2026-08-15T10:00:00Z",
+      promotionEndsAt: "2026-08-16T23:59:00Z",
+    };
+
+    renderModal({ product: countdownOnlyProduct });
+
+    const promotionSwitch = await screen.findByRole("checkbox", {
+      name: "Activar promoción",
+    });
+    await waitFor(() => expect(promotionSwitch).toBeChecked());
+
+    expect(
+      screen.queryByRole("radio", { name: "Descuento" }),
+    ).not.toBeChecked();
+    expect(
+      screen.queryByRole("radio", { name: "Oferta" }),
+    ).not.toBeChecked();
+
+    const countdownSwitch = screen.getByRole("checkbox", {
+      name: "Activar cuenta regresiva",
+    });
+    expect(countdownSwitch).toBeChecked();
+
+    const submitButton = screen.getByRole("button", {
+      name: /Guardar cambios/,
+    });
+    expect(submitButton).toBeDisabled();
+  });
+});

@@ -1011,6 +1011,8 @@ const ProductFormPage = () => {
                     onPublish={handlePublishClick}
                     isSubmitting={isSaving}
                     uploadProgress={uploadProgress}
+                    isDirty={formikProps.dirty}
+                    isEditMode={!!id}
                   />
                 </Box>
               </Box>
