@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   usePromotionCountdown,
   PromotionCountdownInput,
+  __resetPromotionInvalidationCoalescingForTests,
 } from "./usePromotionCountdown";
 
 // Plain .ts (not .tsx) file: use React.createElement instead of JSX, since
@@ -28,9 +29,24 @@ const renderCountdownWithClient = (
   });
 };
 
+// Threads props through renderHook's initialProps/rerender so a test can
+// simulate a prop update after mount (e.g. `status` flipping once a
+// boundary-crossing invalidation's resulting refetch resolves), rather than
+// only ever rendering with a fixed input for the hook's lifetime.
+const renderCountdownRerenderable = (initialProps: PromotionCountdownInput) =>
+  renderHook(
+    (props: PromotionCountdownInput) => usePromotionCountdown(props),
+    { wrapper, initialProps },
+  );
+
 describe("usePromotionCountdown", () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    // The invalidation call is coalesced across hook instances via a
+    // module-level timestamp (see usePromotionCountdown.ts). Reset it so
+    // each test's invalidation assertions are independent of real wall-clock
+    // proximity to the previous test's invalidation.
+    __resetPromotionInvalidationCoalescingForTests();
   });
 
   afterEach(() => {
@@ -90,7 +106,11 @@ describe("usePromotionCountdown", () => {
 
     expect(result.current).not.toBeNull();
     expect(result.current?.phase).toBe("ends");
-    expect(result.current?.label).toMatch(/^\d{2}:\d{2}:\d{2}:\d{2}$/);
+    // Exact literal, not just shape: jest.useFakeTimers() makes `now` fully
+    // deterministic here, so this also catches unit-order/off-by-one bugs
+    // (e.g. hours computed as total-hours instead of hours-within-the-day)
+    // that a shape-only regex like /^\d{2}:\d{2}:\d{2}:\d{2}$/ would miss.
+    expect(result.current?.label).toBe("03:08:42:17");
   });
 
   it("returns null when active but endsAt is missing", () => {
@@ -148,6 +168,72 @@ describe("usePromotionCountdown", () => {
       { status: "scheduled", startsAt },
       queryClient,
     );
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ["productCategoriesWithProducts"],
+    });
+  });
+
+  it("returns null the moment a mounted scheduled promo's start time passes (live boundary crossing, not just already-past-at-mount)", () => {
+    const startsAt = new Date(Date.now() + 2000).toISOString();
+    const { result } = renderCountdown({ status: "scheduled", startsAt });
+
+    expect(result.current?.phase).toBe("starts");
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    expect(result.current).toBeNull();
+  });
+
+  it("transitions from 'starts' through null to 'ends' when a scheduled promo flips to active (status prop updates after the resulting refetch)", () => {
+    // This is the actual user-visible scheduled -> active journey: the
+    // boundary crossing fires an invalidation, the refetch resolves with
+    // the backend's new promotion_status, and only THEN does the `status`
+    // prop passed into the hook change to "active".
+    const startsAt = new Date(Date.now() + 2000).toISOString();
+    const endsAt = new Date(Date.now() + 100000).toISOString();
+
+    const { result, rerender } = renderCountdownRerenderable({
+      status: "scheduled",
+      startsAt,
+      endsAt,
+    });
+
+    expect(result.current?.phase).toBe("starts");
+
+    // Cross the start boundary while `status` is still "scheduled" (the
+    // in-flight window before the refetch has resolved) — must render null,
+    // never a live "ends" countdown or a stale "starts" text.
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(result.current).toBeNull();
+
+    // Simulate the refetch resolving: the backend now reports "active".
+    rerender({ status: "active", startsAt, endsAt });
+
+    expect(result.current).not.toBeNull();
+    expect(result.current?.phase).toBe("ends");
+  });
+
+  it("coalesces near-simultaneous boundary crossings from different hook instances into a single invalidateQueries call", () => {
+    // Simulates every product card in an expiring category, plus the
+    // category's own header badge, all sharing the same endsAt and crossing
+    // zero on the same 1-second tick.
+    const queryClient = new QueryClient();
+    const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
+    const endsAt = new Date(Date.now() + 2000).toISOString();
+
+    renderCountdownWithClient({ status: "active", endsAt }, queryClient);
+    renderCountdownWithClient({ status: "active", endsAt }, queryClient);
+    renderCountdownWithClient({ status: "active", endsAt }, queryClient);
 
     act(() => {
       jest.advanceTimersByTime(3000);

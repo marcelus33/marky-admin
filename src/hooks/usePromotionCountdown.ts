@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { PromotionStatus } from "../types/product";
 
 export interface PromotionCountdownInput {
@@ -39,6 +39,35 @@ const formatStartsIn = (ms: number): string => {
   return `Inicia en ${minutes} min.`;
 };
 
+// Module-level (not per-hook-instance) coalescing guard: when many cards
+// share the same endsAt/startsAt (e.g. every product in an expiring
+// category, plus the category's own header badge), they all cross zero on
+// the same 1-second tick and would otherwise each independently call
+// invalidateQueries — React Query does not coalesce these itself, so that's
+// one real HTTP request per card. This collapses near-simultaneous
+// invalidation attempts from different hook instances into a single actual
+// call. The per-instance `firedBoundaryRef` guard (see below) is unrelated
+// and still controls whether a given instance even attempts to invalidate.
+let lastInvalidatedAt = 0;
+const COALESCE_WINDOW_MS = 2000;
+
+function invalidatePromotionsQueryCoalesced(queryClient: QueryClient) {
+  const now = Date.now();
+  if (now - lastInvalidatedAt > COALESCE_WINDOW_MS) {
+    lastInvalidatedAt = now;
+    queryClient.invalidateQueries({
+      queryKey: ["productCategoriesWithProducts"],
+    });
+  }
+}
+
+// Test-only escape hatch: resets the module-level coalescing guard so tests
+// can assert invalidation behavior independently of each other/of real wall
+// clock timing. Not used by application code.
+export function __resetPromotionInvalidationCoalescingForTests() {
+  lastInvalidatedAt = 0;
+}
+
 /**
  * Derives the countdown to show (if any) from the backend's resolved
  * `promotion_status` (products/promotions.py) rather than re-deriving
@@ -56,7 +85,10 @@ const formatStartsIn = (ms: number): string => {
  * zero while mounted (a promo's start or end time arrives live), the
  * discounted price and server-derived status won't update on their own, so
  * this fires a single `productCategoriesWithProducts` invalidation per
- * boundary crossing to pick up the new backend-resolved state.
+ * boundary crossing to pick up the new backend-resolved state. Near-
+ * simultaneous crossings from other cards sharing the same start/end time
+ * are coalesced into a single actual request (see
+ * `invalidatePromotionsQueryCoalesced` above).
  */
 export const usePromotionCountdown = ({
   status,
@@ -87,17 +119,13 @@ export const usePromotionCountdown = ({
       const diff = new Date(endsAt).getTime() - now;
       if (diff <= 0 && !firedBoundaryRef.current) {
         firedBoundaryRef.current = true;
-        queryClient.invalidateQueries({
-          queryKey: ["productCategoriesWithProducts"],
-        });
+        invalidatePromotionsQueryCoalesced(queryClient);
       }
     } else if (status === "scheduled" && startsAt) {
       const diff = new Date(startsAt).getTime() - now;
       if (diff <= 0 && !firedBoundaryRef.current) {
         firedBoundaryRef.current = true;
-        queryClient.invalidateQueries({
-          queryKey: ["productCategoriesWithProducts"],
-        });
+        invalidatePromotionsQueryCoalesced(queryClient);
       }
     }
   }, [now, status, startsAt, endsAt, queryClient]);

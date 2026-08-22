@@ -6,7 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import lightTheme from "../../../themes/light";
 import { ProductGrid } from "./productGrid";
@@ -72,6 +72,36 @@ const renderProductGrid = (initialEntries: string[] = ["/"]) => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={lightTheme}>
         <MemoryRouter initialEntries={initialEntries}>
+          <ProductGrid />
+        </MemoryRouter>
+      </ThemeProvider>
+    </QueryClientProvider>,
+  );
+};
+
+// Renders a button alongside ProductGrid, inside the SAME MemoryRouter
+// entry/history stack, so clicking it drives an in-place `navigate()` call
+// (search-string-only change on the current entry) rather than mounting a
+// fresh MemoryRouter at a different initialEntries value. This mirrors the
+// real bug scenario: the notification bell and ProductGrid are both
+// rendered by the same /home page, so clicking a notification while already
+// on /home does NOT remount ProductGrid — it only changes location.search.
+const NavigateButton = ({ to }: { to: string }) => {
+  const navigate = useNavigate();
+  return (
+    <button onClick={() => navigate(to)}>trigger-in-place-deep-link</button>
+  );
+};
+
+const renderProductGridWithInPlaceNav = (
+  initialEntries: string[] = ["/home"],
+) => {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={lightTheme}>
+        <MemoryRouter initialEntries={initialEntries}>
+          <NavigateButton to="/home?promoCategory=1" />
           <ProductGrid />
         </MemoryRouter>
       </ThemeProvider>
@@ -157,5 +187,23 @@ describe("ProductGrid category-expiry notification deep link", () => {
 
     await screen.findByText("Galleta de chocolate");
     expect(screen.queryByText("Promoción")).not.toBeInTheDocument();
+  });
+
+  it("opens the modal when ?promoCategory= arrives via an in-place navigation while already on /home (no remount)", async () => {
+    // Regression test: the notification bell and ProductGrid are rendered
+    // by the same /home page, so clicking a category-expiry notification
+    // while already viewing the grid navigates /home -> /home?promoCategory=1
+    // WITHOUT remounting ProductGrid — only location.search changes. Confirm
+    // the deep-link effect still picks this up (previously it only ran on
+    // categoriesWithProductsRaw changing, which doesn't happen here since
+    // the query data was already loaded and doesn't refetch).
+    renderProductGridWithInPlaceNav(["/home"]);
+
+    await screen.findByText("Galleta de chocolate");
+    expect(screen.queryByText("Promoción")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("trigger-in-place-deep-link"));
+
+    expect(await screen.findByText("Promoción")).toBeInTheDocument();
   });
 });

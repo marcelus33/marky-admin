@@ -131,7 +131,7 @@ export const ProductGrid: React.FC = () => {
       navigate(location.pathname, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoriesWithProductsRaw]);
+  }, [categoriesWithProductsRaw, location.search]);
 
   const [openProductPromotionModal, setOpenProductPromotionModal] =
     useState(false);
