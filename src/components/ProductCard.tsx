@@ -298,19 +298,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const promotionCountdown = usePromotionCountdown({
     status: product.promotionStatus,
+    startsAt: product.promotionStartsAt,
     endsAt: product.promotionEndsAt,
   });
 
   const renderPromotionBadge = () => {
     if (!promotionCountdown) return null;
 
-    // The countdown badge always uses the fixed promotion/urgency color.
-    // It must never depend on discount, multibuy, price, or any other
-    // product attribute — only on the promotion having a time limit.
+    // The countdown badge always uses a fixed urgency color keyed to the
+    // phase (amber while scheduled, red while actively counting down). It
+    // must never depend on discount, multibuy, price, or any other product
+    // attribute.
     return (
       <Box
         sx={{
-          backgroundColor: "error.main",
+          backgroundColor:
+            promotionCountdown.phase === "starts"
+              ? "warning.main"
+              : "error.main",
           color: "white",
           px: 2,
           py: 0.5,

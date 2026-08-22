@@ -104,21 +104,26 @@ describe("ProductCard promotion countdown badge", () => {
     };
     renderProductCard({ product: activeProduct });
 
-    expect(screen.getByText(/1 día : \d+ horas? : \d+ min/)).toBeInTheDocument();
+    expect(screen.getByText(/^\d{2}:\d{2}:\d{2}:\d{2}$/)).toBeInTheDocument();
   });
 
-  it("does not show the countdown when promotionStatus is scheduled, even with dates present", () => {
-    // A promotion that hasn't reached promotionStartsAt yet must not render
-    // a badge — it would look identical to an already-active countdown.
+  it("shows the 'Inicia en' indicator when promotionStatus is scheduled", () => {
+    // A scheduled promotion (now < promotionStartsAt) shows the "Inicia en"
+    // indicator rather than the live countdown — it must not look identical
+    // to an already-active countdown.
     const scheduledProduct: ProductGridItem = {
       ...product,
       promotionStatus: "scheduled",
-      promotionStartsAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      // A few minutes of headroom past the 2-hour mark so real (unmocked)
+      // clock drift during test execution can't floor this down to "1 h".
+      promotionStartsAt: new Date(
+        Date.now() + 2 * 60 * 60 * 1000 + 5 * 60 * 1000,
+      ).toISOString(),
       promotionEndsAt: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
     };
     renderProductCard({ product: scheduledProduct });
 
-    expect(screen.queryByText(/día|hora|min/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Inicia en 2 h/)).toBeInTheDocument();
   });
 
   it("does not show the countdown when promotionStatus is expired, even with dates present", () => {

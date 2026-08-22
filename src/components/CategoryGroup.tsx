@@ -50,19 +50,24 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
 
   const promotionCountdown = usePromotionCountdown({
     status: category.promotion_status,
+    startsAt: category.promotion_starts_at,
     endsAt: category.promotion_ends_at,
   });
 
   const renderPromotionBadge = () => {
     if (!promotionCountdown) return null;
 
-    // The countdown badge always uses the fixed promotion/urgency color.
-    // It must never depend on discount, multibuy, price, or any other
-    // category/product attribute — only on the promotion having a time limit.
+    // The countdown badge always uses a fixed urgency color keyed to the
+    // phase (amber while scheduled, red while actively counting down). It
+    // must never depend on discount, multibuy, price, or any other
+    // category/product attribute.
     return (
       <Box
         sx={{
-          backgroundColor: "error.main",
+          backgroundColor:
+            promotionCountdown.phase === "starts"
+              ? "warning.main"
+              : "error.main",
           color: "white",
           px: 2,
           py: 0.5,
@@ -74,7 +79,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
           ml: 2,
         }}
       >
-        Finaliza en {promotionCountdown.label}
+        {promotionCountdown.label}
       </Box>
     );
   };
