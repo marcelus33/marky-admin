@@ -77,31 +77,40 @@ export const usePromotionCountdown = ({
     firedBoundaryRef.current = false;
   }, [status, startsAt, endsAt]);
 
-  if (status === "active" && endsAt) {
-    const diff = new Date(endsAt).getTime() - now;
-    if (diff <= 0) {
-      if (!firedBoundaryRef.current) {
+  // Boundary-crossing invalidation is a side effect, so it belongs in an
+  // effect rather than the render body: firing it during render risks
+  // double-firing (or firing from a discarded/interrupted render) under
+  // concurrent rendering. The render path below stays pure — it only
+  // computes `diff` and returns the derived value.
+  useEffect(() => {
+    if (status === "active" && endsAt) {
+      const diff = new Date(endsAt).getTime() - now;
+      if (diff <= 0 && !firedBoundaryRef.current) {
         firedBoundaryRef.current = true;
         queryClient.invalidateQueries({
           queryKey: ["productCategoriesWithProducts"],
         });
       }
-      return null;
+    } else if (status === "scheduled" && startsAt) {
+      const diff = new Date(startsAt).getTime() - now;
+      if (diff <= 0 && !firedBoundaryRef.current) {
+        firedBoundaryRef.current = true;
+        queryClient.invalidateQueries({
+          queryKey: ["productCategoriesWithProducts"],
+        });
+      }
     }
+  }, [now, status, startsAt, endsAt, queryClient]);
+
+  if (status === "active" && endsAt) {
+    const diff = new Date(endsAt).getTime() - now;
+    if (diff <= 0) return null;
     return { phase: "ends", label: formatCountdownCompact(diff) };
   }
 
   if (status === "scheduled" && startsAt) {
     const diff = new Date(startsAt).getTime() - now;
-    if (diff <= 0) {
-      if (!firedBoundaryRef.current) {
-        firedBoundaryRef.current = true;
-        queryClient.invalidateQueries({
-          queryKey: ["productCategoriesWithProducts"],
-        });
-      }
-      return null;
-    }
+    if (diff <= 0) return null;
     return { phase: "starts", label: formatStartsIn(diff) };
   }
 
