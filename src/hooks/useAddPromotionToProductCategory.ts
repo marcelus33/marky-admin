@@ -19,7 +19,9 @@ const useAddPromotionToProductCategory = () => {
       };
     }) => addPromotionToProductCategory(id, promotion),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["productCategories"] });
+      queryClient.invalidateQueries({
+        queryKey: ["productCategoriesWithProducts"],
+      });
     },
   });
 };

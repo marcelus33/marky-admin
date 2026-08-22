@@ -104,21 +104,37 @@ describe("ProductCard promotion countdown badge", () => {
     };
     renderProductCard({ product: activeProduct });
 
-    expect(screen.getByText(/1 día : \d+ horas? : \d+ min/)).toBeInTheDocument();
+    const badge = screen.getByText(/^\d{2}:\d{2}:\d{2}:\d{2}$/);
+    expect(badge).toBeInTheDocument();
+    // "ends" phase badge must use the urgency (error) color, not the
+    // scheduled (warning) one — this is the one fully-specified visual
+    // behavior in the whole countdown feature, so it needs a real assertion
+    // rather than relying on the text-content checks above to catch a
+    // "badge painted the wrong color" regression.
+    expect(getComputedStyle(badge).backgroundColor).toBe("rgb(246, 72, 72)"); // error.main #F64848
   });
 
-  it("does not show the countdown when promotionStatus is scheduled, even with dates present", () => {
-    // A promotion that hasn't reached promotionStartsAt yet must not render
-    // a badge — it would look identical to an already-active countdown.
+  it("shows the 'Inicia en' indicator when promotionStatus is scheduled", () => {
+    // A scheduled promotion (now < promotionStartsAt) shows the "Inicia en"
+    // indicator rather than the live countdown — it must not look identical
+    // to an already-active countdown.
     const scheduledProduct: ProductGridItem = {
       ...product,
       promotionStatus: "scheduled",
-      promotionStartsAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      // A few minutes of headroom past the 2-hour mark so real (unmocked)
+      // clock drift during test execution can't floor this down to "1 h".
+      promotionStartsAt: new Date(
+        Date.now() + 2 * 60 * 60 * 1000 + 5 * 60 * 1000,
+      ).toISOString(),
       promotionEndsAt: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
     };
     renderProductCard({ product: scheduledProduct });
 
-    expect(screen.queryByText(/día|hora|min/)).not.toBeInTheDocument();
+    const badge = screen.getByText(/Inicia en 2 h/);
+    expect(badge).toBeInTheDocument();
+    // "starts" phase badge must use the warning color, distinct from the
+    // "ends" phase's error color above.
+    expect(getComputedStyle(badge).backgroundColor).toBe("rgb(237, 108, 2)"); // warning.main #ed6c02 (MUI default)
   });
 
   it("does not show the countdown when promotionStatus is expired, even with dates present", () => {

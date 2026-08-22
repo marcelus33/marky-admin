@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Dialog, DialogContent } from "@mui/material";
 import XButton from "./XButton";
-import { Formik, Form, useFormikContext } from "formik";
+import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import {
   Alert,
@@ -33,7 +33,7 @@ interface Props {
   onClose: () => void;
 }
 
-const initialValues = {
+const defaultInitialValues = {
   isPromotionActive: false,
   promotionOption: "",
   discountPercentage: undefined,
@@ -43,6 +43,55 @@ const initialValues = {
   promotionTimeStart: "",
   promotionDateEnd: "",
   promotionTimeEnd: "",
+};
+
+// Derives Formik's real initial values from the product's current promotion
+// (if any) so `dirty` reflects actual pending edits from the moment the
+// modal mounts, instead of comparing live values against these hardcoded
+// defaults regardless of what was hydrated in afterward.
+const buildInitialValues = (product?: ProductGridItem | null) => {
+  const hasPromotion = !!(
+    product?.multibuyOption ||
+    (product?.discountPercent ?? 0) !== 0 ||
+    product?.promotionStartsAt ||
+    product?.promotionEndsAt
+  );
+
+  if (!hasPromotion) {
+    return { ...defaultInitialValues };
+  }
+
+  const { date: promotionDateStart, time: promotionTimeStart } =
+    splitIsoDateTime(product?.promotionStartsAt);
+  const { date: promotionDateEnd, time: promotionTimeEnd } = splitIsoDateTime(
+    product?.promotionEndsAt,
+  );
+
+  // Neither branch applies for a countdown-only promotion (dates set, no
+  // discount/multibuy configured) — promotionOption/discountPercentage stay
+  // at their unset defaults, same as the promotion switch alone.
+  let promotionOption: "" | "descuento" | "oferta" = "";
+  let discountPercentage: number | undefined;
+  if (product?.multibuyOption) {
+    promotionOption = "oferta";
+  } else if (product?.discountPercent && product.discountPercent !== 0) {
+    promotionOption = "descuento";
+    discountPercentage = Number(product.discountPercent);
+  }
+
+  return {
+    isPromotionActive: true,
+    promotionOption,
+    discountPercentage,
+    multibuyOption: product?.multibuyOption ?? "",
+    countdownActive: !!(
+      product?.promotionStartsAt && product?.promotionEndsAt
+    ),
+    promotionDateStart,
+    promotionTimeStart,
+    promotionDateEnd,
+    promotionTimeEnd,
+  };
 };
 
 const validationSchema = Yup.object({
@@ -128,55 +177,6 @@ const validationSchema = Yup.object({
     return true;
   },
 );
-
-const ProductInitializer: React.FC<{ product?: ProductGridItem | null }> = ({
-  product,
-}) => {
-  const { setFieldValue } = useFormikContext<any>();
-
-  useEffect(() => {
-    if (!product) return;
-
-    // Also hydrate a countdown-only promo (dates set, no discount/multibuy
-    // configured) — without this a promo with only a countdown never
-    // populates the modal on reopen, and resaving silently wipes the dates.
-    const hasPromotion = !!(
-      product.multibuyOption ||
-      (product.discountPercent ?? 0) !== 0 ||
-      product.promotionStartsAt ||
-      product.promotionEndsAt
-    );
-
-    if (hasPromotion) {
-      setFieldValue("isPromotionActive", true);
-
-      if (product.multibuyOption) {
-        setFieldValue("promotionOption", "oferta");
-        setFieldValue("multibuyOption", product.multibuyOption);
-      } else if (product.discountPercent && product.discountPercent !== 0) {
-        setFieldValue("promotionOption", "descuento");
-        setFieldValue("discountPercentage", Number(product.discountPercent));
-      }
-
-      if (product.promotionStartsAt && product.promotionEndsAt) {
-        const { date: startDate, time: startTime } = splitIsoDateTime(
-          product.promotionStartsAt,
-        );
-        const { date: endDate, time: endTime } = splitIsoDateTime(
-          product.promotionEndsAt,
-        );
-
-        setFieldValue("countdownActive", true);
-        setFieldValue("promotionDateStart", startDate);
-        setFieldValue("promotionTimeStart", startTime);
-        setFieldValue("promotionDateEnd", endDate);
-        setFieldValue("promotionTimeEnd", endTime);
-      }
-    }
-  }, [product, setFieldValue]);
-
-  return null;
-};
 
 const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
   const updateProductPromotion = useUpdateProductPromotion();
@@ -264,14 +264,13 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
         </Box>
         <DialogContent>
           <Formik
-            initialValues={initialValues}
+            initialValues={buildInitialValues(product)}
             validationSchema={validationSchema}
             onSubmit={onSubmitLocal}
             enableReinitialize
           >
-            {({ values, setFieldValue, setValues, isValid, errors }) => (
+            {({ values, setFieldValue, setValues, isValid, errors, dirty }) => (
               <Form>
-                <ProductInitializer product={product} />
                 <Box sx={{ p: 2 }}>
                   <FormControlLabel
                     control={
@@ -479,7 +478,11 @@ const ProductPromotionModal: React.FC<Props> = ({ open, product, onClose }) => {
                       color="primary"
                       type="submit"
                       fullWidth
-                      disabled={!isValid || updateProductPromotion.isPending}
+                      disabled={
+                        !isValid ||
+                        updateProductPromotion.isPending ||
+                        (hasExistingPromotion && !dirty)
+                      }
                     >
                       {updateProductPromotion.isPending
                         ? "Guardando..."

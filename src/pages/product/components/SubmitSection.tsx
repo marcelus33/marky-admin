@@ -39,6 +39,13 @@ interface SubmitSectionProps {
   // being sent; null once nothing is uploading. Once it hits 100 the browser
   // is still waiting on the server, so the label falls back to "Publicando...".
   uploadProgress?: number | null;
+  // True when the form has no pending changes relative to the last loaded/
+  // saved state (Formik's `dirty`). Only meaningful in edit mode — a brand
+  // new product has nothing to compare against yet.
+  isDirty?: boolean;
+  // True when editing an existing product (id present), false when creating
+  // a new one. Gates whether the disabled/"Publicado" state applies at all.
+  isEditMode?: boolean;
 }
 
 const SubmitSection: React.FC<SubmitSectionProps> = ({
@@ -46,6 +53,8 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
   onPublish,
   isSubmitting = false,
   uploadProgress = null,
+  isDirty = true,
+  isEditMode = false,
 }) => {
   const isUploading =
     isSubmitting && uploadProgress !== null && uploadProgress < 100;
@@ -122,7 +131,7 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
             type="button"
             onClick={onPublish}
             sx={{ px: 3 }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || (isEditMode && !isDirty)}
             startIcon={
               isSubmitting ? (
                 <CircularProgress size={16} color="inherit" />
@@ -133,7 +142,11 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
               ? isUploading
                 ? `Subiendo... ${uploadProgress}%`
                 : "Publicando..."
-              : "Publicar"}
+              : isEditMode
+                ? isDirty
+                  ? "Guardar cambios"
+                  : "Publicado"
+                : "Publicar"}
           </Button>
           <Button
             size="small"

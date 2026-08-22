@@ -58,7 +58,7 @@ const renderCategoryGroup = (
 };
 
 describe("CategoryGroup promotion countdown badge", () => {
-  it("shows 'Finaliza en ...' when promotion_status is active", () => {
+  it("shows the compact DD:HH:MM:SS countdown when promotion_status is active", () => {
     const activeCategory: CategoryWithProducts = {
       ...category,
       promotion_status: "active",
@@ -67,14 +67,19 @@ describe("CategoryGroup promotion countdown badge", () => {
     };
     renderCategoryGroup({ category: activeCategory });
 
-    expect(
-      screen.getByText(/Finaliza en 1 día : \d+ horas? : \d+ min/),
-    ).toBeInTheDocument();
+    const badge = screen.getByText(/^\d{2}:\d{2}:\d{2}:\d{2}$/);
+    expect(badge).toBeInTheDocument();
+    // "ends" phase badge must use the urgency (error) color, not the
+    // scheduled (warning) one — this is the one fully-specified visual
+    // behavior in the whole countdown feature, so it needs a real assertion
+    // rather than relying on the text-content check above to catch a
+    // "badge painted the wrong color" regression.
+    expect(getComputedStyle(badge).backgroundColor).toBe("rgb(246, 72, 72)"); // error.main #F64848
   });
 
-  it("shows no badge when promotion_status is scheduled, even with dates present", () => {
-    // A promotion that hasn't reached promotion_starts_at yet must not be
-    // shown as if it were already live.
+  it("shows the 'Inicia en' indicator when promotion_status is scheduled", () => {
+    // A scheduled promotion (now < promotion_starts_at) shows the "Inicia en"
+    // indicator rather than the live countdown.
     const scheduledCategory: CategoryWithProducts = {
       ...category,
       promotion_status: "scheduled",
@@ -83,7 +88,11 @@ describe("CategoryGroup promotion countdown badge", () => {
     };
     renderCategoryGroup({ category: scheduledCategory });
 
-    expect(screen.queryByText(/Empieza en|Finaliza en/)).not.toBeInTheDocument();
+    const badge = screen.getByText(/Inicia en/);
+    expect(badge).toBeInTheDocument();
+    // "starts" phase badge must use the warning color, distinct from the
+    // "ends" phase's error color above.
+    expect(getComputedStyle(badge).backgroundColor).toBe("rgb(237, 108, 2)"); // warning.main #ed6c02 (MUI default)
   });
 
   it("shows no badge when promotion_status is expired, even with dates present", () => {
