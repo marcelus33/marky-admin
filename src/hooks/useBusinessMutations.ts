@@ -44,6 +44,9 @@ export const useUpdateBusinessAccountInfo = () => {
     successMessage: "Datos de cuenta actualizados exitosamente",
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["businessAccountInfo"] });
+      queryClient.invalidateQueries({
+        queryKey: ["productCategoriesWithProducts"],
+      });
     },
   });
 };
