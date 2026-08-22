@@ -6,8 +6,8 @@ import WarningIcon from "@mui/icons-material/Warning";
 import useDeleteProductCategory from "../../../hooks/useDeleteProductCategory";
 import useDeleteProduct from "../../../hooks/useDeleteProduct";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/paths";
 import CategoryGroup from "../../../components/CategoryGroup";
 import useUpdateProductCategoryAvailability from "../../../hooks/useUpdateProductCategoryAvailability";
@@ -110,6 +110,29 @@ export const ProductGrid: React.FC = () => {
   const [openPromotionModal, setOpenPromotionModal] = useState(false);
   const [selectedPromotionCategory, setSelectedPromotionCategory] =
     useState<any>(null);
+
+  const location = useLocation();
+
+  // Preselect and open the category promotion modal when arriving via a
+  // notification's "?promoCategory=<id>" deep link (category-expiry
+  // notification, products/services.py::handle_expired_promotions_for_business).
+  // Mirrors the ?section= pattern in ProductFormPage.tsx.
+  useEffect(() => {
+    const promoCategoryId = new URLSearchParams(location.search).get(
+      "promoCategory",
+    );
+    if (!promoCategoryId || !categoriesWithProductsRaw) return;
+    const target = categoriesWithProductsRaw.results.find(
+      (c: CategoryWithProducts) => String(c.id) === promoCategoryId,
+    );
+    if (target) {
+      setSelectedPromotionCategory(target);
+      setOpenPromotionModal(true);
+      navigate(location.pathname, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoriesWithProductsRaw]);
+
   const [openProductPromotionModal, setOpenProductPromotionModal] =
     useState(false);
   const [selectedPromotionProduct, setSelectedPromotionProduct] =

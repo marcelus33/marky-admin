@@ -66,12 +66,12 @@ const category: CategoryWithProducts = {
   ],
 };
 
-const renderProductGrid = () => {
+const renderProductGrid = (initialEntries: string[] = ["/"]) => {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={lightTheme}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>
           <ProductGrid />
         </MemoryRouter>
       </ThemeProvider>
@@ -127,5 +127,35 @@ describe("ProductGrid product delete flow (Home page)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(mockedDeleteProduct).not.toHaveBeenCalled();
+  });
+});
+
+describe("ProductGrid category-expiry notification deep link", () => {
+  beforeEach(() => {
+    mockedGetCategories.mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      products_count: 1,
+      results: [category],
+    });
+    mockedGetHomePageData.mockResolvedValue({ business_name: "Test Biz" });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("opens the category promotion modal for the category id in ?promoCategory=", async () => {
+    renderProductGrid(["/home?promoCategory=1"]);
+
+    expect(await screen.findByText("Promoción")).toBeInTheDocument();
+  });
+
+  it("does not open the modal when ?promoCategory= doesn't match any category", async () => {
+    renderProductGrid(["/home?promoCategory=999"]);
+
+    await screen.findByText("Galleta de chocolate");
+    expect(screen.queryByText("Promoción")).not.toBeInTheDocument();
   });
 });
