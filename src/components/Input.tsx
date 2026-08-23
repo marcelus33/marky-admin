@@ -32,6 +32,10 @@ interface InputProps {
   field?: any;
   form?: any;
   meta?: any;
+  /** Ícono/elemento extra a mostrar al final del input (ej. check de disponibilidad) */
+  endAdornment?: React.ReactNode;
+  /** Sobrescribe el color del helper text (ej. azul para "Nombre disponible") */
+  helperTextColor?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -56,6 +60,8 @@ const Input: React.FC<InputProps> = ({
   field,
   form,
   meta,
+  endAdornment,
+  helperTextColor,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -98,6 +104,11 @@ const Input: React.FC<InputProps> = ({
               ? `${currentValue?.length || 0}/${maxLength}`
               : maxLength - (currentValue?.length || 0)}
           </Typography>
+        </InputAdornment>
+      )}
+      {endAdornment && (
+        <InputAdornment position="end" sx={{ pl: 1 }}>
+          {endAdornment}
         </InputAdornment>
       )}
     </>
@@ -143,7 +154,11 @@ const Input: React.FC<InputProps> = ({
           ...(maxLength ? { maxLength } : {}),
         }}
       />
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
+      {helperText && (
+        <FormHelperText sx={helperTextColor ? { color: helperTextColor } : undefined}>
+          {helperText}
+        </FormHelperText>
+      )}
     </FormControl>
   );
 };

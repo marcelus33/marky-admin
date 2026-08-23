@@ -1,4 +1,5 @@
 import api from "./axiosConfig";
+import { debouncePromise } from "../utils/debouncePromise";
 
 const baseURL = `${process.env.REACT_APP_API_URL}/business`;
 
@@ -59,6 +60,13 @@ export const validateBusinessName = async (business_id: string) => {
     throw error;
   }
 };
+
+// Misma validación, pero agrupando ráfagas de llamadas (ej. cada tecla
+// mientras el usuario escribe) en una sola request tras 500ms de pausa.
+export const validateBusinessNameDebounced = debouncePromise(
+  validateBusinessName,
+  500,
+);
 
 // Interface for social media links
 export interface SocialMediaLinks {
