@@ -4,9 +4,9 @@ import { Field, Form, Formik } from "formik";
 import React, { useState } from "react";
 import "react-phone-input-2/lib/material.css"; // Customizable
 import * as Yup from "yup";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import registerIllustration from "../assets/images/register-illustration.png";
 import AuthAside from "../components/AuthAside";
+import AuthMobileHeader from "../components/AuthMobileHeader";
 import FormikPhoneInput from "../components/FormikPhoneInput";
 import Input from "../components/Input";
 import Link from "../components/Link";
@@ -19,8 +19,8 @@ const AcceptTermsLabel = () => {
   return (
     <Typography component="span">
       Al crear una cuenta, aceptas nuestros{" "}
-      <Link variant="accent">Términos de servicio</Link> y nuestra{" "}
-      <Link variant="accent">Política de privacidad</Link>.
+      <Link variant="accent">Términos del Servicio</Link> y nuestra{" "}
+      <Link variant="accent">Políticas de Privacidad</Link>.
     </Typography>
   );
 };
@@ -120,22 +120,7 @@ const Register: React.FC = () => {
               </Link>
             </Box>
             {/* MOBILE HEADER */}
-            <Box
-              sx={{
-                width: "100%",
-                height: "64px",
-                paddingX: "16px",
-                borderBottom: "1px solid #E5E7EB",
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-                alignItems: "center",
-              }}
-              justifyContent={"flex-start"}
-            >
-              <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
-            </Box>
+            <AuthMobileHeader />
           </Box>
           <Box
             sx={{
@@ -244,42 +229,23 @@ const Register: React.FC = () => {
                       />
                     </Box>
                     {!isGoogleSignup && (
-                      <>
-                        <Box sx={{ marginBottom: theme.spacing(6) }}>
-                          <Field
-                            name="email"
-                            component={Input}
-                            label="Correo electrónico"
-                            type="email"
-                            placeholder="nombre@correo.com"
-                            required
-                            disabled={loading}
-                            error={touched.email && Boolean(errors.email)}
-                            helperText={touched.email && errors.email}
-                            value={values.email}
-                            onChange={(e: React.ChangeEvent<any>) => {
-                              setFieldValue("email", e.target.value);
-                            }}
-                          />
-                        </Box>
-                        <Box sx={{ marginBottom: theme.spacing(6) }}>
-                          <Field
-                            name="password"
-                            component={Input}
-                            label="Contraseña"
-                            type="password"
-                            placeholder="Crea una contraseña"
-                            required
-                            disabled={loading}
-                            error={touched.password && Boolean(errors.password)}
-                            helperText={touched.password && errors.password}
-                            value={values.password}
-                            onChange={(e: React.ChangeEvent<any>) => {
-                              setFieldValue("password", e.target.value);
-                            }}
-                          />
-                        </Box>
-                      </>
+                      <Box sx={{ marginBottom: theme.spacing(6) }}>
+                        <Field
+                          name="email"
+                          component={Input}
+                          label="Correo electrónico"
+                          type="email"
+                          placeholder="nombre@correo.com"
+                          required
+                          disabled={loading}
+                          error={touched.email && Boolean(errors.email)}
+                          helperText={touched.email && errors.email}
+                          value={values.email}
+                          onChange={(e: React.ChangeEvent<any>) => {
+                            setFieldValue("email", e.target.value);
+                          }}
+                        />
+                      </Box>
                     )}
                     <Box sx={{ marginBottom: theme.spacing(2) }}>
                       <Field
@@ -287,10 +253,33 @@ const Register: React.FC = () => {
                         required
                         disabled={loading}
                         component={FormikPhoneInput}
-                        label="Número de teléfono"
+                        label="Whatsapp"
                         placeholder="981 123 456"
                       />
                     </Box>
+                    {!isGoogleSignup && (
+                      <Box sx={{ marginBottom: theme.spacing(6) }}>
+                        <Field
+                          name="password"
+                          component={Input}
+                          label="Contraseña"
+                          type="password"
+                          placeholder="Ingrese su contraseña"
+                          required
+                          disabled={loading}
+                          error={touched.password && Boolean(errors.password)}
+                          helperText={
+                            touched.password && errors.password
+                              ? errors.password
+                              : "Su contraseña debe contar con un mínimo de 8 caracteres."
+                          }
+                          value={values.password}
+                          onChange={(e: React.ChangeEvent<any>) => {
+                            setFieldValue("password", e.target.value);
+                          }}
+                        />
+                      </Box>
+                    )}
                     <Box
                       display="flex"
                       alignItems="center"
@@ -329,9 +318,9 @@ const Register: React.FC = () => {
                 gap={2}
                 sx={{ display: { xs: "flex", md: "none" } }}
               >
-                <Typography variant="body2">¿Ya tienes una cuenta?</Typography>
+                <Typography variant="body2">¿Ya formas parte?</Typography>
                 <Link to={`${ROUTES.LOGIN}`} variant="accent">
-                  Inicia sesión
+                  Inicia sesión ahora
                 </Link>
               </Box>
             </Box>

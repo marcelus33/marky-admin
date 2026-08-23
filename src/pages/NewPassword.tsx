@@ -1,12 +1,12 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Field, Form, Formik } from "formik";
-import React from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as ResetPasswordImage } from "../assets/images/reset_password.svg";
+import AuthMobileHeader from "../components/AuthMobileHeader";
 import Input from "../components/Input";
-import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
 import { changePassword } from "../services/authService";
 import { ShowNotification } from "../utils/utils";
@@ -31,6 +31,8 @@ const NewPassword: React.FC = () => {
       .required("Este campo es obligatorio"),
   });
 
+  const [passwordChanged, setPasswordChanged] = useState(false);
+
   const handleSubmit = async (values: typeof initialValues) => {
     try {
       const response = await changePassword({
@@ -39,7 +41,7 @@ const NewPassword: React.FC = () => {
         token: token,
       });
       ShowNotification({ message: response.message, type: "success" });
-      navigate(ROUTES.LOGIN);
+      setPasswordChanged(true);
     } catch (error: any) {
       ShowNotification({ message: error.message, type: "error" });
     }
@@ -73,7 +75,7 @@ const NewPassword: React.FC = () => {
             <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
               Llegó tu momento,{" "}
               <span style={{ color: theme.palette.primary.main }}>
-                protege tu cuenta y a tus clientes.
+                protege tu cuenta.
               </span>
             </Typography>
             <Typography variant="body2" gutterBottom>
@@ -99,39 +101,8 @@ const NewPassword: React.FC = () => {
           }}
         >
           <Box display={"flex"} justifyContent={"end"} width={"100%"}>
-            {/* DESKTOP HEADER */}
-            <Box
-              gap={2}
-              sx={{
-                display: {
-                  xs: "none",
-                  md: "flex",
-                },
-              }}
-            >
-              <Typography variant="body2">¿Aún no formas parte?</Typography>
-              <Link to={`${ROUTES.REGISTER}`}>
-                <Typography variant="link">Registrate ahora</Typography>
-              </Link>
-            </Box>
             {/* MOBILE HEADER */}
-            <Box
-              sx={{
-                width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-              }}
-              justifyContent={"flex-start"}
-            >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
-            </Box>
+            <AuthMobileHeader />
           </Box>
           <Box
             sx={{
@@ -150,85 +121,108 @@ const NewPassword: React.FC = () => {
               <Typography
                 sx={{
                   width: "100%",
-                  textAlign: "left",
+                  textAlign: "center",
                   marginBottom: theme.spacing(6),
                 }}
                 variant="h2"
               >
-                Nueva Contraseña
+                {passwordChanged ? "¡Hecho!" : "Nueva contraseña"}
               </Typography>
-              <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={handleSubmit}
-                validateOnMount={true}
+              <Typography
+                variant="body2"
+                sx={{
+                  width: "100%",
+                  marginBottom: theme.spacing(6),
+                }}
               >
-                {({
-                  handleSubmit,
-                  touched,
-                  dirty,
-                  errors,
-                  values,
-                  setFieldValue,
-                  isValid,
-                }) => (
-                  <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
-                    <Box marginBottom={theme.spacing(4)}>
-                      <Field
-                        name="newPassword"
-                        component={Input}
-                        label="Nueva Contraseña"
-                        type="password"
-                        required
-                        placeholder="Ingrese su nueva contraseña"
-                        error={
-                          // touched.newPassword &&
-                          dirty && Boolean(errors.newPassword)
-                        }
-                        helperText={
-                          // touched.newPassword &&
-                          dirty && errors.newPassword
-                        }
-                        value={values.newPassword}
-                        onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("newPassword", e.target.value);
-                        }}
-                      />
-                    </Box>
-                    <Box marginBottom={theme.spacing(4)}>
-                      <Field
-                        name="confirmPassword"
-                        component={Input}
-                        label="Confirmar Contraseña"
-                        type="password"
-                        required
-                        placeholder="Ingrese su nueva contraseña"
-                        error={
-                          // touched.confirmPassword &&
-                          dirty && Boolean(errors.confirmPassword)
-                        }
-                        helperText={
-                          // touched.confirmPassword &&
-                          dirty && errors.confirmPassword
-                        }
-                        value={values.confirmPassword}
-                        onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("confirmPassword", e.target.value);
-                        }}
-                      />
-                    </Box>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      fullWidth
-                      disabled={!isValid}
-                    >
-                      Cambiar contraseña
-                    </Button>
-                  </Form>
-                )}
-              </Formik>
+                {passwordChanged
+                  ? "Tu contraseña se ha actualizado correctamente."
+                  : "Crea una nueva contraseña para tu cuenta en Marky."}
+              </Typography>
+              {!passwordChanged && (
+                <Formik
+                  initialValues={initialValues}
+                  validationSchema={validationSchema}
+                  onSubmit={handleSubmit}
+                  validateOnMount={true}
+                >
+                  {({
+                    handleSubmit,
+                    touched,
+                    dirty,
+                    errors,
+                    values,
+                    setFieldValue,
+                    isValid,
+                  }) => (
+                    <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
+                      <Box marginBottom={theme.spacing(4)}>
+                        <Field
+                          name="newPassword"
+                          component={Input}
+                          label="Contraseña"
+                          type="password"
+                          required
+                          placeholder="Ingresa tu nueva contraseña..."
+                          error={
+                            // touched.newPassword &&
+                            dirty && Boolean(errors.newPassword)
+                          }
+                          helperText={
+                            // touched.newPassword &&
+                            dirty && errors.newPassword
+                          }
+                          value={values.newPassword}
+                          onChange={(e: React.ChangeEvent<any>) => {
+                            setFieldValue("newPassword", e.target.value);
+                          }}
+                        />
+                      </Box>
+                      <Box marginBottom={theme.spacing(4)}>
+                        <Field
+                          name="confirmPassword"
+                          component={Input}
+                          label="Confirmar contraseña"
+                          type="password"
+                          required
+                          placeholder="Ingresa tu contraseña..."
+                          error={
+                            // touched.confirmPassword &&
+                            dirty && Boolean(errors.confirmPassword)
+                          }
+                          helperText={
+                            // touched.confirmPassword &&
+                            dirty && errors.confirmPassword
+                          }
+                          value={values.confirmPassword}
+                          onChange={(e: React.ChangeEvent<any>) => {
+                            setFieldValue("confirmPassword", e.target.value);
+                          }}
+                        />
+                      </Box>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={!isValid}
+                      >
+                        Cambiar contraseña
+                      </Button>
+                    </Form>
+                  )}
+                </Formik>
+              )}
+              {passwordChanged && (
+                <Button
+                  color="primary"
+                  variant="contained"
+                  fullWidth
+                  onClick={() => navigate(ROUTES.LOGIN)}
+                >
+                  Volver al login
+                </Button>
+              )}
             </Box>
           </Box>
         </Grid>

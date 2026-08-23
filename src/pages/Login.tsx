@@ -4,9 +4,9 @@ import { Field, Form, Formik } from "formik";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import loginIllustration from "../assets/images/login-illustration.png";
+import loginImage from "../assets/images/login-img.png";
 import AuthAside from "../components/AuthAside";
+import AuthMobileHeader from "../components/AuthMobileHeader";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import { ROUTES } from "../routes/paths";
@@ -65,7 +65,7 @@ const Login: React.FC = () => {
           image={
             <Box
               component="img"
-              src={loginIllustration}
+              src={loginImage}
               alt=""
               sx={{ width: "100%", maxWidth: 280 }}
             />
@@ -98,22 +98,7 @@ const Login: React.FC = () => {
               </Link>
             </Box>
             {/* MOBILE HEADER */}
-            <Box
-              sx={{
-                width: "100%",
-                height: "64px",
-                paddingX: "16px",
-                borderBottom: "1px solid #E5E7EB",
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-                alignItems: "center",
-              }}
-              justifyContent={"flex-start"}
-            >
-              <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
-            </Box>
+            <AuthMobileHeader />
           </Box>
           <Box
             sx={{
@@ -165,13 +150,7 @@ const Login: React.FC = () => {
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
               >
-                {({
-                  handleSubmit,
-                  setFieldValue,
-                  values,
-                  errors,
-                  touched,
-                }) => (
+                {({ handleSubmit, setFieldValue, values, errors, touched }) => (
                   <Form onSubmit={handleSubmit} style={{ width: "100%" }}>
                     <Box
                       sx={{
@@ -185,7 +164,6 @@ const Login: React.FC = () => {
                         label="Correo electrónico"
                         type="email"
                         placeholder="nombre@correo.com"
-                        required
                         error={touched.email && Boolean(errors.email)}
                         helperText={touched.email && errors.email}
                         value={values.email}
@@ -194,14 +172,13 @@ const Login: React.FC = () => {
                         }}
                       />
                     </Box>
-                    <Box sx={{ marginBottom: theme.spacing(4) }}>
+                    <Box sx={{ marginBottom: theme.spacing(6) }}>
                       <Field
                         name="password"
                         component={Input}
                         label="Contraseña"
                         type="password"
                         placeholder="Ingresa tu contraseña"
-                        required
                         error={touched.password && Boolean(errors.password)}
                         helperText={touched.password && errors.password}
                         value={values.password}
@@ -212,10 +189,10 @@ const Login: React.FC = () => {
                     </Box>
                     {/*  */}
                     <Box
-                      display={"flex"}
-                      justifyContent={"flex-end"}
                       sx={{
-                        marginBottom: { xs: "32px", sm: theme.spacing(8) },
+                        display: "flex",
+                        justifyContent: { xs: "flex-start", md: "flex-end" },
+                        marginBottom: theme.spacing(6),
                       }}
                     >
                       <Link to={`${ROUTES.RECOVER_PASSWORD}`}>

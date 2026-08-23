@@ -4,7 +4,8 @@ import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ReactComponent as LoginImage } from "../assets/images/email_verification_send.svg";
+import emailVerificationIllustration from "../assets/images/email-verification-illustration.png";
+import AuthMobileHeader from "../components/AuthMobileHeader";
 import Link from "../components/Link";
 import VerificationCodeInput from "../components/VerificationCodeInput";
 import { ROUTES } from "../routes/paths";
@@ -19,6 +20,7 @@ const EmailVerification: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [, setServerMessage] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const { user } = useSessionStore();
 
   const handleCodeComplete = (code: string) => {
@@ -37,6 +39,7 @@ const EmailVerification: React.FC = () => {
     try {
       setError(null);
       setServerMessage(null);
+      setVerifying(true);
 
       const response = await verifyEmail({
         email: user?.email ?? "",
@@ -46,6 +49,8 @@ const EmailVerification: React.FC = () => {
       navigate(ROUTES.LOGIN);
     } catch (error: any) {
       ShowNotification({ message: error.message, type: "error" });
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -99,7 +104,12 @@ const EmailVerification: React.FC = () => {
               justifyContent="center"
               sx={{ marginTop: theme.spacing(24) }}
             >
-              <LoginImage />
+              <Box
+                component="img"
+                src={emailVerificationIllustration}
+                alt=""
+                sx={{ width: "100%", maxWidth: 300 }}
+              />
             </Box>
           </Box>
         </Grid>
@@ -129,23 +139,7 @@ const EmailVerification: React.FC = () => {
               </Link>
             </Box>
             {/* MOBILE HEADER */}
-            <Box
-              sx={{
-                width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-              }}
-              justifyContent={"flex-start"}
-            >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
-            </Box>
+            <AuthMobileHeader />
           </Box>
           <Box
             sx={{
@@ -170,7 +164,7 @@ const EmailVerification: React.FC = () => {
                 }}
                 variant="h2"
               >
-                Verificación de Identidad
+                ¡Verifiquemos tu correo!
               </Typography>
               <Typography
                 variant="body2"
@@ -194,12 +188,12 @@ const EmailVerification: React.FC = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={!isComplete}
+                disabled={!isComplete || verifying}
                 fullWidth
                 sx={{ marginBottom: theme.spacing(3) }}
                 onClick={handleSubmit}
               >
-                Verificar
+                {verifying ? "Verificando, por favor espera..." : "Verificar"}
               </Button>
 
               <Typography

@@ -22,6 +22,7 @@ import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-bla
 import { ReactComponent as LoginImage } from "../assets/images/login.svg";
 import { ReactComponent as CoffeeIcon } from "../assets/icons/coffee.svg";
 import { ReactComponent as ExchangeIcon } from "../assets/icons/exchange.svg";
+import AuthMobileHeader from "../components/AuthMobileHeader";
 import BusinessTypeSelectorField from "../components/BusinessTypeSelectorField";
 import CategorySelectionList from "../components/CategorySelectionList";
 import CustomSelectorField from "../components/CustomSelector";
@@ -411,23 +412,7 @@ const Configuration = () => {
               </Link>
             </Box>
             {/* MOBILE HEADER */}
-            <Box
-              sx={{
-                width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-              }}
-              justifyContent={"flex-start"}
-            >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
-            </Box>
+            <AuthMobileHeader disableLoginLink />
           </Box>
           {/*  */}
           <Box
