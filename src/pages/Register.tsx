@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Field, Form, Formik } from "formik";
 import React, { useState } from "react";
@@ -6,7 +6,7 @@ import "react-phone-input-2/lib/material.css"; // Customizable
 import * as Yup from "yup";
 import registerIllustration from "../assets/images/register-illustration.png";
 import AuthAside from "../components/AuthAside";
-import AuthMobileHeader from "../components/AuthMobileHeader";
+import AuthLayout from "../components/AuthLayout";
 import FormikPhoneInput from "../components/FormikPhoneInput";
 import Input from "../components/Input";
 import Link from "../components/Link";
@@ -78,8 +78,8 @@ const Register: React.FC = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
+    <AuthLayout
+      aside={
         <AuthAside
           title="Tu negocio gastronómico,"
           highlight="listo para mostrarse."
@@ -93,241 +93,190 @@ const Register: React.FC = () => {
             />
           }
         />
-        {/* =========== REGISTER FORM CONTAINER ============= */}
-        <Grid
-          item
-          xs={12}
-          md={8}
+      }
+      header={
+        <>
+          <Typography variant="body2">¿Ya tienes una cuenta?</Typography>
+          <Link to={`${ROUTES.LOGIN}`} variant="accent">
+            Inicia sesión
+          </Link>
+        </>
+      }
+    >
+      <Typography
+        sx={{
+          width: "100%",
+          textAlign: "left",
+          marginBottom: theme.spacing(6),
+        }}
+        variant="h2"
+      >
+        {isGoogleSignup ? "Cuenta comercial" : "Crea tu cuenta en Marky"}
+      </Typography>
+      {/* {!isGoogleSignup ? (
+        <Button
+          variant="contained"
           sx={{
-            paddingTop: { md: `${theme.spacing(6)} !important` },
-            paddingRight: { md: theme.spacing(9) },
+            backgroundColor: theme.palette.grey[400],
+            color: theme.palette.text.primary,
+            boxShadow: 0,
+            marginBottom: theme.spacing(6),
+          }}
+          fullWidth
+          startIcon={<GoogleIcon />}
+          onClick={handleGoogleSuccess} // Fake Google Login success
+        >
+          Continuar con Google
+        </Button>
+      ) : (
+        <Box
+          sx={{
+            marginBottom: theme.spacing(4),
+            width: "100%",
           }}
         >
-          <Box display={"flex"} justifyContent={"end"} width={"100%"}>
-            {/* DESKTOP HEADER */}
+          <Input
+            label="Correo electrónico"
+            type="email"
+            value={googleEmail}
+            placeholder="nombre@correo.com"
+            disabled
+          />
+        </Box>
+      )} */}
+      {/* {!isGoogleSignup && (
+        <DividerWithText>
+          <Typography variant="h5" color="textDisabled">
+            O accede con tus datos
+          </Typography>
+        </DividerWithText>
+      )} */}
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        {({
+          handleSubmit,
+          values,
+          handleChange,
+          setFieldValue,
+          errors,
+          touched,
+          isValid,
+          dirty,
+        }) => (
+          <Form onSubmit={handleSubmit} style={{ width: "100%" }} noValidate>
+            <Box sx={{ marginBottom: theme.spacing(6) }}>
+              <Field
+                name="businessName"
+                component={Input}
+                maxLength={22}
+                label="Nombre del negocio"
+                placeholder="Ej. Dulce Momento"
+                type="text"
+                required
+                disabled={loading}
+                error={touched.email && Boolean(errors.email)}
+                helperText={touched.businessName && errors.businessName}
+                value={values.businessName}
+                onChange={(e: React.ChangeEvent<any>) => {
+                  setFieldValue("businessName", e.target.value);
+                }}
+              />
+            </Box>
+            {!isGoogleSignup && (
+              <Box sx={{ marginBottom: theme.spacing(6) }}>
+                <Field
+                  name="email"
+                  component={Input}
+                  label="Correo electrónico"
+                  type="email"
+                  placeholder="nombre@correo.com"
+                  required
+                  disabled={loading}
+                  error={touched.email && Boolean(errors.email)}
+                  helperText={touched.email && errors.email}
+                  value={values.email}
+                  onChange={(e: React.ChangeEvent<any>) => {
+                    setFieldValue("email", e.target.value);
+                  }}
+                />
+              </Box>
+            )}
+            <Box sx={{ marginBottom: theme.spacing(2) }}>
+              <Field
+                name="phone"
+                required
+                disabled={loading}
+                component={FormikPhoneInput}
+                label="Whatsapp"
+                placeholder="981 123 456"
+              />
+            </Box>
+            {!isGoogleSignup && (
+              <Box sx={{ marginBottom: theme.spacing(6) }}>
+                <Field
+                  name="password"
+                  component={Input}
+                  label="Contraseña"
+                  type="password"
+                  placeholder="Ingrese su contraseña"
+                  required
+                  disabled={loading}
+                  error={touched.password && Boolean(errors.password)}
+                  helperText={
+                    touched.password && errors.password
+                      ? errors.password
+                      : "Su contraseña debe contar con un mínimo de 8 caracteres."
+                  }
+                  value={values.password}
+                  onChange={(e: React.ChangeEvent<any>) => {
+                    setFieldValue("password", e.target.value);
+                  }}
+                />
+              </Box>
+            )}
             <Box
-              gap={2}
+              display="flex"
+              alignItems="center"
+              sx={{ marginBottom: theme.spacing(6) }}
+            >
+              <AcceptTermsLabel />
+            </Box>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={!dirty || !isValid || loading}
               sx={{
-                display: {
-                  xs: "none",
-                  md: "flex",
+                marginTop: theme.spacing(2),
+                marginBottom: theme.spacing(6),
+                fontWeight: 600,
+                "&:not(.Mui-disabled):hover": {
+                  backgroundColor: theme.palette.primary.dark,
+                },
+                "&.Mui-disabled": {
+                  backgroundColor: "#E5E7EB",
+                  color: "#9CA3AF",
+                  boxShadow: "none",
+                  cursor: "not-allowed",
+                  pointerEvents: "auto",
                 },
               }}
             >
-              <Typography variant="body2">¿Ya tienes una cuenta?</Typography>
-              <Link to={`${ROUTES.LOGIN}`} variant="accent">
-                Inicia sesión
-              </Link>
-            </Box>
-            {/* MOBILE HEADER */}
-            <AuthMobileHeader />
-          </Box>
-          <Box
-            sx={{
-              width: { md: "60%", lg: "45%" },
-              margin: "0 auto",
-            }}
-          >
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              sx={{
-                minHeight: "100dvh",
-                height: "auto",
-                overflowY: "auto",
-                width: "100%",
-                padding: "24px 16px 32px",
-                paddingBottom: "max(32px, env(safe-area-inset-bottom))",
-              }}
-            >
-              <Typography
-                sx={{
-                  width: "100%",
-                  textAlign: "left",
-                  marginBottom: theme.spacing(6),
-                }}
-                variant="h2"
-              >
-                {isGoogleSignup ? "Cuenta comercial" : "Crea tu cuenta en Marky"}
-              </Typography>
-              {/* {!isGoogleSignup ? (
-                <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: theme.palette.grey[400],
-                    color: theme.palette.text.primary,
-                    boxShadow: 0,
-                    marginBottom: theme.spacing(6),
-                  }}
-                  fullWidth
-                  startIcon={<GoogleIcon />}
-                  onClick={handleGoogleSuccess} // Fake Google Login success
-                >
-                  Continuar con Google
-                </Button>
-              ) : (
-                <Box
-                  sx={{
-                    marginBottom: theme.spacing(4),
-                    width: "100%",
-                  }}
-                >
-                  <Input
-                    label="Correo electrónico"
-                    type="email"
-                    value={googleEmail}
-                    placeholder="nombre@correo.com"
-                    disabled
-                  />
-                </Box>
-              )} */}
-              {/* {!isGoogleSignup && (
-                <DividerWithText>
-                  <Typography variant="h5" color="textDisabled">
-                    O accede con tus datos
-                  </Typography>
-                </DividerWithText>
-              )} */}
-              <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={handleSubmit}
-              >
-                {({
-                  handleSubmit,
-                  values,
-                  handleChange,
-                  setFieldValue,
-                  errors,
-                  touched,
-                  isValid,
-                  dirty,
-                }) => (
-                  <Form
-                    onSubmit={handleSubmit}
-                    style={{ width: "100%" }}
-                    noValidate
-                  >
-                    <Box sx={{ marginBottom: theme.spacing(6) }}>
-                      <Field
-                        name="businessName"
-                        component={Input}
-                        maxLength={22}
-                        label="Nombre del negocio"
-                        placeholder="Ej. Dulce Momento"
-                        type="text"
-                        required
-                        disabled={loading}
-                        error={touched.email && Boolean(errors.email)}
-                        helperText={touched.businessName && errors.businessName}
-                        value={values.businessName}
-                        onChange={(e: React.ChangeEvent<any>) => {
-                          setFieldValue("businessName", e.target.value);
-                        }}
-                      />
-                    </Box>
-                    {!isGoogleSignup && (
-                      <Box sx={{ marginBottom: theme.spacing(6) }}>
-                        <Field
-                          name="email"
-                          component={Input}
-                          label="Correo electrónico"
-                          type="email"
-                          placeholder="nombre@correo.com"
-                          required
-                          disabled={loading}
-                          error={touched.email && Boolean(errors.email)}
-                          helperText={touched.email && errors.email}
-                          value={values.email}
-                          onChange={(e: React.ChangeEvent<any>) => {
-                            setFieldValue("email", e.target.value);
-                          }}
-                        />
-                      </Box>
-                    )}
-                    <Box sx={{ marginBottom: theme.spacing(2) }}>
-                      <Field
-                        name="phone"
-                        required
-                        disabled={loading}
-                        component={FormikPhoneInput}
-                        label="Whatsapp"
-                        placeholder="981 123 456"
-                      />
-                    </Box>
-                    {!isGoogleSignup && (
-                      <Box sx={{ marginBottom: theme.spacing(6) }}>
-                        <Field
-                          name="password"
-                          component={Input}
-                          label="Contraseña"
-                          type="password"
-                          placeholder="Ingrese su contraseña"
-                          required
-                          disabled={loading}
-                          error={touched.password && Boolean(errors.password)}
-                          helperText={
-                            touched.password && errors.password
-                              ? errors.password
-                              : "Su contraseña debe contar con un mínimo de 8 caracteres."
-                          }
-                          value={values.password}
-                          onChange={(e: React.ChangeEvent<any>) => {
-                            setFieldValue("password", e.target.value);
-                          }}
-                        />
-                      </Box>
-                    )}
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      sx={{ marginBottom: theme.spacing(6) }}
-                    >
-                      <AcceptTermsLabel />
-                    </Box>
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      disabled={!dirty || !isValid || loading}
-                      sx={{
-                        marginTop: theme.spacing(2),
-                        marginBottom: theme.spacing(6),
-                        fontWeight: 600,
-                        "&:not(.Mui-disabled):hover": {
-                          backgroundColor: theme.palette.primary.dark,
-                        },
-                        "&.Mui-disabled": {
-                          backgroundColor: "#E5E7EB",
-                          color: "#9CA3AF",
-                          boxShadow: "none",
-                          cursor: "not-allowed",
-                          pointerEvents: "auto",
-                        },
-                      }}
-                    >
-                      Crear cuenta
-                    </Button>
-                  </Form>
-                )}
-              </Formik>
-              <Box
-                display={"flex"}
-                gap={2}
-                sx={{ display: { xs: "flex", md: "none" } }}
-              >
-                <Typography variant="body2">¿Ya formas parte?</Typography>
-                <Link to={`${ROUTES.LOGIN}`} variant="accent">
-                  Inicia sesión ahora
-                </Link>
-              </Box>
-            </Box>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+              Crear cuenta
+            </Button>
+          </Form>
+        )}
+      </Formik>
+      <Box display={"flex"} gap={2} sx={{ display: { xs: "flex", md: "none" } }}>
+        <Typography variant="body2">¿Ya formas parte?</Typography>
+        <Link to={`${ROUTES.LOGIN}`} variant="accent">
+          Inicia sesión ahora
+        </Link>
+      </Box>
+    </AuthLayout>
   );
 };
 

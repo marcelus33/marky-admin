@@ -37,7 +37,7 @@ const Link = styled(
       fontSize,
       lineHeight: "22px",
       letterSpacing: "-0.1px",
-      fontWeight: 600,
+      fontWeight: 700,
       textDecoration: "none",
       cursor: "pointer",
       color: theme.palette.primary.main,

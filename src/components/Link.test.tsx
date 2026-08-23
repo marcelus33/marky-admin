@@ -21,17 +21,17 @@ describe("Link accent variant (login page 'Regístrate' link)", () => {
     const link = screen.getByText("Regístrate");
     const style = getComputedStyle(link);
     expect(style.color).toBe("rgb(37, 99, 235)"); // #2563EB
-    expect(style.fontWeight).toBe("600");
+    expect(style.fontWeight).toBe("700");
     expect(style.cursor).toBe("pointer");
   });
 
   it("leaves the default primary variant's font weight unchanged", () => {
     // The default ("primary") variant resolves to fontWeight 300/400 depending
-    // on the variant ternary — it must NOT pick up accent's bold 600, since
+    // on the variant ternary — it must NOT pick up accent's bold 700, since
     // other call sites (e.g. "¿Olvidaste tu contraseña?") rely on the default.
     renderLink();
     const link = screen.getByText("Regístrate");
     const style = getComputedStyle(link);
-    expect(style.fontWeight).not.toBe("600");
+    expect(style.fontWeight).not.toBe("700");
   });
 });

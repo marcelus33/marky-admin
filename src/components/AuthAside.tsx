@@ -1,13 +1,13 @@
 import React from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 
 interface AuthAsideProps {
   title: string;
-  highlight: string;
+  highlight?: string;
   supportText: string;
-  image: React.ReactNode;
+  image?: React.ReactNode;
 }
 
 const AuthAside: React.FC<AuthAsideProps> = ({
@@ -19,46 +19,65 @@ const AuthAside: React.FC<AuthAsideProps> = ({
   const theme = useTheme();
 
   return (
-    <Grid
-      item
-      xs={12}
-      md={4}
+    <Box
+      component="aside"
       sx={{
-        display: {
-          xs: "none",
-          md: "block",
-          backgroundColor: theme.palette.primary.main + "1A",
-        },
-        paddingLeft: { md: `${theme.spacing(15)} !important` },
-        paddingRight: { md: `${theme.spacing(15)} !important` },
-        paddingTop: { md: `${theme.spacing(12)} !important` },
+        display: { xs: "none", md: "flex" },
+        flexDirection: "column",
+        alignItems: "center",
+        flex: { md: "0 0 33.3333%" },
+        backgroundColor: theme.palette.secondary.main,
       }}
     >
       <Box
-        display={"flex"}
-        flexDirection={"column"}
-        minHeight="100vh"
-        sx={{ padding: 2 }}
+        sx={{
+          width: "100%",
+          paddingX: { md: theme.spacing(15) },
+          paddingTop: "50px",
+          paddingBottom: "50px",
+        }}
       >
         <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
-        <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-          {title}{" "}
-          <span style={{ color: theme.palette.primary.main }}>
-            {highlight}
-          </span>
+        <Typography
+          sx={{
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+            fontSize: "28px",
+            fontWeight: 700,
+            lineHeight: "34px",
+            letterSpacing: "-0.096px",
+            color: theme.palette.text.primary,
+            marginBottom: "14px",
+          }}
+        >
+          {title}
+          {highlight && (
+            <>
+              <br />
+              <span style={{ color: theme.palette.primary.main }}>
+                {highlight}
+              </span>
+            </>
+          )}
         </Typography>
-        <Typography variant="body2" gutterBottom>
+        <Typography
+          sx={{
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+            fontSize: "14px",
+            fontWeight: 400,
+            lineHeight: "18px",
+            letterSpacing: "-0.1px",
+            color: theme.palette.text.primary,
+          }}
+        >
           {supportText}
         </Typography>
-        <Box
-          display="flex"
-          justifyContent="center"
-          sx={{ marginTop: theme.spacing(24) }}
-        >
+      </Box>
+      {image && (
+        <Box display="flex" justifyContent="center">
           {image}
         </Box>
-      </Box>
-    </Grid>
+      )}
+    </Box>
   );
 };
 

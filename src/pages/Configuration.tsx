@@ -4,7 +4,6 @@ import {
   CircularProgress,
   FormControlLabel,
   FormLabel,
-  Grid,
   InputAdornment,
   Step,
   StepConnector,
@@ -20,13 +19,12 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
-import { ReactComponent as LoginImage } from "../assets/images/login.svg";
 import { ReactComponent as CoffeeIcon } from "../assets/icons/coffee.svg";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { ReactComponent as ExchangeIcon } from "../assets/icons/exchange.svg";
 import categoryIcons from "../assets/icons/category/categoryIcons";
-import AuthMobileHeader from "../components/AuthMobileHeader";
+import AuthAside from "../components/AuthAside";
+import AuthLayout from "../components/AuthLayout";
 import BusinessTypeSelectorField from "../components/BusinessTypeSelectorField";
 import CategorySelectionList from "../components/CategorySelectionList";
 import CustomSelectorField from "../components/CustomSelector";
@@ -384,673 +382,575 @@ const Configuration = () => {
   }, [currencies, formikRef.current?.values?.primary_currency]);
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{
-            display: {
-              xs: "none",
-              md: "block",
-              backgroundColor: theme.palette.primary.main + "1A",
-            },
-            paddingLeft: { md: `${theme.spacing(15)} !important` },
-            paddingRight: { md: `${theme.spacing(15)} !important` },
-            paddingTop: { md: `${theme.spacing(12)} !important` },
-          }}
+    <>
+      <AuthLayout
+        maxWidth={560}
+        disableLoginLink
+        aside={
+          <AuthAside
+            title="Configuración para tu negocio"
+            highlight={steps[activeStep].subtitle}
+            supportText="Estamos orgullosos de formar parte de tu crecimiento"
+          />
+        }
+        header={
+          <Link to={`${ROUTES.LOGOUT}`}>
+            <Typography variant="link">Cerrar sesión</Typography>
+          </Link>
+        }
+      >
+        <Stepper
+          activeStep={activeStep}
+          alternativeLabel
+          connector={<CustomConnector />}
+          sx={{ marginBottom: theme.spacing(8) }}
         >
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            minHeight="100vh"
-            sx={{ padding: 2 }}
-          >
-            <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
-            <Typography
-              variant="h1"
-              sx={{ fontSize: "28px", marginBottom: theme.spacing(2) }}
-            >
-              Configuración para tu negocio
-            </Typography>
-            <Typography
-              variant="subtitle2"
-              sx={{ color: "primary.main", marginBottom: theme.spacing(4) }}
-            >
-              {steps[activeStep].subtitle}
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              Estamos orgullosos de formar parte de tu crecimiento
-            </Typography>
-            <Box
-              display="flex"
-              justifyContent="center"
-              sx={{ marginTop: theme.spacing(24) }}
-            >
-              <LoginImage />
-            </Box>
-          </Box>
-        </Grid>
-        {/* ==================================================== */}
-        <Grid
-          item
-          xs={12}
-          md={8}
-          sx={{
-            paddingTop: { md: `${theme.spacing(6)} !important` },
-            paddingRight: { md: theme.spacing(9) },
-          }}
+          {steps.map((step, idx) => (
+            <Step key={`step-${idx}`}>
+              <StepLabel StepIconComponent={NumberedStepIcon} />
+            </Step>
+          ))}
+        </Stepper>
+        <Formik
+          innerRef={formikRef}
+          initialValues={initialValues}
+          validationSchema={validationSchema[activeStep]}
+          onSubmit={handleSubmit}
         >
-          {/*  */}
-          <Box
-            display={"flex"}
-            justifyContent={"end"}
-            width={"100%"}
-            sx={{
-              paddingBottom: { md: `${theme.spacing(24)} !important` },
-              // paddingRight: { md: theme.spacing(9) },
-            }}
-          >
-            {/* DESKTOP HEADER */}
-            <Box
-              gap={2}
-              sx={{
-                display: {
-                  xs: "none",
-                  md: "flex",
-                },
-              }}
-            >
-              <Link to={`${ROUTES.LOGOUT}`}>
-                <Typography variant="link">Cerrar sesión</Typography>
-              </Link>
-            </Box>
-            {/* MOBILE HEADER */}
-            <AuthMobileHeader disableLoginLink />
-          </Box>
-          {/*  */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Box
-              sx={{
-                marginTop: theme.spacing(8),
-                paddingBottom: "90px",
-                width: {
-                  xs: "100%",
-                  md: "50%",
-                },
-              }}
-            >
-              <Stepper
-                activeStep={activeStep}
-                alternativeLabel
-                connector={<CustomConnector />}
-                sx={{ marginBottom: theme.spacing(8) }}
-              >
-                {steps.map((step, idx) => (
-                  <Step key={`step-${idx}`}>
-                    <StepLabel StepIconComponent={NumberedStepIcon} />
-                  </Step>
-                ))}
-              </Stepper>
-              <Formik
-                innerRef={formikRef}
-                initialValues={initialValues}
-                validationSchema={validationSchema[activeStep]}
-                onSubmit={handleSubmit}
-              >
-                {({
-                  setFieldTouched,
-                  values,
-                  errors,
-                  touched,
-                  setFieldValue,
-                  setFieldError,
-                  handleChange,
-                  handleBlur,
-                  isValid,
-                  isValidating,
-                  dirty,
-                }) => {
-                  const meetsMinBusinessIdLength =
-                    values.business_id.length >= MIN_BUSINESS_ID_LENGTH;
-                  const isCheckingBusinessId =
-                    meetsMinBusinessIdLength && isValidating;
-                  const isBusinessIdAvailable =
-                    meetsMinBusinessIdLength &&
-                    !errors.business_id &&
-                    !isValidating;
+          {({
+            setFieldTouched,
+            values,
+            errors,
+            touched,
+            setFieldValue,
+            setFieldError,
+            handleChange,
+            handleBlur,
+            isValid,
+            isValidating,
+            dirty,
+          }) => {
+            const meetsMinBusinessIdLength =
+              values.business_id.length >= MIN_BUSINESS_ID_LENGTH;
+            const isCheckingBusinessId =
+              meetsMinBusinessIdLength && isValidating;
+            const isBusinessIdAvailable =
+              meetsMinBusinessIdLength && !errors.business_id && !isValidating;
 
-                  return (
-                  <Form>
-                    <Typography
-                      variant="h2"
-                      sx={{
-                        textAlign: { xs: "center", md: "left" },
-                        fontWeight: 700,
-                        lineHeight: "32px",
-                        marginBottom: theme.spacing(8),
-                      }}
-                    >
-                      {steps[activeStep].title}
-                    </Typography>
+            return (
+              <Form>
+                <Typography
+                  variant="h2"
+                  sx={{
+                    textAlign: { xs: "center", md: "left" },
+                    fontWeight: 700,
+                    lineHeight: "32px",
+                    marginBottom: theme.spacing(8),
+                  }}
+                >
+                  {steps[activeStep].title}
+                </Typography>
 
-                    <Box>
-                      {/* =================== PASO 1 =================== */}
-                      {activeStep === 0 && (
-                        <>
-                          <Input
-                            name="business_id"
-                            maxLength={24}
-                            placeholder="Escribe tu usuario..."
-                            label="Nombre de Usuario"
-                            required
-                            value={values.business_id}
-                            onChange={(e: React.ChangeEvent<any>) => {
-                              setFieldValue(
-                                "business_id",
-                                sanitizeBusinessIdLive(e.target.value),
-                              );
-                            }}
-                            onBlur={(e: React.FocusEvent<any>) => {
-                              setFieldValue(
-                                "business_id",
-                                sanitizeBusinessId(e.target.value),
-                              );
-                              handleBlur(e);
-                            }}
-                            error={
-                              !!touched.business_id &&
-                              Boolean(errors.business_id)
-                            }
-                            helperText={
-                              isBusinessIdAvailable
-                                ? "Nombre disponible"
-                                : touched.business_id
-                                  ? errors.business_id
-                                  : undefined
-                            }
-                            helperTextColor={
-                              isBusinessIdAvailable
-                                ? theme.palette.primary.main
-                                : undefined
-                            }
-                            endAdornment={
-                              isCheckingBusinessId ? (
-                                <CircularProgress
-                                  size={20}
-                                  sx={{ color: theme.palette.primary.main }}
-                                />
-                              ) : isBusinessIdAvailable ? (
-                                <CheckCircleIcon
-                                  sx={{ color: theme.palette.primary.main }}
-                                />
-                              ) : undefined
-                            }
-                          />
-                          {/*  */}
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "stretch",
-                              justifyContent: "flex-start",
-                              border: `1px solid ${colors.light.grey[800]}`,
-                              borderRadius: theme.spacing(1),
-                              paddingX: theme.spacing(10),
-                              paddingY: theme.spacing(4),
-                              marginTop: theme.spacing(4),
-                            }}
-                          >
-                            <Typography
-                              variant="h5"
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                marginBottom: theme.spacing(2),
-                                fontWeight: 700,
+                <Box>
+                  {/* =================== PASO 1 =================== */}
+                  {activeStep === 0 && (
+                    <>
+                      <Input
+                        name="business_id"
+                        maxLength={24}
+                        placeholder="Escribe tu usuario..."
+                        label="Nombre de Usuario"
+                        required
+                        value={values.business_id}
+                        onChange={(e: React.ChangeEvent<any>) => {
+                          setFieldValue(
+                            "business_id",
+                            sanitizeBusinessIdLive(e.target.value),
+                          );
+                        }}
+                        onBlur={(e: React.FocusEvent<any>) => {
+                          setFieldValue(
+                            "business_id",
+                            sanitizeBusinessId(e.target.value),
+                          );
+                          handleBlur(e);
+                        }}
+                        error={
+                          !!touched.business_id && Boolean(errors.business_id)
+                        }
+                        helperText={
+                          isBusinessIdAvailable
+                            ? "Nombre disponible"
+                            : touched.business_id
+                              ? errors.business_id
+                              : undefined
+                        }
+                        helperTextColor={
+                          isBusinessIdAvailable
+                            ? theme.palette.primary.main
+                            : undefined
+                        }
+                        endAdornment={
+                          isCheckingBusinessId ? (
+                            <CircularProgress
+                              size={20}
+                              sx={{ color: theme.palette.primary.main }}
+                            />
+                          ) : isBusinessIdAvailable ? (
+                            <CheckCircleIcon
+                              sx={{ color: theme.palette.primary.main }}
+                            />
+                          ) : undefined
+                        }
+                      />
+                      {/*  */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "stretch",
+                          justifyContent: "flex-start",
+                          border: `1px solid ${colors.light.grey[800]}`,
+                          borderRadius: theme.spacing(1),
+                          paddingX: theme.spacing(10),
+                          paddingY: theme.spacing(4),
+                          marginTop: theme.spacing(4),
+                        }}
+                      >
+                        <Typography
+                          variant="h5"
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            marginBottom: theme.spacing(2),
+                            fontWeight: 700,
+                          }}
+                        >
+                          <CoffeeIcon />
+                          Categoría del negocio
+                        </Typography>
+                        <Paragraph>
+                          Elige la categoría principal para ayudar a tus
+                          comensales a entender qué ofreces.
+                        </Paragraph>
+                        <Field
+                          component={CustomSelectorField}
+                          label="Categoría"
+                          name="categories"
+                          onOpen={() => setOpenCategoriesModal(true)}
+                          required
+                          value={values.categories}
+                          maxSelected={3}
+                          placeholder="Seleccionar categoría"
+                          options={categories?.map((cat: any) => ({
+                            value: cat.id,
+                            label: cat.name,
+                          }))}
+                          onChange={handleChange}
+                          fullWidth
+                          variant="outlined"
+                          margin="normal"
+                          error={!!dirty && values.categories.length === 0}
+                          helperText={<ErrorMessage name="categories" />}
+                          maxSelectable={2}
+                          renderIcon={(cat: Category) => {
+                            const Icon = BUSINESS_CATEGORY_ICON_MAP[cat.name];
+                            return Icon ? (
+                              <Box
+                                sx={{
+                                  display: "inline-flex",
+                                  flexShrink: 0,
+                                  "& path": {
+                                    fill: theme.palette.primary.main,
+                                  },
+                                }}
+                              >
+                                <Icon width={30} height={30} />
+                              </Box>
+                            ) : null;
+                          }}
+                          sx={{
+                            marginTop: theme.spacing(3),
+                            marginBottom: theme.spacing(3),
+                          }}
+                        />
+                      </Box>
+                    </>
+                  )}
+                  {/* =================== PASO 2 =================== */}
+                  {activeStep === 1 && (
+                    <>
+                      <Field
+                        component={CustomSelectorField}
+                        displayAsInput={true}
+                        label="País"
+                        name="country"
+                        onOpen={() => setOpenCountriesModal(true)}
+                        required
+                        value={values.country}
+                        maxSelected={1}
+                        placeholder="Selecciona tu país"
+                        options={countries?.map((cat: any) => ({
+                          value: cat.id,
+                          label: cat.name,
+                        }))}
+                        onChange={handleChange}
+                        fullWidth
+                        variant="outlined"
+                        margin="normal"
+                        error={touched?.country && Boolean(errors?.country)}
+                        helperText={<ErrorMessage name="country" />}
+                        maxSelectable={2}
+                        sx={{
+                          marginTop: theme.spacing(3),
+                          marginBottom: theme.spacing(3),
+                        }}
+                      />
+                      <Field
+                        component={CustomSelectorField}
+                        label="Ciudad"
+                        name="city"
+                        onOpen={() => setOpenCitiesModal(true)}
+                        required
+                        value={values.city}
+                        maxSelected={1}
+                        placeholder="Selecciona tu ciudad"
+                        options={cities?.map((cat: any) => ({
+                          value: cat.id,
+                          label: cat.name,
+                        }))}
+                        onChange={handleChange}
+                        fullWidth
+                        variant="outlined"
+                        margin="normal"
+                        error={touched.city && Boolean(errors?.city)}
+                        helperText={<ErrorMessage name="city" />}
+                        maxSelectable={2}
+                        sx={{
+                          marginTop: theme.spacing(3),
+                          marginBottom: theme.spacing(3),
+                        }}
+                      />
+
+                      {/* ========================== */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "stretch",
+                          justifyContent: "flex-start",
+                          border: `1px solid ${colors.light.grey[800]}`,
+                          borderRadius: theme.spacing(1),
+                          paddingX: theme.spacing(6),
+                          paddingY: theme.spacing(4),
+                          marginTop: theme.spacing(4),
+                        }}
+                      >
+                        <FormLabel
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            marginBottom: 2,
+                          }}
+                        >
+                          <CoffeeIcon />
+                          Tipo de negocio
+                        </FormLabel>
+                        <Field
+                          name="business_type"
+                          component={BusinessTypeSelectorField}
+                          // label="Tipo de negocio"
+                          required
+                          options={[
+                            {
+                              value: "commercial",
+                              label: "Comercial",
+                              description:
+                                "Tu negocio dispone de sucursal para recibir clientes o comensales",
+                            },
+                            {
+                              value: "entrepreneur",
+                              label: "Emprendedor",
+                              description:
+                                "Tu negocio aun no cuenta con sucursal. Opera desde un centro de producción.",
+                            },
+                          ]}
+                          sx={{ marginTop: 2, marginBottom: 2 }}
+                        />
+                      </Box>
+                      {/* ========================== */}
+                    </>
+                  )}
+                  {/* =================== PASO 3 =================== */}
+                  {activeStep === 2 && (
+                    <>
+                      <Field
+                        component={CustomSelectorField}
+                        label="Moneda de uso"
+                        name="primary_currency"
+                        onOpen={() => setOpenPrimaryCurrencyModal(true)}
+                        required
+                        value={values.primary_currency}
+                        maxSelected={1}
+                        placeholder="Selecciona tu moneda"
+                        options={currencies?.map((cat: any) => ({
+                          value: cat.id,
+                          label: cat.name,
+                        }))}
+                        onChange={handleChange}
+                        fullWidth
+                        variant="outlined"
+                        margin="normal"
+                        error={
+                          !!values.primary_currency &&
+                          values.primary_currency.length === 0
+                        }
+                        helperText={<ErrorMessage name="primary_currency" />}
+                        maxSelectable={1}
+                        sx={{
+                          marginTop: theme.spacing(3),
+                          marginBottom: theme.spacing(3),
+                        }}
+                      />
+                      <Typography
+                        id="modal-description"
+                        variant="body2"
+                        sx={{ mt: 2, mb: 4 }}
+                      >
+                        Esta será la moneda que se mostrará en los precios de
+                        tus productos.
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "stretch",
+                          justifyContent: "flex-start",
+                          border: `1px solid ${colors.light.grey[800]}`,
+                          borderRadius: theme.spacing(1),
+                          paddingX: theme.spacing(4),
+                          paddingY: theme.spacing(4),
+                          marginTop: theme.spacing(4),
+                        }}
+                      >
+                        <FormLabel>Mostrar tasa de cambio</FormLabel>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.enable_exchange_rate}
+                              onChange={(e) => {
+                                const checkedValue = e.target.checked;
+                                setFieldValue(
+                                  "enable_exchange_rate",
+                                  checkedValue,
+                                );
+                                if (!checkedValue) {
+                                  setFieldValue("secondary_currency", "");
+                                  setFieldValue("exchange_rate", "");
+                                }
                               }}
-                            >
-                              <CoffeeIcon />
-                              Categoría del negocio
-                            </Typography>
-                            <Paragraph>
-                              Elige la categoría principal para ayudar a tus
-                              comensales a entender qué ofreces.
-                            </Paragraph>
+                            />
+                          }
+                          label="Activar"
+                        />
+                        <Typography
+                          id="modal-description"
+                          variant="body2"
+                          sx={{ mt: 2, mb: 4 }}
+                        >
+                          Si lo activas, podrás mostrar el valor de cambio junto
+                          al precio de tus productos.
+                        </Typography>
+                        {values.enable_exchange_rate && (
+                          <>
                             <Field
                               component={CustomSelectorField}
-                              label="Categoría"
-                              name="categories"
-                              onOpen={() => setOpenCategoriesModal(true)}
+                              label="Moneda Secundaria"
+                              name="secondary_currency"
+                              onOpen={() => setOpenSecondaryCurrencyModal(true)}
                               required
-                              value={values.categories}
-                              maxSelected={3}
-                              placeholder="Seleccionar categoría"
-                              options={categories?.map((cat: any) => ({
-                                value: cat.id,
-                                label: cat.name,
-                              }))}
+                              value={values.secondary_currency}
+                              maxSelected={1}
+                              placeholder="Selecciona moneda secundaria"
+                              options={currencies
+                                ?.filter(
+                                  (curr: any) =>
+                                    //@ts-ignore
+                                    curr.id !== values.primary_currency?.id,
+                                )
+                                .map((cat: any) => ({
+                                  value: cat.id,
+                                  label: cat.name,
+                                }))}
                               onChange={handleChange}
                               fullWidth
                               variant="outlined"
                               margin="normal"
-                              error={!!dirty && values.categories.length === 0}
-                              helperText={<ErrorMessage name="categories" />}
-                              maxSelectable={2}
-                              renderIcon={(cat: Category) => {
-                                const Icon =
-                                  BUSINESS_CATEGORY_ICON_MAP[cat.name];
-                                return Icon ? (
-                                  <Box
-                                    sx={{
-                                      display: "inline-flex",
-                                      flexShrink: 0,
-                                      "& path": {
-                                        fill: theme.palette.primary.main,
-                                      },
-                                    }}
-                                  >
-                                    <Icon width={30} height={30} />
-                                  </Box>
-                                ) : null;
-                              }}
+                              error={
+                                !!values.secondary_currency &&
+                                values.secondary_currency.length === 0
+                              }
+                              helperText={
+                                <ErrorMessage name="secondary_currency" />
+                              }
+                              maxSelectable={1}
                               sx={{
                                 marginTop: theme.spacing(3),
                                 marginBottom: theme.spacing(3),
                               }}
                             />
-                          </Box>
-                        </>
-                      )}
-                      {/* =================== PASO 2 =================== */}
-                      {activeStep === 1 && (
-                        <>
-                          <Field
-                            component={CustomSelectorField}
-                            displayAsInput={true}
-                            label="País"
-                            name="country"
-                            onOpen={() => setOpenCountriesModal(true)}
-                            required
-                            value={values.country}
-                            maxSelected={1}
-                            placeholder="Selecciona tu país"
-                            options={countries?.map((cat: any) => ({
-                              value: cat.id,
-                              label: cat.name,
-                            }))}
-                            onChange={handleChange}
-                            fullWidth
-                            variant="outlined"
-                            margin="normal"
-                            error={touched?.country && Boolean(errors?.country)}
-                            helperText={<ErrorMessage name="country" />}
-                            maxSelectable={2}
-                            sx={{
-                              marginTop: theme.spacing(3),
-                              marginBottom: theme.spacing(3),
-                            }}
-                          />
-                          <Field
-                            component={CustomSelectorField}
-                            label="Ciudad"
-                            name="city"
-                            onOpen={() => setOpenCitiesModal(true)}
-                            required
-                            value={values.city}
-                            maxSelected={1}
-                            placeholder="Selecciona tu ciudad"
-                            options={cities?.map((cat: any) => ({
-                              value: cat.id,
-                              label: cat.name,
-                            }))}
-                            onChange={handleChange}
-                            fullWidth
-                            variant="outlined"
-                            margin="normal"
-                            error={touched.city && Boolean(errors?.city)}
-                            helperText={<ErrorMessage name="city" />}
-                            maxSelectable={2}
-                            sx={{
-                              marginTop: theme.spacing(3),
-                              marginBottom: theme.spacing(3),
-                            }}
-                          />
 
-                          {/* ========================== */}
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "stretch",
-                              justifyContent: "flex-start",
-                              border: `1px solid ${colors.light.grey[800]}`,
-                              borderRadius: theme.spacing(1),
-                              paddingX: theme.spacing(6),
-                              paddingY: theme.spacing(4),
-                              marginTop: theme.spacing(4),
-                            }}
-                          >
-                            <FormLabel
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                marginBottom: 2,
-                              }}
-                            >
-                              <CoffeeIcon />
-                              Tipo de negocio
-                            </FormLabel>
-                            <Field
-                              name="business_type"
-                              component={BusinessTypeSelectorField}
-                              // label="Tipo de negocio"
-                              required
-                              options={[
-                                {
-                                  value: "commercial",
-                                  label: "Comercial",
-                                  description:
-                                    "Tu negocio dispone de sucursal para recibir clientes o comensales",
-                                },
-                                {
-                                  value: "entrepreneur",
-                                  label: "Emprendedor",
-                                  description:
-                                    "Tu negocio aun no cuenta con sucursal. Opera desde un centro de producción.",
-                                },
-                              ]}
-                              sx={{ marginTop: 2, marginBottom: 2 }}
-                            />
-                          </Box>
-                          {/* ========================== */}
-                        </>
-                      )}
-                      {/* =================== PASO 3 =================== */}
-                      {activeStep === 2 && (
-                        <>
-                          <Field
-                            component={CustomSelectorField}
-                            label="Moneda de uso"
-                            name="primary_currency"
-                            onOpen={() => setOpenPrimaryCurrencyModal(true)}
-                            required
-                            value={values.primary_currency}
-                            maxSelected={1}
-                            placeholder="Selecciona tu moneda"
-                            options={currencies?.map((cat: any) => ({
-                              value: cat.id,
-                              label: cat.name,
-                            }))}
-                            onChange={handleChange}
-                            fullWidth
-                            variant="outlined"
-                            margin="normal"
-                            error={
-                              !!values.primary_currency &&
-                              values.primary_currency.length === 0
-                            }
-                            helperText={
-                              <ErrorMessage name="primary_currency" />
-                            }
-                            maxSelectable={1}
-                            sx={{
-                              marginTop: theme.spacing(3),
-                              marginBottom: theme.spacing(3),
-                            }}
-                          />
-                          <Typography
-                            id="modal-description"
-                            variant="body2"
-                            sx={{ mt: 2, mb: 4 }}
-                          >
-                            Esta será la moneda que se mostrará en los precios
-                            de tus productos.
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "stretch",
-                              justifyContent: "flex-start",
-                              border: `1px solid ${colors.light.grey[800]}`,
-                              borderRadius: theme.spacing(1),
-                              paddingX: theme.spacing(4),
-                              paddingY: theme.spacing(4),
-                              marginTop: theme.spacing(4),
-                            }}
-                          >
-                            <FormLabel>Mostrar tasa de cambio</FormLabel>
-                            <FormControlLabel
-                              control={
-                                <Switch
-                                  checked={values.enable_exchange_rate}
-                                  onChange={(e) => {
-                                    const checkedValue = e.target.checked;
-                                    setFieldValue(
-                                      "enable_exchange_rate",
-                                      checkedValue,
-                                    );
-                                    if (!checkedValue) {
-                                      setFieldValue("secondary_currency", "");
-                                      setFieldValue("exchange_rate", "");
-                                    }
-                                  }}
-                                />
-                              }
-                              label="Activar"
-                            />
-                            <Typography
-                              id="modal-description"
-                              variant="body2"
-                              sx={{ mt: 2, mb: 4 }}
-                            >
-                              Si lo activas, podrás mostrar el valor de cambio
-                              junto al precio de tus productos.
-                            </Typography>
-                            {values.enable_exchange_rate && (
-                              <>
-                                <Field
-                                  component={CustomSelectorField}
-                                  label="Moneda Secundaria"
-                                  name="secondary_currency"
-                                  onOpen={() =>
-                                    setOpenSecondaryCurrencyModal(true)
-                                  }
-                                  required
-                                  value={values.secondary_currency}
-                                  maxSelected={1}
-                                  placeholder="Selecciona moneda secundaria"
-                                  options={currencies
-                                    ?.filter(
-                                      (curr: any) =>
-                                        //@ts-ignore
-                                        curr.id !== values.primary_currency?.id,
-                                    )
-                                    .map((cat: any) => ({
-                                      value: cat.id,
-                                      label: cat.name,
-                                    }))}
-                                  onChange={handleChange}
-                                  fullWidth
-                                  variant="outlined"
-                                  margin="normal"
-                                  error={
-                                    !!values.secondary_currency &&
-                                    values.secondary_currency.length === 0
-                                  }
-                                  helperText={
-                                    <ErrorMessage name="secondary_currency" />
-                                  }
-                                  maxSelectable={1}
+                            {values.secondary_currency.length > 0 && (
+                              <Box>
+                                <Box
                                   sx={{
-                                    marginTop: theme.spacing(3),
-                                    marginBottom: theme.spacing(3),
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 2,
+                                    width: "100%",
                                   }}
-                                />
-
-                                {values.secondary_currency.length > 0 && (
-                                  <Box>
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 2,
-                                        width: "100%",
-                                      }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: "fit-content",
+                                      whiteSpace: "nowrap",
+                                      backgroundColor: "#FFF4E8",
+                                      paddingX: 2,
+                                      paddingY: 4,
+                                      borderRadius: 2,
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      id="modal-description"
+                                      variant="body2"
                                     >
-                                      <Box
-                                        sx={{
-                                          width: "fit-content",
-                                          whiteSpace: "nowrap",
-                                          backgroundColor: "#FFF4E8",
-                                          paddingX: 2,
-                                          paddingY: 4,
-                                          borderRadius: 2,
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        <Typography
-                                          id="modal-description"
-                                          variant="body2"
-                                        >
-                                          {/* @ts-ignore */}
-                                          {values.is_primary_to_secondary
-                                            ? // @ts-ignore
-                                              `1 ${values.primary_currency[0]?.code ?? ""}`
-                                            : // @ts-ignore
-                                              `1 ${values.secondary_currency[0]?.code ?? ""}`}
-                                        </Typography>
-                                      </Box>
-
-                                      <Box
-                                        sx={{
-                                          width: "fit-content",
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        <Typography
-                                          id="modal-description"
-                                          variant="body2"
-                                        >
-                                          es igual a:
-                                        </Typography>
-                                      </Box>
-
-                                      <Field
-                                        component={NumberInput}
-                                        name="exchange_rate"
-                                        value={values.exchange_rate}
-                                        onChange={handleChange}
-                                        variant="outlined"
-                                        margin="normal"
-                                        InputProps={{
-                                          endAdornment: (
-                                            <InputAdornment position="end">
-                                              <Typography variant="body2">
-                                                {values.is_primary_to_secondary
-                                                  ? values.secondary_currency[0] //@ts-ignore
-                                                      ?.code
-                                                  : values.primary_currency[0] //@ts-ignore
-                                                      ?.code}
-                                              </Typography>
-                                            </InputAdornment>
-                                          ),
-                                        }}
-                                      />
-
-                                      <Button
-                                        variant="outlined"
-                                        sx={{
-                                          border: 0,
-                                          backgroundColor:
-                                            colors.light.grey[400],
-                                        }}
-                                        onClick={() => {
-                                          setFieldValue(
-                                            "is_primary_to_secondary",
-                                            !values.is_primary_to_secondary,
-                                          );
-                                          setFieldValue("exchange_rate", "");
-                                        }}
-                                      >
-                                        <ExchangeIcon />
-                                      </Button>
-                                    </Box>
-                                    <Box sx={{ marginTop: 4 }}>
-                                      <Typography
-                                        variant="caption"
-                                        sx={{
-                                          color: colors.light.grey[900],
-                                        }}
-                                      >
-                                        Podrás ajustar esto en cualquier momento
-                                      </Typography>
-                                    </Box>
+                                      {/* @ts-ignore */}
+                                      {values.is_primary_to_secondary
+                                        ? // @ts-ignore
+                                          `1 ${values.primary_currency[0]?.code ?? ""}`
+                                        : // @ts-ignore
+                                          `1 ${values.secondary_currency[0]?.code ?? ""}`}
+                                    </Typography>
                                   </Box>
-                                )}
-                              </>
+
+                                  <Box
+                                    sx={{
+                                      width: "fit-content",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    <Typography
+                                      id="modal-description"
+                                      variant="body2"
+                                    >
+                                      es igual a:
+                                    </Typography>
+                                  </Box>
+
+                                  <Field
+                                    component={NumberInput}
+                                    name="exchange_rate"
+                                    value={values.exchange_rate}
+                                    onChange={handleChange}
+                                    variant="outlined"
+                                    margin="normal"
+                                    InputProps={{
+                                      endAdornment: (
+                                        <InputAdornment position="end">
+                                          <Typography variant="body2">
+                                            {values.is_primary_to_secondary
+                                              ? values.secondary_currency[0] //@ts-ignore
+                                                  ?.code
+                                              : values.primary_currency[0] //@ts-ignore
+                                                  ?.code}
+                                          </Typography>
+                                        </InputAdornment>
+                                      ),
+                                    }}
+                                  />
+
+                                  <Button
+                                    variant="outlined"
+                                    sx={{
+                                      border: 0,
+                                      backgroundColor: colors.light.grey[400],
+                                    }}
+                                    onClick={() => {
+                                      setFieldValue(
+                                        "is_primary_to_secondary",
+                                        !values.is_primary_to_secondary,
+                                      );
+                                      setFieldValue("exchange_rate", "");
+                                    }}
+                                  >
+                                    <ExchangeIcon />
+                                  </Button>
+                                </Box>
+                                <Box sx={{ marginTop: 4 }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: colors.light.grey[900],
+                                    }}
+                                  >
+                                    Podrás ajustar esto en cualquier momento
+                                  </Typography>
+                                </Box>
+                              </Box>
                             )}
-                          </Box>
-                        </>
-                      )}
-                    </Box>
-                    <Box
+                          </>
+                        )}
+                      </Box>
+                    </>
+                  )}
+                </Box>
+                <Box
+                  sx={{
+                    marginTop:
+                      activeStep === 1 || activeStep === 2
+                        ? "65px"
+                        : theme.spacing(7),
+                    width: "100%",
+                    display: "flex",
+                    gap: 3,
+                  }}
+                >
+                  {activeStep > 0 && (
+                    <Button
+                      variant="contained"
+                      color="inherit"
                       sx={{
-                        marginTop:
-                          activeStep === 1 || activeStep === 2
-                            ? "65px"
-                            : theme.spacing(7),
-                        width: "100%",
-                        display: "flex",
-                        gap: 3,
+                        backgroundColor: colors.light.grey[400],
+                        color: "#4B4B4B",
+                        boxShadow: "unset",
                       }}
+                      onClick={() => handlePrevious(setFieldTouched)}
                     >
-                      {activeStep > 0 && (
-                        <Button
-                          variant="contained"
-                          color="inherit"
-                          sx={{
-                            backgroundColor: colors.light.grey[400],
-                            color: "#4B4B4B",
-                            boxShadow: "unset",
-                          }}
-                          onClick={() => handlePrevious(setFieldTouched)}
-                        >
-                          Volver
-                        </Button>
-                      )}
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleNext(setFieldTouched)}
-                        disabled={
-                          !isValid || !dirty || !isStepValid(activeStep, values)
-                        }
-                      >
-                        {activeStep === steps.length - 1
-                          ? "Finalizar"
-                          : " Siguiente"}
-                      </Button>
-                    </Box>
-                  </Form>
-                  );
-                }}
-              </Formik>
-            </Box>
-          </Box>
-        </Grid>
-      </Grid>
+                      Volver
+                    </Button>
+                  )}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleNext(setFieldTouched)}
+                    disabled={
+                      !isValid || !dirty || !isStepValid(activeStep, values)
+                    }
+                  >
+                    {activeStep === steps.length - 1
+                      ? "Finalizar"
+                      : " Siguiente"}
+                  </Button>
+                </Box>
+              </Form>
+            );
+          }}
+        </Formik>
+      </AuthLayout>
       {/* ================ MODAL CATEGORIAS =================== */}
       <CustomModal
         sx={{
@@ -1298,7 +1198,7 @@ const Configuration = () => {
           setSelected={setSelectedSecondaryCurrencies}
         />
       </CustomModal>
-    </Box>
+    </>
   );
 };
 
