@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  CircularProgress,
   FormControlLabel,
   FormLabel,
   Grid,
@@ -13,6 +14,7 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
+import { StepIconProps } from "@mui/material/StepIcon";
 import { styled, useTheme } from "@mui/material/styles";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,7 +23,10 @@ import * as Yup from "yup";
 import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
 import { ReactComponent as LoginImage } from "../assets/images/login.svg";
 import { ReactComponent as CoffeeIcon } from "../assets/icons/coffee.svg";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { ReactComponent as ExchangeIcon } from "../assets/icons/exchange.svg";
+import categoryIcons from "../assets/icons/category/categoryIcons";
+import AuthMobileHeader from "../components/AuthMobileHeader";
 import BusinessTypeSelectorField from "../components/BusinessTypeSelectorField";
 import CategorySelectionList from "../components/CategorySelectionList";
 import CustomSelectorField from "../components/CustomSelector";
@@ -40,7 +45,7 @@ import { Currency } from "../services/currenciesService";
 import { ROUTES } from "../routes/paths";
 import {
   createBusinessProfile,
-  validateBusinessName,
+  validateBusinessNameDebounced,
 } from "../services/businessService";
 import { Category } from "../services/categoriesService";
 import { buildBusinessProfilePayload } from "./Configuration.payload";
@@ -68,6 +73,52 @@ const CustomConnector = styled(StepConnector)(({ theme }) => ({
   },
 }));
 
+const NumberedStepIcon: React.FC<StepIconProps> = ({
+  active,
+  completed,
+  icon,
+}) => {
+  const theme = useTheme();
+  const filled = active || completed;
+  return (
+    <Box
+      sx={{
+        width: 32,
+        height: 32,
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: filled ? theme.palette.primary.main : "transparent",
+        border: filled ? "none" : `2px solid ${theme.palette.grey[300]}`,
+        color: filled ? "#fff" : theme.palette.grey[300],
+        fontWeight: 700,
+        fontSize: 14,
+      }}
+    >
+      {icon}
+    </Box>
+  );
+};
+
+// Categorías sembradas en el backend (business/management/commands/seed.py)
+// mapeadas a los íconos disponibles en src/assets/icons/category.
+// "Restaurante" no tiene ícono dedicado; se usa "cocina" como más cercano.
+const BUSINESS_CATEGORY_ICON_MAP: Record<
+  string,
+  React.FC<React.SVGProps<SVGSVGElement>>
+> = {
+  Restaurante: categoryIcons.cocina,
+  Pizzería: categoryIcons.pizza,
+  Cafetería: categoryIcons.cafe,
+  Heladería: categoryIcons.helado,
+  "Parrillada / Asados": categoryIcons.asado,
+  Panadería: categoryIcons.bagette,
+  Pastelería: categoryIcons.torta,
+};
+
+const MIN_BUSINESS_ID_LENGTH = 4;
+
 const initialValues = {
   business_id: "",
   categories: [],
@@ -85,7 +136,6 @@ const Configuration = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const formikRef = useRef(null);
-  const { user } = useSessionStore();
   const [openCategoriesModal, setOpenCategoriesModal] = useState(false);
   const [openCountriesModal, setOpenCountriesModal] = useState(false);
   const [openCitiesModal, setOpenCitiesModal] = useState(false);
@@ -104,15 +154,15 @@ const Configuration = () => {
           /^[a-z0-9\-_]+$/,
           "Solo se permiten letras minúsculas, guiones (-) y guiones bajos (_)",
         )
-        .min(4, "No puede tener menos de 4 caracteres")
+        .min(MIN_BUSINESS_ID_LENGTH, "No puede tener menos de 4 caracteres")
         .max(24, "No puede tener más de 24 caracteres")
         .test(
           "unique-business-id",
           "Este nombre de negocio ya existe",
           async function (value: string) {
-            if (!value) return true;
+            if (!value || value.length < MIN_BUSINESS_ID_LENGTH) return true;
             try {
-              const result = await validateBusinessName(value);
+              const result = await validateBusinessNameDebounced(value);
               return !result.is_taken;
             } catch (error) {
               //@ts-ignore
@@ -164,8 +214,12 @@ const Configuration = () => {
   const [localCategories, setLocalCategories] = useState(categories);
   const [localCountries, setLocalCountries] = useState<Country[]>([]);
   const [localCities, setLocalCities] = useState<City[]>([]);
-  const [localPrimaryCurrencies, setLocalPrimaryCurrencies] = useState<Currency[]>([]);
-  const [localSecondaryCurrencies, setLocalSecondaryCurrencies] = useState<Currency[]>([]);
+  const [localPrimaryCurrencies, setLocalPrimaryCurrencies] = useState<
+    Currency[]
+  >([]);
+  const [localSecondaryCurrencies, setLocalSecondaryCurrencies] = useState<
+    Currency[]
+  >([]);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const { countries } = useCountries();
   const { cities } = useCities(selectedCountry);
@@ -354,15 +408,17 @@ const Configuration = () => {
             sx={{ padding: 2 }}
           >
             <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
-            <Typography variant="h1" sx={{ marginBottom: theme.spacing(4) }}>
-              <Box sx={{ marginBottom: theme.spacing(2) }}>
-                Configuración para tu cuenta
-              </Box>
-              {user?.business_name && (
-                <span style={{ color: theme.palette.primary.main }}>
-                  {user.business_name}
-                </span>
-              )}
+            <Typography
+              variant="h1"
+              sx={{ fontSize: "28px", marginBottom: theme.spacing(2) }}
+            >
+              Configuración para tu negocio
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "primary.main", marginBottom: theme.spacing(4) }}
+            >
+              {steps[activeStep].subtitle}
             </Typography>
             <Typography variant="body2" gutterBottom>
               Estamos orgullosos de formar parte de tu crecimiento
@@ -411,44 +467,9 @@ const Configuration = () => {
               </Link>
             </Box>
             {/* MOBILE HEADER */}
-            <Box
-              sx={{
-                width: "100%",
-                padding: theme.spacing(2.75, 4, 2, 4),
-                gap: 0,
-                boxShadow: "0px 1px 0px 0px #E8E9EB",
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-              }}
-              justifyContent={"flex-start"}
-            >
-              <Box>
-                <LogoMarkyBlack />
-              </Box>
-            </Box>
+            <AuthMobileHeader disableLoginLink />
           </Box>
           {/*  */}
-          <Box
-            sx={{
-              width: { xs: "100%", md: "72%" },
-              margin: "auto",
-            }}
-          >
-            <Stepper
-              activeStep={activeStep}
-              alternativeLabel
-              connector={<CustomConnector />}
-            >
-              {steps.map((step, idx) => (
-                <Step key={`step-${idx}`}>
-                  <StepLabel sx={{ fontWeight: "bold" }} />
-                </Step>
-              ))}
-            </Stepper>
-          </Box>
-
           <Box
             sx={{
               display: "flex",
@@ -466,6 +487,18 @@ const Configuration = () => {
                 },
               }}
             >
+              <Stepper
+                activeStep={activeStep}
+                alternativeLabel
+                connector={<CustomConnector />}
+                sx={{ marginBottom: theme.spacing(8) }}
+              >
+                {steps.map((step, idx) => (
+                  <Step key={`step-${idx}`}>
+                    <StepLabel StepIconComponent={NumberedStepIcon} />
+                  </Step>
+                ))}
+              </Stepper>
               <Formik
                 innerRef={formikRef}
                 initialValues={initialValues}
@@ -482,13 +515,26 @@ const Configuration = () => {
                   handleChange,
                   handleBlur,
                   isValid,
+                  isValidating,
                   dirty,
-                }) => (
+                }) => {
+                  const meetsMinBusinessIdLength =
+                    values.business_id.length >= MIN_BUSINESS_ID_LENGTH;
+                  const isCheckingBusinessId =
+                    meetsMinBusinessIdLength && isValidating;
+                  const isBusinessIdAvailable =
+                    meetsMinBusinessIdLength &&
+                    !errors.business_id &&
+                    !isValidating;
+
+                  return (
                   <Form>
                     <Typography
                       variant="h2"
                       sx={{
                         textAlign: { xs: "center", md: "left" },
+                        fontWeight: 700,
+                        lineHeight: "32px",
                         marginBottom: theme.spacing(8),
                       }}
                     >
@@ -519,42 +565,33 @@ const Configuration = () => {
                               );
                               handleBlur(e);
                             }}
-                            // onBlur={async (
-                            //   e: React.FocusEvent<HTMLInputElement>
-                            // ) => {
-                            //   handleBlur(e);
-                            //   if (e.target.value) {
-                            //     try {
-                            //       const result = await validateBusinessName(
-                            //         e.target.value
-                            //       );
-                            //       if (result.is_taken) {
-                            //         console.log(
-                            //           "IS TAKEN!!!!!",
-                            //           touched.business_id
-                            //         );
-                            //         setFieldError(
-                            //           "business_id",
-                            //           "Este nombre de negocio ya existe"
-                            //         );
-                            //         setFieldTouched("business_id", true);
-                            //       }
-                            //     } catch (error) {
-                            //       console.error(
-                            //         "Error validating business name",
-                            //         error
-                            //       );
-                            //     }
-                            //   }
-                            // }}
                             error={
                               !!touched.business_id &&
                               Boolean(errors.business_id)
                             }
                             helperText={
-                              touched.business_id
-                                ? errors.business_id
+                              isBusinessIdAvailable
+                                ? "Nombre disponible"
+                                : touched.business_id
+                                  ? errors.business_id
+                                  : undefined
+                            }
+                            helperTextColor={
+                              isBusinessIdAvailable
+                                ? theme.palette.primary.main
                                 : undefined
+                            }
+                            endAdornment={
+                              isCheckingBusinessId ? (
+                                <CircularProgress
+                                  size={20}
+                                  sx={{ color: theme.palette.primary.main }}
+                                />
+                              ) : isBusinessIdAvailable ? (
+                                <CheckCircleIcon
+                                  sx={{ color: theme.palette.primary.main }}
+                                />
+                              ) : undefined
                             }
                           />
                           {/*  */}
@@ -573,15 +610,20 @@ const Configuration = () => {
                           >
                             <Typography
                               variant="h5"
-                              sx={{ marginBottom: theme.spacing(2) }}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                marginBottom: theme.spacing(2),
+                                fontWeight: 700,
+                              }}
                             >
-                              Tipo de negocio
+                              <CoffeeIcon />
+                              Categoría del negocio
                             </Typography>
                             <Paragraph>
-                              Ayudará a las personas a encontrar comercios como
-                              el tuyo.
-                              <br />
-                              Ej. Panadería
+                              Elige la categoría principal para ayudar a tus
+                              comensales a entender qué ofreces.
                             </Paragraph>
                             <Field
                               component={CustomSelectorField}
@@ -591,7 +633,7 @@ const Configuration = () => {
                               required
                               value={values.categories}
                               maxSelected={3}
-                              placeholder="Seleccionar categoría comercial"
+                              placeholder="Seleccionar categoría"
                               options={categories?.map((cat: any) => ({
                                 value: cat.id,
                                 label: cat.name,
@@ -603,6 +645,23 @@ const Configuration = () => {
                               error={!!dirty && values.categories.length === 0}
                               helperText={<ErrorMessage name="categories" />}
                               maxSelectable={2}
+                              renderIcon={(cat: Category) => {
+                                const Icon =
+                                  BUSINESS_CATEGORY_ICON_MAP[cat.name];
+                                return Icon ? (
+                                  <Box
+                                    sx={{
+                                      display: "inline-flex",
+                                      flexShrink: 0,
+                                      "& path": {
+                                        fill: theme.palette.primary.main,
+                                      },
+                                    }}
+                                  >
+                                    <Icon width={30} height={30} />
+                                  </Box>
+                                ) : null;
+                              }}
                               sx={{
                                 marginTop: theme.spacing(3),
                                 marginBottom: theme.spacing(3),
@@ -754,8 +813,8 @@ const Configuration = () => {
                             variant="body2"
                             sx={{ mt: 2, mb: 4 }}
                           >
-                            Expresión en la que se mostrarán los precios de tus
-                            productos.
+                            Esta será la moneda que se mostrará en los precios
+                            de tus productos.
                           </Typography>
                           <Box
                             sx={{
@@ -770,7 +829,7 @@ const Configuration = () => {
                               marginTop: theme.spacing(4),
                             }}
                           >
-                            <FormLabel>Precios con tasa de cambio</FormLabel>
+                            <FormLabel>Mostrar tasa de cambio</FormLabel>
                             <FormControlLabel
                               control={
                                 <Switch
@@ -795,7 +854,8 @@ const Configuration = () => {
                               variant="body2"
                               sx={{ mt: 2, mb: 4 }}
                             >
-                              Se mostrará el valor de cambio en tus productos.
+                              Si lo activas, podrás mostrar el valor de cambio
+                              junto al precio de tus productos.
                             </Typography>
                             {values.enable_exchange_rate && (
                               <>
@@ -866,9 +926,9 @@ const Configuration = () => {
                                           {/* @ts-ignore */}
                                           {values.is_primary_to_secondary
                                             ? // @ts-ignore
-                                              `1 ${values.primary_currency[0].code}`
+                                              `1 ${values.primary_currency[0]?.code ?? ""}`
                                             : // @ts-ignore
-                                              `1 ${values.secondary_currency[0].code}`}
+                                              `1 ${values.secondary_currency[0]?.code ?? ""}`}
                                         </Typography>
                                       </Box>
 
@@ -933,8 +993,7 @@ const Configuration = () => {
                                           color: colors.light.grey[900],
                                         }}
                                       >
-                                        Podrás ajustar esto en cualquier otro
-                                        momento
+                                        Podrás ajustar esto en cualquier momento
                                       </Typography>
                                     </Box>
                                   </Box>
@@ -961,6 +1020,7 @@ const Configuration = () => {
                           variant="contained"
                           color="inherit"
                           sx={{
+                            backgroundColor: colors.light.grey[400],
                             color: "#4B4B4B",
                             boxShadow: "unset",
                           }}
@@ -984,7 +1044,8 @@ const Configuration = () => {
                       </Button>
                     </Box>
                   </Form>
-                )}
+                  );
+                }}
               </Formik>
             </Box>
           </Box>
@@ -1002,6 +1063,8 @@ const Configuration = () => {
         primaryActionLabel="Aplicar"
         title="¿Cuál categoría te identifica?"
         onClose={() => setOpenCategoriesModal(false)}
+        onBack={() => setOpenCategoriesModal(false)}
+        showCloseButton
         primaryActionParams={selected}
         primaryAction={(selectedCategories) => {
           //@ts-ignore
@@ -1034,6 +1097,10 @@ const Configuration = () => {
           maxSelectable={3}
           selected={selected}
           setSelected={setSelected}
+          renderIcon={(cat) => {
+            const Icon = BUSINESS_CATEGORY_ICON_MAP[cat.name];
+            return Icon ? <Icon width={30} height={30} /> : null;
+          }}
         />
       </CustomModal>
       {/* ================ MODAL PAISES =================== */}
@@ -1048,6 +1115,8 @@ const Configuration = () => {
         primaryActionLabel="Aplicar"
         title="¿En cuál país te encuentras?"
         onClose={() => setOpenCountriesModal(false)}
+        onBack={() => setOpenCountriesModal(false)}
+        showCloseButton
         primaryActionParams={selectedCountries}
         primaryAction={(selectedCountries) => {
           console.log("selectedCountries ====", selectedCountries);
@@ -1096,6 +1165,8 @@ const Configuration = () => {
         primaryActionLabel="Aplicar"
         title="¿En cuál ciudad te encuentras?"
         onClose={() => setOpenCitiesModal(false)}
+        onBack={() => setOpenCitiesModal(false)}
+        showCloseButton
         primaryActionParams={selectedCities}
         primaryAction={(selectedCities) => {
           console.log("selectedCities ====", selectedCities);
@@ -1136,6 +1207,8 @@ const Configuration = () => {
         primaryActionLabel="Aplicar"
         title="¿Cuál es tu expresión monetaria?"
         onClose={() => setOpenPrimaryCurrencyModal(false)}
+        onBack={() => setOpenPrimaryCurrencyModal(false)}
+        showCloseButton
         primaryActionParams={selectedPrimaryCurrencies}
         primaryAction={(selectedPrimaryCurrencies) => {
           console.log(
@@ -1184,6 +1257,8 @@ const Configuration = () => {
         primaryActionLabel="Aplicar"
         title="¿Cuál es tu expresión monetaria?"
         onClose={() => setOpenSecondaryCurrencyModal(false)}
+        onBack={() => setOpenSecondaryCurrencyModal(false)}
+        showCloseButton
         primaryActionParams={selectedSecondaryCurrencies}
         primaryAction={(selectedSecondaryCurrencies) => {
           console.log(

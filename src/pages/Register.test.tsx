@@ -18,10 +18,12 @@ const renderRegister = () =>
   );
 
 describe("Register page copy (register page polish ticket)", () => {
-  it("renders exactly two 'Inicia sesión' login links (desktop header + mobile footer)", () => {
+  it("renders the desktop header and mobile footer login links with their own copy", () => {
     renderRegister();
-    expect(screen.getAllByText("Inicia sesión")).toHaveLength(2);
-    expect(screen.getAllByText("¿Ya tienes una cuenta?")).toHaveLength(2);
+    expect(screen.getAllByText("Inicia sesión")).toHaveLength(1);
+    expect(screen.getByText("¿Ya tienes una cuenta?")).toBeInTheDocument();
+    expect(screen.getByText("Inicia sesión ahora")).toBeInTheDocument();
+    expect(screen.getByText("¿Ya formas parte?")).toBeInTheDocument();
   });
 
   it("renders the updated form title", () => {
@@ -38,7 +40,7 @@ describe("Register page copy (register page polish ticket)", () => {
       screen.getByPlaceholderText("nombre@correo.com"),
     ).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText("Crea una contraseña"),
+      screen.getByPlaceholderText("Ingrese su contraseña"),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText("981 123 456")).toBeInTheDocument();
   });
@@ -50,7 +52,7 @@ describe("Register page copy (register page polish ticket)", () => {
         exact: false,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Términos de servicio")).toBeInTheDocument();
-    expect(screen.getByText("Política de privacidad")).toBeInTheDocument();
+    expect(screen.getByText("Términos del Servicio")).toBeInTheDocument();
+    expect(screen.getByText("Políticas de Privacidad")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,6 @@
-import { Box, Button, Modal, Typography } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseIcon from "@mui/icons-material/Close";
+import { Box, Button, IconButton, Modal, Typography } from "@mui/material";
 import React from "react";
 import colors from "../themes/utils/colors";
 
@@ -16,6 +18,10 @@ interface CustomModalProps {
   sx?: object;
   // Oculta el footer predeterminado (útil cuando el contenido ya maneja botones)
   hideFooter?: boolean;
+  // Muestra un botón de volver (flecha) a la izquierda del título
+  onBack?: () => void;
+  // Muestra un botón de cerrar (X) a la derecha del título
+  showCloseButton?: boolean;
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({
@@ -30,6 +36,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
   primaryActionParams,
   sx,
   hideFooter = false,
+  onBack,
+  showCloseButton = false,
 }) => {
   return (
     <Modal
@@ -50,15 +58,42 @@ const CustomModal: React.FC<CustomModalProps> = ({
           ...sx, // Permite extender o sobreescribir los estilos predeterminados
         }}
       >
-        <Box sx={{ borderBottom: "1px solid lightgray" }}>
-          <Typography
-            id="modal-title"
-            variant="h6"
-            component="h2"
-            sx={{ p: 4 }}
-          >
-            {title}
-          </Typography>
+        <Box
+          sx={{
+            borderBottom: "1px solid lightgray",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+            paddingRight: onBack || showCloseButton ? 3 : 0,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            {onBack && (
+              <IconButton onClick={onBack} sx={{ marginLeft: 1 }}>
+                <ArrowBackIcon />
+              </IconButton>
+            )}
+            <Typography
+              id="modal-title"
+              variant="h6"
+              component="h2"
+              sx={{ p: 4, paddingLeft: onBack ? 1 : 4 }}
+            >
+              {title}
+            </Typography>
+          </Box>
+          {showCloseButton && (
+            <IconButton
+              onClick={onClose}
+              sx={{
+                backgroundColor: colors.light.grey[400],
+                borderRadius: "50%",
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
         {/*  */}
         <Box

@@ -29,6 +29,8 @@ interface CustomSelectorFieldProps extends FieldProps {
   required?: boolean;
   displayAsInput?: boolean;
   sx: object;
+  /** Renderiza un ícono junto al texto de cada item seleccionado (chip) */
+  renderIcon?: (option: any) => React.ReactNode;
 }
 
 const CustomSelectorField: React.FC<CustomSelectorFieldProps> = ({
@@ -42,6 +44,7 @@ const CustomSelectorField: React.FC<CustomSelectorFieldProps> = ({
   maxSelected = 10,
   onOpen,
   getOptionLabel = (option: any) => option.label || option.name || "Item",
+  renderIcon,
 }) => {
   // field.value es el valor almacenado en Formik, se espera que sea un array.
   const selectedItems = Array.isArray(field.value) ? field.value : [];
@@ -151,7 +154,22 @@ const CustomSelectorField: React.FC<CustomSelectorFieldProps> = ({
               key={item.id || index}
               color="primary"
               variant="outlined"
-              label={getOptionLabel(item)}
+              label={
+                renderIcon ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    {renderIcon(item)}
+                    <span>{getOptionLabel(item)}</span>
+                  </Box>
+                ) : (
+                  getOptionLabel(item)
+                )
+              }
               onDelete={(e) => handleDelete(item, e)}
               sx={{
                 margin: "4px",
@@ -163,6 +181,9 @@ const CustomSelectorField: React.FC<CustomSelectorFieldProps> = ({
                 borderRadius: 2,
                 border: 0,
                 backgroundColor: "secondary.main",
+                color: "primary.main",
+                "& .MuiChip-label": { color: "primary.main" },
+                "& .MuiChip-deleteIcon": { color: "primary.main" },
               }}
             />
           ))

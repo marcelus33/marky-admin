@@ -23,6 +23,8 @@ interface CategorySelectionListProps {
    */
   selected?: Category[];
   setSelected?: (args: any) => void;
+  /** Renderiza un ícono personalizado por categoría (si no se provee, usa el ícono de bandera por defecto) */
+  renderIcon?: (category: Category) => React.ReactNode;
 }
 
 const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
@@ -30,6 +32,7 @@ const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
   maxSelectable,
   selected = [],
   setSelected = () => {},
+  renderIcon,
 }) => {
   const theme = useTheme();
 
@@ -83,8 +86,13 @@ const CategorySelectionList: React.FC<CategorySelectionListProps> = ({
               }}
             >
               <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                {cat.name === "Paraguay" ? <ParaguayFlagIcon /> : null}
-                {cat.name === "Venezuela" ? <VenezuelaFlagIcon /> : null}
+                {renderIcon
+                  ? renderIcon(cat)
+                  : cat.name === "Paraguay"
+                    ? <ParaguayFlagIcon />
+                    : cat.name === "Venezuela"
+                      ? <VenezuelaFlagIcon />
+                      : null}
                 {cat.code && (
                   <Typography variant="body2" sx={{ fontWeight: 700 }}>
                     {cat.code} -
