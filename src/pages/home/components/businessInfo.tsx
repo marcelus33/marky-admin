@@ -1,7 +1,7 @@
 import { Avatar, Box, Typography } from "@mui/material";
 import React, { useRef } from "react";
 import { HomePageData } from "../../../services/businessService";
-import businessImageDefault from "../../../assets/images/business-image-default.svg";
+import defaultBusinessLogo from "../../../assets/images/marky-m-gray-logo.png";
 import AttributesInfo from "./AttributesInfo";
 import DescriptionInfo from "./DescriptionInfo";
 import SocialMediaInfo from "./SocialMediaInfo";
@@ -63,11 +63,23 @@ export const BusinessInfo: React.FC<{
     fileInputRef.current?.click();
   };
 
-  // Get profile image - use API data if available, otherwise default
+  // Get profile image - use API data if available, otherwise show the
+  // default Marky mark centered in a neutral circle (see hasProfilePhoto
+  // below). The backend always fills BusinessProfile.profile_image with a
+  // model-level default ("business_profiles/default.png") when the business
+  // hasn't uploaded a photo, so a non-empty API value doesn't by itself mean
+  // the business has a real photo - treat that specific placeholder path the
+  // same as "no photo".
+  const isBackendDefaultPhoto =
+    typeof values.profilePhoto === "string" &&
+    values.profilePhoto.includes("business_profiles/default.png");
   const profileImageSrc =
     values.profilePhoto instanceof File
       ? URL.createObjectURL(values.profilePhoto)
-      : values.profilePhoto || businessImageDefault;
+      : !isBackendDefaultPhoto && values.profilePhoto
+        ? values.profilePhoto
+        : undefined;
+  const hasProfilePhoto = Boolean(profileImageSrc);
   // Get business name - use API data if available, otherwise placeholder
   const businessName =
     homePageData?.business_name || values.business_name || "nombre_del_negocio";
@@ -76,6 +88,14 @@ export const BusinessInfo: React.FC<{
   const categoriesText = homePageData?.categories?.length
     ? homePageData.categories.map((cat) => cat.name).join(" | ")
     : values.category || "Panaderia | Cafetería";
+
+  const hasAnySocialMedia = Object.values(values.socialMedia || {}).some(
+    (url) => typeof url === "string" && url.trim() !== "",
+  );
+  const isProfileIncomplete =
+    !hasAnySocialMedia ||
+    !values.description ||
+    (values.attributes || []).length === 0;
 
   return (
     <Box p={2}>
@@ -117,10 +137,18 @@ export const BusinessInfo: React.FC<{
             sx={{
               width: 100,
               height: 100,
-              border: "1px solid #D1D5DB",
-              backgroundColor: "#F3F4F6",
+              border: hasProfilePhoto ? "1px solid #D1D5DB" : "1px solid #E0E0E0",
+              backgroundColor: hasProfilePhoto ? "#F3F4F6" : "#E5E7EB",
             }}
-          />
+          >
+            {!hasProfilePhoto && (
+              <img
+                src={defaultBusinessLogo}
+                alt="Marky"
+                style={{ width: "45%", height: "45%", objectFit: "contain" }}
+              />
+            )}
+          </Avatar>
           <Box
             className="edit-icon"
             sx={{
@@ -152,6 +180,20 @@ export const BusinessInfo: React.FC<{
         </Typography>
       </Box>
       <Box display={"flex"} flexDirection={"column"} gap={1} mt={4}>
+        {isProfileIncomplete && (
+          <Typography
+            sx={{
+              color: "#374151",
+              fontWeight: 700,
+              fontSize: 14,
+              lineHeight: "18px",
+              textAlign: "center",
+              mb: 1,
+            }}
+          >
+            Completa el perfil de tu negocio
+          </Typography>
+        )}
         {/* Redes sociales */}
         <SocialMediaInfo
           socialMedia={values.socialMedia}

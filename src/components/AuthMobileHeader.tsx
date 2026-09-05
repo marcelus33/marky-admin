@@ -2,7 +2,7 @@ import React from "react";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
+import logoMarky from "../assets/images/marky-logo.png";
 import { ROUTES } from "../routes/paths";
 
 interface AuthMobileHeaderProps {
@@ -36,7 +36,11 @@ const AuthMobileHeader: React.FC<AuthMobileHeaderProps> = ({
           cursor: disableLoginLink ? "default" : "pointer",
         }}
       >
-        <LogoMarkyBlack style={{ width: "112px", height: "auto" }} />
+        <img
+          src={logoMarky}
+          alt="Marky"
+          style={{ width: "112px", height: "auto" }}
+        />
       </Box>
     </Box>
   );

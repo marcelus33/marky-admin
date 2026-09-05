@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import categoryIcons from "../assets/icons/category/categoryIcons";
 import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";
+import AddProductTileIcon from "../assets/icons/add-product-tile-icon.svg";
 import { ROUTES } from "../routes/paths";
 import { CategoryWithProducts } from "../types/categoryWithProducts";
 import { usePromotionCountdown } from "../hooks/usePromotionCountdown";
@@ -260,24 +261,66 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         gap={{ xs: 4, md: 6 }}
         // gap={2}
       >
-        {category.products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            currentCategory={{ id: category.id, name: category.name }}
-            onClick={() => {
-              navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));
+        {category.products.length === 0 ? (
+          <Box
+            onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
+            sx={{
+              aspectRatio: "1 / 1",
+              minWidth: 97,
+              minHeight: 97,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              border: "2px dashed",
+              borderColor: "primary.main",
+              borderRadius: "16px",
+              backgroundColor: "white",
+              cursor: "pointer",
             }}
-            onPromotionClick={onProductPromotionClick}
-            onDeleteClick={onProductDeleteClick}
-            onMoveClick={(prod, currentCategory) =>
-              onProductMoveClick?.(
-                prod,
-                currentCategory ?? { id: category.id, name: category.name },
-              )
-            }
-          />
-        ))}
+          >
+            <Box
+              component="img"
+              src={AddProductTileIcon}
+              alt=""
+              sx={{ width: 34, height: 34 }}
+            />
+            <Typography
+              sx={{
+                color: "primary.main",
+                fontWeight: 700,
+                fontSize: 14,
+                lineHeight: "16px",
+                textAlign: "center",
+                px: 3,
+              }}
+            >
+              Añade tu producto
+            </Typography>
+          </Box>
+        ) : (
+          category.products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              currentCategory={{ id: category.id, name: category.name }}
+              onClick={() => {
+                navigate(
+                  ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""),
+                );
+              }}
+              onPromotionClick={onProductPromotionClick}
+              onDeleteClick={onProductDeleteClick}
+              onMoveClick={(prod, currentCategory) =>
+                onProductMoveClick?.(
+                  prod,
+                  currentCategory ?? { id: category.id, name: category.name },
+                )
+              }
+            />
+          ))
+        )}
       </Box>
     </Box>
   );

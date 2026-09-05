@@ -17,7 +17,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
+import logoMarky from "../assets/images/marky-logo.png";
 import defaultUserAvatar from "../assets/images/user_default.png";
 import { ROUTES } from "../routes/paths";
 import { useSessionStore } from "../stores/sessionStore";
@@ -53,8 +53,10 @@ export const Header: React.FC = () => {
             sx={{ borderRadius: 1 }}
             aria-label="Ir a inicio"
           >
-            <LogoMarkyBlack
-              style={{ height: 50, marginRight: theme.spacing(1) }}
+            <img
+              src={logoMarky}
+              alt="Marky"
+              style={{ height: 24, marginRight: theme.spacing(1) }}
             />
           </ButtonBase>
         </Box>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import { ReactComponent as FacebookIcon } from "../../../assets/icons/facebook.svg";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -29,72 +29,30 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
 
   const isEmpty = !hasInstagram && !hasFacebook && !hasWhatsApp;
 
-  console.log("isEmpty ====>", isEmpty, socialMedia);
-
   return (
     <Box
       onClick={onOpen}
       sx={{
-        border: isEmpty ? "2px dashed" : "none",
-        borderColor: "primary.main",
-        padding: 2,
-        borderRadius: 2,
+        border: isEmpty ? "1px dashed #B8CDF5" : "none",
+        backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
+        borderRadius: isEmpty ? "6px" : 2,
+        py: isEmpty ? 4 : 2,
+        px: isEmpty ? 3 : 2,
         cursor: "pointer",
       }}
     >
       {isEmpty ? (
-        <Box
-          display="flex"
-          alignItems="center"
-          flexDirection={"column"}
-          gap={3}
-          p={2}
+        <Typography
+          sx={{
+            color: "#2563EB",
+            fontWeight: 700,
+            fontSize: 14,
+            lineHeight: "22px",
+            textAlign: "center",
+          }}
         >
-          <Box
-            sx={{
-              // border: "2px solid red",
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-            }}
-          >
-            <IconButton
-              aria-label="Instagram"
-              sx={{
-                backgroundColor: "grey.200",
-                borderRadius: 1,
-                p: 2, // Padding opcional
-              }}
-            >
-              <InstagramIcon />
-            </IconButton>
-            <IconButton
-              aria-label="Facebook"
-              sx={{
-                backgroundColor: "grey.200",
-                borderRadius: 1,
-                p: 2, // Padding opcional
-              }}
-            >
-              <FacebookIcon />
-            </IconButton>
-            <IconButton
-              aria-label="WhatsApp"
-              sx={{
-                backgroundColor: "grey.200",
-                borderRadius: 1,
-                p: 2, // Padding opcional
-              }}
-            >
-              <WhatsAppIcon />
-            </IconButton>
-          </Box>
-          <Typography color="primary" fontWeight={500}>
-            Añadir canales
-          </Typography>
-        </Box>
+          Agrega tus canales
+        </Typography>
       ) : (
         <Box
           display="flex"

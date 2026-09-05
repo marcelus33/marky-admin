@@ -134,9 +134,17 @@ const Home = () => {
       }}
     >
       <Header />
-      <Box sx={{ flex: 1, p: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
+      <Box sx={{ flex: 1, p: 3, height: "100%" }}>
+        <Grid container spacing={3} sx={{ height: "100vh" }}>
+          <Grid
+            item
+            xs={12}
+            md={3}
+            px={6}
+            sx={{
+              borderRight: (theme) => `1px solid ${theme.palette.grey[600]}`,
+            }}
+          >
             <Formik
               initialValues={formInitialValues}
               onSubmit={handleSubmit}
@@ -153,7 +161,12 @@ const Home = () => {
 
                 return (
                   <>
-                    <Box sx={{ position: "sticky", top: "4.7rem" }}>
+                    <Box
+                      sx={{
+                        position: "sticky",
+                        top: "4.7rem",
+                      }}
+                    >
                       <BusinessInfo
                         values={values}
                         homePageData={homePageData}

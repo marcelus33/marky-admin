@@ -102,8 +102,14 @@ export const ProductGrid: React.FC = () => {
   }, [categoriesWithProductsRaw, filters.search]);
 
   const productCount = categoriesWithProducts?.products_count || 0;
+  const categoriesCount = categoriesWithProducts?.results.length || 0;
   const { data: homePageData } = useHomePageData();
-  const showEmptyState = !hasFiltered && !isLoading && productCount === 0;
+  // The fully-empty illustration is only for a business with no categories
+  // at all yet. Once a category exists (even with zero products), it must
+  // render in the grid with its own "Añade tu producto" empty-state tile
+  // (see CategoryGroup) instead of the whole-page empty state — a product
+  // count of 0 alone isn't enough to trigger it.
+  const showEmptyState = !hasFiltered && !isLoading && categoriesCount === 0;
 
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openCategoryAdminModal, setOpenCategoryAdminModal] = useState(false);
@@ -189,7 +195,7 @@ export const ProductGrid: React.FC = () => {
         }}
       >
         <Typography variant="h2" sx={{ display: { xs: "none", md: "block" } }}>
-          Cuenta comercial
+          Productos
         </Typography>
         <Box
           display={"flex"}
