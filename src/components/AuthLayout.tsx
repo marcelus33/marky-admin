@@ -81,8 +81,8 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              paddingX: { xs: 2, md: 0 },
-              paddingY: { xs: 4, md: 2 },
+              paddingX: { xs: 8, md: 0 },
+              paddingY: { xs: 6, md: 2 },
             }}
           >
             <Box sx={{ width: "100%", maxWidth }}>{children}</Box>

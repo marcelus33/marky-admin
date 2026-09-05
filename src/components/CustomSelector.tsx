@@ -8,6 +8,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { FieldProps } from "formik";
 import { ReactComponent as ParaguayFlagIcon } from "../assets/icons/flag-paraguay.svg";
 import { ReactComponent as VenezuelaFlagIcon } from "../assets/icons/flag-venezuela.svg";
@@ -123,79 +124,100 @@ const CustomSelectorField: React.FC<CustomSelectorFieldProps> = ({
         </FormLabel>
       )}
       {/* Contenedor que se comporta como botón y abre el modal */}
-      <Box
-        onClick={selectedItems.length < maxSelected ? onOpen : () => {}}
-        sx={{
-          border: selectedItems.length === 0 ? `3px dashed` : `2px solid`,
-          borderColor:
-            selectedItems.length === 0
-              ? "primary.main"
-              : form.touched[field.name] && form.errors[field.name]
-              ? "error.main"
-              : "primary.main",
-          borderRadius: 1,
-          //   padding: "8px",
-          minHeight: "40px",
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          cursor: "pointer",
-          paddingY: 1,
-          marginTop: 2,
-        }}
-      >
-        {selectedItems.length === 0 ? (
-          <Typography variant="body2" color="primary" sx={{ marginLeft: 2 }}>
-            {placeholder}
-          </Typography>
-        ) : (
-          selectedItems.map((item: any, index: number) => (
-            <Chip
-              key={item.id || index}
-              color="primary"
-              variant="outlined"
-              label={
-                renderIcon ? (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    {renderIcon(item)}
-                    <span>{getOptionLabel(item)}</span>
-                  </Box>
-                ) : (
-                  getOptionLabel(item)
-                )
-              }
-              onDelete={(e) => handleDelete(item, e)}
-              sx={{
-                margin: "4px",
-                width: "100%",
-                display: "flex",
-                paddingTop: 6,
-                paddingBottom: 6,
-                justifyContent: "space-between",
-                borderRadius: 2,
-                border: 0,
-                backgroundColor: "secondary.main",
-                color: "primary.main",
-                "& .MuiChip-label": { color: "primary.main" },
-                "& .MuiChip-deleteIcon": { color: "primary.main" },
-              }}
-            />
-          ))
-        )}
-        {selectedItems.length > 0 && selectedItems.length < maxSelected && (
-          <Box sx={{ padding: 2 }}>
-            <Typography variant="body1" fontWeight={"500"} color="primary">
-              Añadir otra opción
-            </Typography>
+      {(() => {
+        // Los campos de selección única (país, ciudad, moneda) muestran el
+        // chip plano una vez seleccionados, sin borde ni padding extra
+        // alrededor — según Figma, solo el selector multi-selección
+        // (categorías) conserva el recuadro azul persistente para poder
+        // seguir agregando opciones.
+        const isSingleSelectFilled = maxSelected === 1 && selectedItems.length > 0;
+        return (
+          <Box
+            onClick={selectedItems.length < maxSelected ? onOpen : () => {}}
+            sx={{
+              border:
+                selectedItems.length === 0
+                  ? `2px dashed`
+                  : isSingleSelectFilled
+                  ? "none"
+                  : `2px solid`,
+              borderColor:
+                selectedItems.length === 0
+                  ? "primary.main"
+                  : form.touched[field.name] && form.errors[field.name]
+                  ? "error.main"
+                  : "primary.main",
+              borderRadius: 1.5,
+              minHeight: "40px",
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              cursor: "pointer",
+              paddingX: selectedItems.length === 0 ? 4 : 0,
+              paddingY:
+                selectedItems.length === 0
+                  ? 3.25
+                  : isSingleSelectFilled
+                  ? 0
+                  : 1,
+              marginTop: 2,
+            }}
+          >
+            {selectedItems.length === 0 ? (
+              <Typography variant="body2" color="primary">
+                {placeholder}
+              </Typography>
+            ) : (
+              selectedItems.map((item: any, index: number) => (
+                <Chip
+                  key={item.id || index}
+                  color="primary"
+                  variant="outlined"
+                  label={
+                    renderIcon ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        {renderIcon(item)}
+                        <span>{getOptionLabel(item)}</span>
+                      </Box>
+                    ) : (
+                      getOptionLabel(item)
+                    )
+                  }
+                  onDelete={(e) => handleDelete(item, e)}
+                  deleteIcon={<CloseIcon sx={{ fontSize: 18 }} />}
+                  sx={{
+                    margin: isSingleSelectFilled ? 0 : "4px",
+                    width: "100%",
+                    display: "flex",
+                    paddingTop: 6,
+                    paddingBottom: 6,
+                    justifyContent: "space-between",
+                    borderRadius: 2,
+                    border: 0,
+                    backgroundColor: "secondary.main",
+                    color: "primary.main",
+                    "& .MuiChip-label": { color: "primary.main" },
+                    "& .MuiChip-deleteIcon": { color: "primary.main" },
+                  }}
+                />
+              ))
+            )}
+            {selectedItems.length > 0 && selectedItems.length < maxSelected && (
+              <Box sx={{ padding: 2 }}>
+                <Typography variant="body1" fontWeight={"500"} color="primary">
+                  Añadir otra opción
+                </Typography>
+              </Box>
+            )}
           </Box>
-        )}
-      </Box>
+        );
+      })()}
 
       {/* Mensaje de error, si existe */}
       {form.touched[field.name] && form.errors[field.name] && (

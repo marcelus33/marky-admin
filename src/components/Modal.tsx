@@ -1,6 +1,8 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Button, IconButton, Modal, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import React from "react";
 import colors from "../themes/utils/colors";
 
@@ -22,6 +24,8 @@ interface CustomModalProps {
   onBack?: () => void;
   // Muestra un botón de cerrar (X) a la derecha del título
   showCloseButton?: boolean;
+  // En mobile, ocupa toda la pantalla (header y footer fijos) en vez de un diálogo centrado
+  fullScreenOnMobile?: boolean;
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({
@@ -38,7 +42,12 @@ const CustomModal: React.FC<CustomModalProps> = ({
   hideFooter = false,
   onBack,
   showCloseButton = false,
+  fullScreenOnMobile = false,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isFullScreen = fullScreenOnMobile && isMobile;
+
   return (
     <Modal
       open={open}
@@ -47,16 +56,30 @@ const CustomModal: React.FC<CustomModalProps> = ({
       aria-describedby="modal-description"
     >
       <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          borderRadius: 1, // Opcional, para redondear esquinas
-          ...sx, // Permite extender o sobreescribir los estilos predeterminados
-        }}
+        sx={
+          isFullScreen
+            ? {
+                position: "fixed",
+                inset: 0,
+                width: "100%",
+                height: "100dvh",
+                bgcolor: "background.paper",
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 0,
+                ...sx,
+              }
+            : {
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: 24,
+                borderRadius: 1, // Opcional, para redondear esquinas
+                ...sx, // Permite extender o sobreescribir los estilos predeterminados
+              }
+        }
       >
         <Box
           sx={{
@@ -66,6 +89,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
             justifyContent: "space-between",
             gap: 2,
             paddingRight: onBack || showCloseButton ? 3 : 0,
+            flexShrink: 0,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -100,6 +124,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
           id="modal-description"
           sx={{
             p: 4,
+            ...(isFullScreen ? { flex: 1, overflowY: "auto" } : {}),
           }}
         >
           {children}
@@ -107,13 +132,27 @@ const CustomModal: React.FC<CustomModalProps> = ({
         {/*  */}
         {!hideFooter && (
           <Box
-            sx={{
-              borderTop: "1px solid lightgray",
-              display: "flex",
-              p: 4,
-              justifyContent: "flex-end",
-              gap: 4,
-            }}
+            sx={
+              isFullScreen
+                ? {
+                    borderTop: "1px solid lightgray",
+                    display: "flex",
+                    paddingX: theme.spacing(5.25),
+                    paddingY: theme.spacing(2.75),
+                    justifyContent: "flex-end",
+                    gap: theme.spacing(3),
+                    flexShrink: 0,
+                    mt: "auto",
+                  }
+                : {
+                    borderTop: "1px solid lightgray",
+                    display: "flex",
+                    p: 4,
+                    justifyContent: "flex-end",
+                    gap: 4,
+                    flexShrink: 0,
+                  }
+            }
           >
             {
               <>
@@ -125,6 +164,14 @@ const CustomModal: React.FC<CustomModalProps> = ({
                     backgroundColor: colors.light.grey[600],
                     color: colors.light.text.secondary,
                     paddingX: "1rem",
+                    ...(isFullScreen
+                      ? {
+                          flex: 1,
+                          backgroundColor: colors.light.grey[400],
+                          borderRadius: theme.spacing(1.5),
+                          padding: theme.spacing(3),
+                        }
+                      : {}),
                   }}
                 >
                   {secondaryActionLabel}
@@ -137,6 +184,14 @@ const CustomModal: React.FC<CustomModalProps> = ({
                     color="primary"
                     sx={{
                       paddingX: "1rem",
+                      ...(isFullScreen
+                        ? {
+                            flex: 1,
+                            backgroundColor: "#337AEA",
+                            borderRadius: theme.spacing(1.5),
+                            padding: theme.spacing(3),
+                          }
+                        : {}),
                     }}
                   >
                     {primaryActionLabel}
