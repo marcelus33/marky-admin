@@ -9,12 +9,15 @@ import {
   FormControlLabel,
   Switch,
   Box,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import * as Yup from "yup";
 import CancelButton from "../../../components/CancelButton";
 import { Attribute } from "..";
 import XButton from "../../../components/XButton";
 import BackButton from "../../../components/BackButton";
+import colors from "../../../themes/utils/colors";
 import { useAttributes } from "../../../hooks/useAttributes";
 
 interface AttributesModalProps {
@@ -34,9 +37,17 @@ const AttributesModal: React.FC<AttributesModalProps> = ({
 }) => {
   const { data: attributesData } = useAttributes(open);
   const attributes = attributesData?.results || [];
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      fullScreen={isMobile}
+    >
       <Box
         sx={{
           display: "flex",
@@ -54,7 +65,17 @@ const AttributesModal: React.FC<AttributesModalProps> = ({
           <DialogTitle>Atributos de la sucursal</DialogTitle>
         </Box>
         <Box display={"flex"} sx={{ paddingY: 3 }}>
-          <XButton onClick={onClose} sx={{ marginRight: 2 }} />
+          <XButton
+            onClick={onClose}
+            sx={{
+              marginRight: 2,
+              ...(isMobile && {
+                backgroundColor: colors.light.grey[400],
+                borderRadius: "6px",
+                "&:hover": { backgroundColor: colors.light.grey[400] },
+              }),
+            }}
+          />
         </Box>
       </Box>
 
@@ -68,8 +89,20 @@ const AttributesModal: React.FC<AttributesModalProps> = ({
         }}
       >
         {({ values, setFieldValue, isValid, dirty }) => (
-          <Form>
-            <DialogContent sx={{ maxHeight: "80vh" }}>
+          <Form
+            style={
+              isMobile
+                ? { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }
+                : undefined
+            }
+          >
+            <DialogContent
+              sx={
+                isMobile
+                  ? { flex: 1, overflowY: "auto" }
+                  : { maxHeight: "80vh" }
+              }
+            >
               <Box
                 sx={{
                   display: "grid",
@@ -126,6 +159,8 @@ const AttributesModal: React.FC<AttributesModalProps> = ({
                 display: "flex",
                 gap: 2,
                 padding: 4,
+                flexShrink: 0,
+                ...(isMobile && { "& > button": { flex: 1 } }),
               }}
             >
               <CancelButton sx={{ paddingX: 4 }} onClick={onClose}>

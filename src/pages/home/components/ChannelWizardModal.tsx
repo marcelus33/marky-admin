@@ -13,7 +13,9 @@ import {
   Grid,
   InputAdornment,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { useQueryClient } from "@tanstack/react-query";
 import { Field, Form, Formik } from "formik";
 import React, { useEffect, useMemo, useState } from "react";
@@ -25,6 +27,7 @@ import CancelButton from "../../../components/CancelButton";
 import FormikPhoneInput from "../../../components/FormikPhoneInput";
 import Input from "../../../components/Input";
 import XButton from "../../../components/XButton";
+import colors from "../../../themes/utils/colors";
 import { useApiMutation } from "../../../hooks/useApiMutation";
 import { updateSocialMediaLinks } from "../../../services/businessService";
 import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
@@ -101,6 +104,8 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
   // Step 1: bienvenida, 2: selector, 3: admin
   const [step, setStep] = useState(1);
   const [selectedChannels, setSelectedChannels] = useState<ChannelKey[]>([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Número actual de la cuenta (no el de sesión, que puede quedar
   // desactualizado tras editarlo en Configuración de cuenta), para
@@ -263,7 +268,13 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
       }) => {
         return (
           <Form>
-            <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+            <Dialog
+              open={open}
+              onClose={onClose}
+              fullWidth
+              maxWidth="sm"
+              fullScreen={isMobile}
+            >
               {/* --- TITULO DINÁMICO --- */}
               <Box
                 sx={{
@@ -271,6 +282,7 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                   justifyContent: "space-between",
                   width: "100%",
                   borderBottom: "1px solid lightgrey",
+                  flexShrink: 0,
                 }}
               >
                 <Box display={"flex"}>
@@ -286,11 +298,32 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                   </DialogTitle>
                 </Box>
                 <Box display={"flex"} sx={{ paddingY: 3 }}>
-                  <XButton onClick={onClose} sx={{ marginRight: 2 }} />
+                  <XButton
+                    onClick={onClose}
+                    sx={{
+                      marginRight: 2,
+                      ...(isMobile && {
+                        backgroundColor: colors.light.grey[400],
+                        borderRadius: "6px",
+                        "&:hover": { backgroundColor: colors.light.grey[400] },
+                      }),
+                    }}
+                  />
                 </Box>
               </Box>
 
-              <DialogContent>
+              <DialogContent
+                sx={
+                  isMobile
+                    ? {
+                        flex: 1,
+                        overflowY: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                      }
+                    : undefined
+                }
+              >
                 {/* ====== STEP 1: WELCOME ====== */}
                 {step === 1 && (
                   <Box textAlign="center" py={4}>
@@ -379,7 +412,13 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                 )}
                 {/* FINISH */}
                 {step === 3 && (
-                  <Box py={2} display="flex" flexDirection="column" gap={2}>
+                  <Box
+                    py={2}
+                    display="flex"
+                    flexDirection="column"
+                    gap={2}
+                    sx={isMobile ? { flex: 1, minHeight: 0 } : undefined}
+                  >
                     {selectedChannels
                       .sort(
                         (a, b) =>
@@ -450,18 +489,49 @@ export const ChannelWizardModal: React.FC<ChannelWizardModalProps> = ({
                         );
                       })}
 
-                    <Box textAlign="center" sx={{ mt: 2 }}>
-                      <Button onClick={() => setStep(2)}>
+                    {isMobile ? (
+                      <Button
+                        onClick={() => setStep(2)}
+                        sx={{
+                          mt: "auto",
+                          width: "100%",
+                          px: 4,
+                          py: "13px",
+                          border: "2px dashed",
+                          borderColor: "primary.main",
+                          borderRadius: "6px",
+                          color: "primary.main",
+                          fontWeight: 700,
+                          textTransform: "none",
+                          "&:hover": {
+                            border: "2px dashed",
+                            borderColor: "primary.main",
+                            backgroundColor: "transparent",
+                          },
+                        }}
+                      >
                         Cambiar configuración
                       </Button>
-                    </Box>
+                    ) : (
+                      <Box textAlign="center" sx={{ mt: 2 }}>
+                        <Button onClick={() => setStep(2)}>
+                          Cambiar configuración
+                        </Button>
+                      </Box>
+                    )}
                   </Box>
                 )}
               </DialogContent>
 
               {step !== 1 && (
                 <DialogActions
-                  sx={{ px: 3, py: 4, borderTop: "1px solid lightgrey" }}
+                  sx={{
+                    px: 3,
+                    py: 4,
+                    borderTop: "1px solid lightgrey",
+                    flexShrink: 0,
+                    ...(isMobile && { "& > button": { flex: 1 } }),
+                  }}
                 >
                   {step === 2 && (
                     <CancelButton onClick={onClose} sx={{ paddingX: 4 }}>
