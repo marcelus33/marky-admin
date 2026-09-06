@@ -98,7 +98,12 @@ const DescriptionModal = ({
           <Form
             style={
               isMobile
-                ? { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }
+                ? {
+                    display: "flex",
+                    flexDirection: "column",
+                    flex: 1,
+                    minHeight: 0,
+                  }
                 : undefined
             }
           >
@@ -117,9 +122,7 @@ const DescriptionModal = ({
                 }}
               >
                 <FormLabel>Descripción</FormLabel>
-                <Typography>
-                  {values.description?.length || 0}/100
-                </Typography>
+                <Typography>{values.description?.length || 0}/100</Typography>
               </Box>
               <TextField
                 sx={{ mt: 2 }}
@@ -139,8 +142,8 @@ const DescriptionModal = ({
                 variant="body2"
                 sx={{ mt: 4, color: colors.light.grey[900] }}
               >
-                Escribe una bio breve para presentar tu negocio en el perfil
-                público. Máximo 100 caracteres.
+                Sea creativo, informativo, descriptivo. Lo que desee. Será la
+                introducción pública de su comercio.
               </Typography>
             </DialogContent>
             <DialogActions

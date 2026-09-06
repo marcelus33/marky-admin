@@ -192,7 +192,10 @@ const Home = () => {
             md={3}
             px={6}
             sx={{
-              borderRight: (theme) => `1px solid ${theme.palette.grey[600]}`,
+              borderRight: (theme) => ({
+                xs: "none",
+                md: `1px solid ${theme.palette.grey[600]}`,
+              }),
             }}
           >
             <Formik
