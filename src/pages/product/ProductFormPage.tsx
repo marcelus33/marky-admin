@@ -41,6 +41,7 @@ import HighlightSection from "./components/HighlightSection";
 import PreviewPanel from "./components/PreviewPanel";
 import ProductFormHeader from "./components/ProductFormHeader";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SectionErrorBoundary from "../../components/SectionErrorBoundary";
 import {
@@ -952,10 +953,19 @@ const ProductFormPage = () => {
               {/* confirmation dialog for deleting product */}
               <ConfirmationDialog
                 open={Boolean(openDeleteDialog)}
-                title={"Eliminar producto"}
-                content={
-                  "¿Estás seguro que deseas eliminar este producto? Esta acción no se puede deshacer."
+                title="¿Estás seguro de eliminar este producto?"
+                content="Esta acción eliminará permanentemente el producto."
+                image={
+                  formikProps.values.media?.find(
+                    (m) => m.media_type === "image" && typeof m.file === "string",
+                  )?.file as string | undefined
                 }
+                imageOverlay={
+                  <ReportProblemIcon color="error" sx={{ fontSize: 28 }} />
+                }
+                confirmationCheckboxLabel="Confirmo que deseo eliminar el producto"
+                confirmColor="error"
+                confirmText="Eliminar"
                 onClose={() => setOpenDeleteDialog(false)}
                 onConfirm={() => {
                   if (id) {

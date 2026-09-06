@@ -7,6 +7,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import defaultImage from "../assets/images/default-product.png"; // you can replace this path
 import { styled } from "@mui/material/styles";
 import { ProductGridItem } from "../types/product";
@@ -40,6 +41,7 @@ const styles = {
     width: "100%",
     boxShadow: 0,
     backgroundColor: "transparent",
+    borderRadius: 3,
     transition: "background-color 0.2s",
     cursor: "pointer", // 👈 makes it feel clickable
     "&:hover": {
@@ -85,29 +87,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const renderPromotionBadge = () => {
     if (!promotionCountdown) return null;
 
-    // The countdown badge always uses a fixed urgency color keyed to the
-    // phase (amber while scheduled, red while actively counting down). It
-    // must never depend on discount, multibuy, price, or any other product
-    // attribute.
+    // The countdown pill always uses the same danger-toned colors regardless
+    // of phase (scheduled vs. actively counting down) — it must never depend
+    // on discount, multibuy, price, or any other product attribute.
     return (
       <Box
         sx={{
-          backgroundColor:
-            promotionCountdown.phase === "starts"
-              ? "warning.main"
-              : "error.main",
-          color: "white",
-          px: 2,
+          backgroundColor: "error.light",
+          color: "error.main",
+          px: 1.5,
           py: 0.5,
           borderRadius: 1,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: 500,
           display: "flex",
           alignItems: "center",
-          mt: 1,
+          gap: 0.5,
+          mb: 2,
           width: "fit-content",
         }}
       >
+        <AccessTimeIcon sx={{ fontSize: 16 }} />
         {promotionCountdown.label}
       </Box>
     );
@@ -120,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return (
       <Box
         sx={{
-          backgroundColor: "grey.500",
+          backgroundColor: "#BDBDBD",
           color: "white",
           px: 2,
           py: 1,
@@ -154,7 +154,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           sx={{
             border: "1px solid",
             borderColor: "grey.200",
-            borderRadius: 2,
+            borderRadius: { xs: 3, lg: 4 },
             overflow: "hidden",
           }}
         >
@@ -297,18 +297,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
           return <ProductStopperTag stopper={stopper} />;
         })()}
 
-        {/* Product name */}
-        <LineClamp variant="subtitle1">{product.name}</LineClamp>
-
-        {/* Promotion badge: above the description but below the optional tags */}
+        {/* Countdown pill: below the stopper ribbon, above the title */}
         {renderPromotionBadge()}
+
+        {/* Product name */}
+        <LineClamp sx={{ fontSize: 14, fontWeight: 500, color: "#4F4F4F" }}>
+          {product.name}
+        </LineClamp>
+
         {/* Description summary: truncated to 60 chars, full text on hover */}
         {product.description && (
           <Tooltip title={product.description} arrow>
-            <LineClamp
-              variant="body2"
-              sx={{ mt: 1, mb: 1, color: "text.secondary" }}
-            >
+            <LineClamp sx={{ mt: 1, mb: 1, fontSize: 12, color: "#4F4F4F" }}>
               {truncateText(product.description, 60)}
             </LineClamp>
           </Tooltip>
@@ -322,12 +322,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <Box mt={1}>
           {hasPriceDiscount && !hasMultibuy && product.primaryPriceWithDiscount ? (
             <>
-              <Typography color="primary" fontWeight="bold">
+              <Typography color="primary" fontWeight={500} fontSize={18}>
                 {product.primaryPriceWithDiscount}
               </Typography>
               {product.primaryPrice && (
                 <Typography
-                  variant="body2"
+                  fontSize={14}
                   color="grey.500"
                   sx={{ textDecoration: "line-through" }}
                 >
@@ -335,29 +335,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 </Typography>
               )}
               {product.secondaryPriceWithDiscount && (
-                <Typography variant="body2" color="grey.500">
+                <Typography fontSize={14} color="grey.500">
                   {product.secondaryPriceWithDiscount}
                 </Typography>
               )}
             </>
           ) : product.primaryPrice ? (
             <>
-              <Typography color="primary" fontWeight="bold">
+              <Typography color="primary" fontWeight={500} fontSize={18}>
                 {product.primaryPrice}
               </Typography>
               {product.secondaryPrice && (
-                <Typography variant="body2" color="grey.500">
+                <Typography fontSize={14} color="grey.500">
                   {product.secondaryPrice}
                 </Typography>
               )}
             </>
           ) : (
             <>
-              <Typography color="primary" fontWeight="bold">
+              <Typography color="primary" fontWeight={500} fontSize={18}>
                 {formatPrice(product.price)}
               </Typography>
               {product.priceAlt && (
-                <Typography variant="body2" color="textSecondary">
+                <Typography fontSize={14} color="textSecondary">
                   {formatPrice(product.priceAlt)}
                 </Typography>
               )}

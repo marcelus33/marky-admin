@@ -25,6 +25,9 @@ interface ConfirmationDialogProps {
    * header-less "warning" layout (image, centered title/subtitle, optional
    * confirmation checkbox, full-width footer buttons). */
   image?: string;
+  /** Optional element layered on top of `image` (e.g. a small warning icon),
+   * for illustrations that need a badge/overlay rather than a plain photo. */
+  imageOverlay?: React.ReactNode;
   /** When set, renders a confirmation checkbox with this label and keeps the
    * confirm button disabled until it's checked. Resets when the dialog closes. */
   confirmationCheckboxLabel?: string;
@@ -41,6 +44,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   confirmText = "Aceptar",
   isLoading = false,
   image,
+  imageOverlay,
   confirmationCheckboxLabel,
   confirmColor = "primary",
 }) => {
@@ -74,12 +78,25 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             px: 5.5,
           }}
         >
-          <Box
-            component="img"
-            src={image}
-            alt=""
-            sx={{ width: 215, height: 197 }}
-          />
+          <Box sx={{ position: "relative", width: 215, height: 197 }}>
+            <Box
+              component="img"
+              src={image}
+              alt=""
+              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            {imageOverlay && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: -8,
+                  right: -8,
+                }}
+              >
+                {imageOverlay}
+              </Box>
+            )}
+          </Box>
           <Box sx={{ textAlign: "center" }}>
             <Typography sx={{ fontSize: 16, fontWeight: 500, color: "#292929" }}>
               {title}

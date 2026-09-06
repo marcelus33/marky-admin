@@ -90,7 +90,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
     return (
       <Box
         sx={{
-          backgroundColor: "grey.500",
+          backgroundColor: "#BDBDBD",
           color: "white",
           px: 2,
           py: 1,
@@ -253,13 +253,12 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
       <Box
         display={"grid"}
         gridTemplateColumns={{
-          xs: "repeat(2, 1fr)", // 2 columns on phones
-          sm: "repeat(3, 1fr)", // 3 on small screens
+          xs: "repeat(3, 1fr)", // 3 columns on phones
+          sm: "repeat(3, 1fr)", // 3 on tablets
           md: "repeat(4, 1fr)", // 4 on medium
           lg: "repeat(5, 1fr)", // ✅ 5 columns on large screens
         }}
-        gap={{ xs: 4, md: 6 }}
-        // gap={2}
+        gap={{ xs: 4, sm: 4, lg: 6 }}
       >
         {category.products.length === 0 ? (
           <Box
