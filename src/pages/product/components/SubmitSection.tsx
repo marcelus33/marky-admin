@@ -78,7 +78,7 @@ const SubmitSection: React.FC<SubmitSectionProps> = ({
 
   const handleMenuItemClick = (
     event: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    option: string
+    option: string,
   ) => {
     onSectionSelect(option);
     setOpen(false);

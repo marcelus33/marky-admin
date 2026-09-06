@@ -184,13 +184,17 @@ const Home = () => {
       }}
     >
       <Header />
-      <Box sx={{ flex: 1, p: 3, height: "100%" }}>
-        <Grid container spacing={3} sx={{ height: "100vh" }}>
+      <Box sx={{ flex: 1, px: { xs: 4, sm: 6, lg: 8 }, py: 3, height: "100%" }}>
+        <Grid
+          container
+          spacing={3}
+          sx={{ height: { xs: "auto", md: "100vh" } }}
+        >
           <Grid
             item
             xs={12}
             md={3}
-            px={6}
+            px={{ xs: 0, md: 6 }}
             sx={{
               borderRight: (theme) => ({
                 xs: "none",
@@ -237,8 +241,8 @@ const Home = () => {
                     />
                     <Box
                       sx={{
-                        position: "sticky",
-                        top: "4.7rem",
+                        position: { xs: "static", md: "sticky" },
+                        top: { md: "4.7rem" },
                       }}
                     >
                       <BusinessInfo
