@@ -1,7 +1,4 @@
-import CategoryIcon from "@mui/icons-material/Category";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import EditIcon from "@mui/icons-material/Edit";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import categoryIcons from "../../../assets/icons/category/categoryIcons";
 import useProductCategories from "../../../hooks/useProductCategories";
 import { ReactComponent as CrownIcon } from "../../../assets/icons/crown.svg";
@@ -49,47 +46,20 @@ export const CategorySelector = ({
       ? categoryIcons[resolvedCategory.icon]
       : null;
 
+  const category = resolvedCategory ?? selectedCategory;
+
   return (
-    <Box
-      sx={{
-        border: "1px solid #e0e0e0",
-        borderRadius: 2,
-        p: 5,
-        mt: 5,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
-        <Box display={"flex"} alignItems={"center"} gap={2} mb={5}>
-          <CategoryIcon />
-          <Typography variant="h6">Categoría</Typography>
-        </Box>
-
-        <Box sx={{ backgroundColor: "grey.400", borderRadius: 2 }}>
-          <IconButton onClick={onOpenModal}>
-            <EditIcon />
-          </IconButton>
-        </Box>
-      </Box>
-
-      <Typography variant="h5" color="textSecondary" sx={{ mb: 3 }}>
-        Categoría de producto
+    <Box sx={{ mt: 4 }}>
+      <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+        Categoría del producto
       </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      {category ? (
         <Box
-          sx={{ display: "flex", alignItems: "center", gap: 2, width: "100%" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
         >
           <Box
             sx={{
@@ -111,26 +81,55 @@ export const CategorySelector = ({
           <Box
             sx={{
               p: 3,
-              backgroundColor: "grey.100",
+              backgroundColor: "grey.50",
               borderRadius: 1,
-              width: "100%",
+              flex: 1,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <Typography variant="body1">
-              {resolvedCategory?.name ??
-                selectedCategory?.name ??
-                "Sin categoría"}
+            <Typography variant="body1">{category.name}</Typography>
+            <Typography
+              component="button"
+              type="button"
+              onClick={onOpenModal}
+              variant="body2"
+              color="primary.main"
+              fontWeight="bold"
+              sx={{
+                background: "none",
+                border: "none",
+                p: 0,
+                cursor: "pointer",
+              }}
+            >
+              Cambiar
             </Typography>
-            {/*  */}
-            {(resolvedCategory || selectedCategory) && (
-              <CheckCircleIcon fontSize="small" />
-            )}
           </Box>
         </Box>
-      </Box>
+      ) : (
+        <Box
+          component="button"
+          type="button"
+          onClick={onOpenModal}
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            border: "2px dashed",
+            borderColor: "primary.main",
+            borderRadius: 2,
+            backgroundColor: "transparent",
+            px: 4,
+            py: 2,
+            cursor: "pointer",
+          }}
+        >
+          <Typography variant="body2" color="primary.main" fontWeight="bold">
+            Selecciona una categoría
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };

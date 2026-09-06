@@ -13,19 +13,23 @@ interface ProductSectionProps {
   formik: FormikProps<Product>;
   onOpenModal: () => void;
   selectedCategory: Category | null;
+  uploadProgress?: number | null;
+  isSaving?: boolean;
 }
 
 const ProductSection = ({
   formik,
   onOpenModal,
   selectedCategory,
+  uploadProgress,
+  isSaving,
 }: ProductSectionProps) => {
   const { values, errors, touched, handleChange, handleBlur } = formik;
   const { data: businessAccountInfo } = useBusinessAccountInfo();
   const currencyCode = businessAccountInfo?.primary_currency_code;
   return (
     <Box sx={{ width: "100%" }}>
-      <ProductImageGallery />
+      <ProductImageGallery uploadProgress={uploadProgress} isSaving={isSaving} />
 
       <Box
         sx={{
@@ -97,12 +101,11 @@ const ProductSection = ({
             ) : undefined,
           }}
         />
+        <CategorySelector
+          selectedCategory={selectedCategory}
+          onOpenModal={onOpenModal}
+        />
       </Box>
-
-      <CategorySelector
-        selectedCategory={selectedCategory}
-        onOpenModal={onOpenModal}
-      />
     </Box>
   );
 };

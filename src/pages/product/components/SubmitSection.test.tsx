@@ -10,11 +10,7 @@ const renderSubmitSection = (
   render(
     <MemoryRouter>
       <ThemeProvider theme={lightTheme}>
-        <SubmitSection
-          onSectionSelect={() => {}}
-          onPublish={() => {}}
-          {...props}
-        />
+        <SubmitSection onPublish={() => {}} {...props} />
       </ThemeProvider>
     </MemoryRouter>,
   );
