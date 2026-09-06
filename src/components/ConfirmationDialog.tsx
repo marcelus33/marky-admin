@@ -100,6 +100,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                 </Typography>
               }
               checked={checked}
+              disabled={isLoading}
               onChange={(e) => setChecked(e.target.checked)}
             />
           )}
@@ -112,6 +113,14 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               <Typography>{content}</Typography>
             ) : (
               content
+            )}
+            {confirmationCheckboxLabel && (
+              <CheckboxWithLabel
+                label={confirmationCheckboxLabel}
+                checked={checked}
+                disabled={isLoading}
+                onChange={(e) => setChecked(e.target.checked)}
+              />
             )}
           </DialogContent>
         </>

@@ -8,6 +8,7 @@ interface CheckboxWithLabelProps {
   label: string | React.ReactNode;
   name?: string;
   checked?: boolean;
+  disabled?: boolean;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -43,11 +44,13 @@ const CheckboxWithLabel: React.FC<CheckboxWithLabelProps> = ({
   label,
   name,
   checked,
+  disabled,
   onChange,
 }) => {
   const theme = useTheme();
   return (
     <FormControlLabel
+      disabled={disabled}
       sx={{
         marginLeft: 0,
         gap: theme.spacing(2), // 8px
@@ -58,6 +61,7 @@ const CheckboxWithLabel: React.FC<CheckboxWithLabelProps> = ({
           name={name}
           checked={checked}
           onChange={onChange}
+          disabled={disabled}
           disableRipple
           sx={{ padding: 0 }}
           icon={<UncheckedIcon data-testid="checkbox-icon-unchecked" />}

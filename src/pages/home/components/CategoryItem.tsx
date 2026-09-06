@@ -56,10 +56,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
       alignItems="center"
       justifyContent="space-between"
       height={44}
-      // pl={1.5}
-      // pr={3}
-      py={8}
-      px={2}
+      pl={1.5}
+      pr={3}
       sx={{ boxShadow: "0px 1px 0px #E8E9EB", ...style }}
     >
       <Box display="flex" alignItems="center" gap={1.5}>
