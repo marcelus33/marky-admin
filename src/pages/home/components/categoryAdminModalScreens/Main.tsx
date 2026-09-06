@@ -1,6 +1,5 @@
 import {
   Box,
-  IconButton,
   TextField,
   InputAdornment,
   Button,
@@ -10,11 +9,9 @@ import {
 import ConfirmationDialog from "../../../../components/ConfirmationDialog";
 import categoryIcons from "../../../../assets/icons/category/categoryIcons";
 import SearchIcon from "@mui/icons-material/Search";
-import MoveDownIcon from "@mui/icons-material/MoveDown";
-import WarningIcon from "@mui/icons-material/Warning";
+import ImportExportIcon from "@mui/icons-material/ImportExport";
 import { ReactComponent as CrownIcon } from "../../../../assets/icons/crown.svg";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import DeleteCategoryWarningImage from "../../../../assets/images/delete-category-warning.png";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { Category } from "../../../../types/category";
 import { useState } from "react";
@@ -44,6 +41,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 }) => {
   const IconComponent =
     cat.icon && categoryIcons[cat.icon] ? categoryIcons[cat.icon] : null;
+  const hasPromo = !!(cat.multibuyOption || (cat.discountPercentage || 0) > 0);
 
   return (
     <Box
@@ -51,42 +49,45 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
       display="flex"
       alignItems="center"
       justifyContent="space-between"
-      pb={2}
-      pt={1}
-      px={3}
-      mb={1}
+      height={44}
+      px={2}
+      py={6}
       sx={{
-        borderBottom: "1px solid #e0e0e0",
-        borderRadius: 1,
+        boxShadow: "0px 1px 0px #E8E9EB",
         width: "100%",
       }}
     >
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
         {isSortable && (
           <Typography variant="body2" sx={{ cursor: "grab" }}>
-            <DragIndicatorIcon />
+            <ImportExportIcon fontSize="small" />
           </Typography>
         )}
         <Box
           sx={{
-            backgroundColor: "grey.600",
-            p: 1,
-            borderRadius: 1,
+            backgroundColor: "grey.400",
+            p: 2,
+            borderRadius: 1.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            mx: 2,
           }}
         >
           {IconComponent ? (
-            <IconComponent fontSize="small" />
+            <IconComponent width={18} height={18} />
           ) : (
-            <CrownIcon fontSize="small" />
+            <CrownIcon width={18} height={18} />
           )}
         </Box>
         <Typography
-          variant="body1"
-          sx={{ cursor: "pointer", paddingBottom: 1 }}
+          sx={{
+            cursor: "pointer",
+            fontSize: 12,
+            color: "#4F4F4F",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
           onClick={() => {
             setCategoryForm(cat);
             setActiveScreen("createEdit");
@@ -97,59 +98,25 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
       </Box>
 
       {isEditable && (
-        <Box display="flex" alignItems="center" gap={1}>
-          {/* Show inline buttons on desktop */}
-          <Box display={{ xs: "none", sm: "flex" }} alignItems="center" gap={1}>
-            <IconButton
-              onClick={() => {
-                setActiveScreen("promotion");
-                setSelectedPromotionCategory(cat);
-              }}
-              size="small"
-            >
-              <Box display="flex" alignItems="center" gap={1}>
-                <LocalOfferIcon
-                  fontSize="small"
-                  color={
-                    cat.multibuyOption || (cat.discountPercentage || 0) > 0
-                      ? "error"
-                      : "inherit"
-                  }
-                />
-                {(cat.multibuyOption || (cat.discountPercentage || 0) > 0) && (
-                  <Typography variant="body2" color="error">
-                    Promo activa
-                  </Typography>
-                )}
-              </Box>
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setOpenDeleteCategoryDialog(true);
-                setSelectedCategoryDelete(cat);
-              }}
-              size="small"
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Box>
-
-          {/* Show menu icon on mobile */}
-          <Box display={{ xs: "flex", sm: "none" }}>
-            <MobileOptionsMenu
-              onPromo={() => {
-                setActiveScreen("promotion");
-                setSelectedPromotionCategory(cat);
-              }}
-              onDelete={() => {
-                setOpenDeleteCategoryDialog(true);
-                setSelectedCategoryDelete(cat);
-              }}
-              hasPromo={
-                !!(cat.multibuyOption || (cat.discountPercentage || 0) > 0)
-              }
-            />
-          </Box>
+        <Box display="flex" alignItems="center" gap={1} flexShrink={0}>
+          {hasPromo && (
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <LocalOfferIcon fontSize="small" color="error" />
+              <Typography variant="body2" color="error" fontSize={12}>
+                Activa
+              </Typography>
+            </Box>
+          )}
+          <MobileOptionsMenu
+            onPromo={() => {
+              setActiveScreen("promotion");
+              setSelectedPromotionCategory(cat);
+            }}
+            onDelete={() => {
+              setOpenDeleteCategoryDialog(true);
+              setSelectedCategoryDelete(cat);
+            }}
+          />
         </Box>
       )}
     </Box>
@@ -186,31 +153,34 @@ export const Main: React.FC<MainProps> = ({
   return (
     <Box sx={{ marginBottom: 4 }}>
       {/* Filtros y botón para crear categoría */}
-      <Box
-        display="flex"
-        alignItems="center"
-        gap={4}
-        mb={2}
-        // sx={{ border: "1px solid blue" }}
-      >
+      <Box display="flex" alignItems="center" gap={4} mb={4}>
         <TextField
-          sx={{ flex: 3 }}
-          placeholder="Buscar categoría..."
+          sx={{
+            flex: 3,
+            "& .MuiOutlinedInput-root": {
+              height: 40,
+              "& fieldset": { borderColor: "#E0E0E0" },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "grey.900",
+              opacity: 1,
+            },
+          }}
+          placeholder="Buscar categoría"
           variant="outlined"
           size="small"
           fullWidth
           InputProps={{
-            style: { padding: "5px 0px 5px 8px" },
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon sx={{ color: "#333" }} />
               </InputAdornment>
             ),
           }}
           // Aquí podrías manejar el onChange para filtrar la lista
         />
         <Button
-          sx={{ flex: 1, boxShadow: 0 }}
+          sx={{ flex: 1, boxShadow: 0, whiteSpace: "nowrap" }}
           variant="contained"
           color="primary"
           onClick={() => {
@@ -221,40 +191,44 @@ export const Main: React.FC<MainProps> = ({
           Crear categoría
         </Button>
       </Box>
+      {/* Encabezado del listado + acceso a Ordenar categorías */}
       <Box
-        display={"flex"}
-        alignItems={"end"}
-        justifyContent={"end"}
-        sx={{ width: "100%" }}
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        mb={2}
       >
+        <Typography variant="subtitle2" sx={{ color: "#333" }}>
+          Categorías creadas ({categories.length})
+        </Typography>
         <Button
-          startIcon={<MoveDownIcon />}
+          startIcon={<ImportExportIcon fontSize="small" />}
           onClick={() => setActiveScreen("sort")}
+          sx={{ color: "primary.main", fontSize: 14 }}
         >
           Ordenar categorías
         </Button>
       </Box>
       {/* Lista de categorías creadas */}
-      <Typography variant="subtitle2" mb={2}>
-        Categorías creadas
-      </Typography>
       <Box
         sx={{
           maxHeight: 300,
           overflowY: "auto",
           border: 1,
-          borderColor: "grey.600",
-          paddingY: 1,
-          borderRadius: 1,
+          borderColor: "#E0E0E0",
+          borderRadius: 1.5,
+          py: 0.25,
         }}
       >
         {isLoading ? (
           <CircularProgress />
         ) : categories && categories.length > 0 ? (
           categories.map((cat: Category) => (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box
+              key={cat.id}
+              sx={{ display: "flex", alignItems: "center", gap: 2 }}
+            >
               <CategoryItem
-                key={cat.id}
                 cat={cat}
                 setCategoryForm={setCategoryForm}
                 setActiveScreen={setActiveScreen}
@@ -291,22 +265,15 @@ export const Main: React.FC<MainProps> = ({
             });
           }
         }}
-        title={"Categoría"}
+        title="¿Estás seguro de eliminar esta categoría?"
+        content="Esta acción también eliminará permanentemente los productos vinculados."
+        image={DeleteCategoryWarningImage}
+        confirmationCheckboxLabel="Confirmo que deseo eliminar la categoría"
+        confirmColor="error"
+        confirmText="Eliminar"
         open={openDeleteCategoryDialog}
         onClose={() => setOpenDeleteCategoryDialog(false)}
-        content={
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"center"}
-            gap={4}
-          >
-            <WarningIcon color="warning" fontSize="large" />
-            <Typography variant="body2" fontSize={"medium"}>
-              ¿Desea eliminar la categoría?
-            </Typography>
-          </Box>
-        }
+        isLoading={deleteProductCategory.isPending}
       />
     </Box>
   );

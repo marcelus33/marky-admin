@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,8 +7,10 @@ import {
   Button,
   Typography,
   CircularProgress,
+  Box,
 } from "@mui/material";
 import CancelButton from "./CancelButton";
+import CheckboxWithLabel from "./CheckboxWithLabel";
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -19,6 +21,14 @@ interface ConfirmationDialogProps {
   cancelText?: string;
   confirmText?: string;
   isLoading?: boolean;
+  /** Illustration shown above the title — switches the dialog to the compact,
+   * header-less "warning" layout (image, centered title/subtitle, optional
+   * confirmation checkbox, full-width footer buttons). */
+  image?: string;
+  /** When set, renders a confirmation checkbox with this label and keeps the
+   * confirm button disabled until it's checked. Resets when the dialog closes. */
+  confirmationCheckboxLabel?: string;
+  confirmColor?: "primary" | "error";
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -30,7 +40,19 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   cancelText = "Cancelar",
   confirmText = "Aceptar",
   isLoading = false,
+  image,
+  confirmationCheckboxLabel,
+  confirmColor = "primary",
 }) => {
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (!open) setChecked(false);
+  }, [open]);
+
+  const confirmDisabled =
+    isLoading || (Boolean(confirmationCheckboxLabel) && !checked);
+
   return (
     <Dialog
       open={open}
@@ -40,28 +62,99 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       }}
       disableEscapeKeyDown={isLoading}
     >
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
-        {typeof content === "string" ? (
-          <Typography>{content}</Typography>
-        ) : (
-          content
-        )}
-      </DialogContent>
-      <DialogActions sx={{ display: "flex", gap: 2 }}>
+      {image ? (
+        <DialogContent
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 3.25,
+            pt: 5.5,
+            pb: 6,
+            px: 5.5,
+          }}
+        >
+          <Box
+            component="img"
+            src={image}
+            alt=""
+            sx={{ width: 215, height: 197 }}
+          />
+          <Box sx={{ textAlign: "center" }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 500, color: "#292929" }}>
+              {title}
+            </Typography>
+            {typeof content === "string" ? (
+              <Typography sx={{ fontSize: 14, color: "#828282", mt: 0.5 }}>
+                {content}
+              </Typography>
+            ) : (
+              content
+            )}
+          </Box>
+          {confirmationCheckboxLabel && (
+            <CheckboxWithLabel
+              label={
+                <Typography sx={{ fontSize: 14, color: "#4A4A4A" }}>
+                  {confirmationCheckboxLabel}
+                </Typography>
+              }
+              checked={checked}
+              onChange={(e) => setChecked(e.target.checked)}
+            />
+          )}
+        </DialogContent>
+      ) : (
+        <>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogContent>
+            {typeof content === "string" ? (
+              <Typography>{content}</Typography>
+            ) : (
+              content
+            )}
+          </DialogContent>
+        </>
+      )}
+      <DialogActions
+        sx={
+          image
+            ? {
+                display: "flex",
+                gap: 1.5,
+                boxShadow: "0px -1px 0px #E8E9EB",
+                px: 2.5,
+                py: 1.5,
+              }
+            : { display: "flex", gap: 2 }
+        }
+      >
         <CancelButton
           onClick={onClose}
-          sx={{ paddingX: 2, paddingY: 2 }}
           disabled={isLoading}
+          sx={
+            image
+              ? { flex: 1, backgroundColor: "grey.400", color: "#4B4B4B", paddingY: 2 }
+              : { paddingX: 2, paddingY: 2 }
+          }
         >
           {cancelText}
         </CancelButton>
         <Button
           onClick={onConfirm}
           variant="contained"
-          color="primary"
-          disabled={isLoading}
-          sx={{ paddingX: 2, paddingY: 2, boxShadow: 0 }}
+          color={confirmColor}
+          disabled={confirmDisabled}
+          sx={{
+            boxShadow: 0,
+            ...(image ? { flex: 1, paddingY: 2 } : { paddingX: 2, paddingY: 2 }),
+            ...(confirmColor === "error" && {
+              "&.Mui-disabled": {
+                backgroundColor: "error.light",
+                color: "white",
+              },
+            }),
+          }}
         >
           {isLoading ? (
             <CircularProgress size={18} color="inherit" />

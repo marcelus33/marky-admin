@@ -1,5 +1,5 @@
 import { Box, Typography, Button } from "@mui/material";
-import AdminCategoriesImage from "../../../../assets/images/admin-categories.png";
+import CreateCategoriesEmptyImage from "../../../../assets/images/create-categories-empty.png";
 
 type ActiveScreen = "welcome" | "main" | "sort" | "createEdit" | "promotion";
 
@@ -9,28 +9,33 @@ interface WelcomeProps {
 
 export const Welcome: React.FC<WelcomeProps> = ({ setActiveScreen }) => {
   return (
-    <Box textAlign="center" py={4}>
-      <img
-        src={AdminCategoriesImage}
-        alt="Canales de bienvenida"
-        // width={120}
-        style={{ marginBottom: 16 }}
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      textAlign="center"
+      gap={6.5}
+      py={5.5}
+    >
+      <Box
+        component="img"
+        src={CreateCategoriesEmptyImage}
+        alt="Crea tus categorías"
+        sx={{ width: 272, height: 272 }}
       />
-      <Typography variant="h6" gutterBottom>
-        Crea tus categorías
-      </Typography>
-      <Typography
-        color="textSecondary"
-        variant="body2"
-        sx={{ color: "grey.500" }}
-      >
-        Organiza tus productos relacionados
-      </Typography>
+      <Box display="flex" flexDirection="column" alignItems="center">
+        <Typography sx={{ fontSize: 16, fontWeight: 500, color: "#292929" }}>
+          Crea tus categorías
+        </Typography>
+        <Typography sx={{ fontSize: 14, color: "#828282" }}>
+          Organiza tus productos relacionados
+        </Typography>
+      </Box>
       <Button
         variant="contained"
         color="primary"
         onClick={() => setActiveScreen("createEdit")}
-        sx={{ paddingX: 4, boxShadow: 0, mt: 8 }}
+        sx={{ width: 221, boxShadow: 0 }}
       >
         Crear categoría
       </Button>

@@ -16,7 +16,7 @@ import {
 import { Box, Button, Typography } from "@mui/material";
 import { Category } from "../../../types/category";
 import CategoryItem, { CategoryScreen } from "./CategoryItem";
-import MoveDownIcon from "@mui/icons-material/MoveDown";
+import ImportExportIcon from "@mui/icons-material/ImportExport";
 interface SortableCategoryListProps {
   categories: Category[];
   onOrderChange: (newOrder: Category[]) => void;
@@ -68,14 +68,14 @@ const SortableCategoryList: React.FC<SortableCategoryListProps> = ({
     //    - arrayMove(...) shifts the dragged item from oldIndex → newIndex
     //    - .map(...) reassigns each item’s `order` property to its new array index
     const reordered = arrayMove(localCategories, oldIndex, newIndex).map(
-      (cat, idx) => ({ ...cat, order: idx })
+      (cat, idx) => ({ ...cat, order: idx }),
     );
 
     // 4️⃣ Notify parent / save to state / API
     setLocalCategories(reordered);
     // ✅ Check if new order differs from original
     const isDifferent = reordered.some(
-      (item, index) => item.id !== categories[index]?.id
+      (item, index) => item.id !== categories[index]?.id,
     );
     setHasChanges(isDifferent);
   }
@@ -90,9 +90,9 @@ const SortableCategoryList: React.FC<SortableCategoryListProps> = ({
         items={localCategories.map((c) => c.id)}
         strategy={verticalListSortingStrategy}
       >
-        <Box display={"flex"} alignItems={"center"} mb={4} gap={2}>
-          <MoveDownIcon />
-          <Typography variant="subtitle2">
+        <Box display={"flex"} alignItems={"center"} mb={3} gap={1}>
+          <ImportExportIcon />
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#333" }}>
             Selecciona y arrastra la categoría
           </Typography>
         </Box>
@@ -102,9 +102,9 @@ const SortableCategoryList: React.FC<SortableCategoryListProps> = ({
             maxHeight: 300,
             overflowY: "auto",
             border: 1,
-            borderColor: "grey.600",
-            p: 1,
-            borderRadius: 1,
+            borderColor: "#E0E0E0",
+            py: 0.25,
+            borderRadius: 1.5,
           }}
         >
           {localCategories.length > 0 ? (
@@ -112,10 +112,7 @@ const SortableCategoryList: React.FC<SortableCategoryListProps> = ({
               <CategoryItem
                 key={cat.id}
                 cat={cat}
-                // setFieldValue={setFieldValue}
                 setActiveScreen={setActiveScreen}
-                // setOpenDeleteCategoryDialog={setOpenDeleteCategoryDialog}
-                // setSelectedCategoryDelete={setSelectedCategoryDelete}
                 isSortable={isSortable}
                 isEditable={isEditable}
               />
@@ -127,13 +124,14 @@ const SortableCategoryList: React.FC<SortableCategoryListProps> = ({
           )}
         </Box>
       </SortableContext>
-      <Box mt={4}>
+      <Box mt={4} pt={3} sx={{ boxShadow: "0px -1px 0px #E8E9EB" }}>
         <Button
           variant="contained"
           color="primary"
           fullWidth
           onClick={() => onOrderChange(localCategories)}
           disabled={!hasChanges}
+          sx={{ boxShadow: 0 }}
         >
           Guardar
         </Button>
