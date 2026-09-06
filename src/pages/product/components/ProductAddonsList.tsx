@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import React from "react";
 import { ProductAddon } from "../../../types/product";
 import { formatPrice } from "../../../utils/format";
@@ -10,41 +10,40 @@ const ProductAddonsList: React.FC<{ addons: ProductAddon[] }> = ({
 
   return (
     <Box sx={{ mt: 0 }}>
-      <Typography variant="subtitle1" fontWeight={600} mb={4}>
+      <Typography variant="h5" fontWeight={700} mb={2}>
         Adicionales o extras
       </Typography>
 
-      {/* Outer container with rounded corners and subtle border. Inside we render rows
-          with separators so the whole block looks like the provided mock. */}
-      <Paper
-        variant="outlined"
-        sx={{
-          borderRadius: 2,
-          borderColor: "grey.200",
-          backgroundColor: "transparent",
-          overflow: "hidden",
-        }}
-      >
+      {/* Each row keeps its own 1px border and rows overlap by 1px (mb: -1px)
+          so shared borders don't double up; only the first/last row gets
+          rounded corners on that edge, matching the Figma block. */}
+      <Box display="flex" flexDirection="column">
         {addons.map((a, index) => {
           // backend might provide formatted labels using snake_case or camelCase
           const primaryLabel =
             (a as any).primaryPrice ?? (a as any).primary_price;
           const secondaryLabel =
             (a as any).secondaryPrice ?? (a as any).secondary_price;
+          const isFirst = index === 0;
+          const isLast = index === addons.length - 1;
 
           return (
             <Box
               key={a.id ?? index}
               sx={{
-                p: 2,
-                pl: 4,
+                backgroundColor: "common.white",
+                border: "1px solid",
+                borderColor: "grey.400",
+                mb: isLast ? 0 : "-1px",
+                px: 3,
+                py: 2,
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                // separator between rows except for last
-                borderBottom:
-                  index !== addons.length - 1 ? "1px solid" : "none",
-                borderColor: "grey.200",
+                borderTopLeftRadius: isFirst ? 12 : 0,
+                borderTopRightRadius: isFirst ? 12 : 0,
+                borderBottomLeftRadius: isLast ? 12 : 0,
+                borderBottomRightRadius: isLast ? 12 : 0,
               }}
             >
               <Typography>{a.name}</Typography>
@@ -74,7 +73,7 @@ const ProductAddonsList: React.FC<{ addons: ProductAddon[] }> = ({
             </Box>
           );
         })}
-      </Paper>
+      </Box>
     </Box>
   );
 };

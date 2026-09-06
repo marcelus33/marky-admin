@@ -39,17 +39,17 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
         justifyContent: "center",
       }}
     >
-      <Grid container spacing={2}>
-        <Grid item xs={2}>
-          <Box display="flex" flexDirection="column" gap={2}>
+      <Grid container spacing={3}>
+        <Grid item xs={3} sm={2}>
+          <Box display="flex" flexDirection="column" gap={3}>
             {media.map((item: any, idx: number) => (
               <Box
                 key={item.id || idx}
                 onClick={() => setMainIndex(idx)}
                 sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 1,
+                  width: 54,
+                  height: 54,
+                  borderRadius: 1.5,
                   overflow: "hidden",
                   cursor: "pointer",
                   border: idx === mainIndex ? "2px solid" : "1px solid",
@@ -59,8 +59,8 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
                 {item.media_type === "video" ? (
                   <VideoThumbnail
                     url={resolveUrl(item.file)}
-                    width={64}
-                    height={64}
+                    width={54}
+                    height={54}
                   />
                 ) : (
                   <img
@@ -73,17 +73,21 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
             ))}
           </Box>
         </Grid>
-        <Grid item xs={10}>
+        <Grid item xs={9} sm={10}>
           <Box
             sx={{
               border: "1px solid",
-              borderColor: "grey.300",
-              borderRadius: 2,
-              padding: 4,
+              borderColor: "grey.400",
+              borderRadius: 1.5,
+              pt: 6,
+              pl: 6,
+              pr: "10px",
+              pb: 3,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: 480,
+              aspectRatio: "1 / 1",
+              width: "100%",
               position: "relative",
             }}
           >
@@ -92,16 +96,16 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
               <Box
                 sx={{
                   position: "absolute",
-                  left: 16,
-                  top: 16,
+                  left: 24,
+                  top: 24,
                   bgcolor: theme.palette.error.main,
                   color: theme.palette.common.white,
-                  p: 2,
-                  borderRadius: 1,
-                  fontSize: "0.75rem",
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: "3px",
                 }}
               >
-                <Typography color="white" fontWeight={500}>
+                <Typography variant="body2" color="white" fontWeight={500}>
                   -{formattedDiscount}%
                 </Typography>
               </Box>
@@ -113,8 +117,8 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
                 controls
                 style={{
                   maxWidth: "100%",
-                  maxHeight: 420,
-                  borderRadius: 10,
+                  maxHeight: "100%",
+                  borderRadius: 6,
                 }}
               />
             ) : (
@@ -122,10 +126,10 @@ const ProductDetailGallery: React.FC<{ product: Product }> = ({ product }) => {
                 src={resolveUrl(mainMedia ? mainMedia.file : defaultImage)}
                 alt={product.name}
                 style={{
-                  maxWidth: "100%",
-                  maxHeight: 420,
-                  objectFit: "contain",
-                  borderRadius: 10,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: 6,
                 }}
               />
             )}

@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BackButton from "../../components/BackButton";
@@ -41,17 +41,20 @@ const ProductDetailPage: React.FC = () => {
       <Box
         sx={{
           flex: 1,
-          px: 3,
+          px: { xs: 4, md: 8 },
           pb: "100px",
           mt: 16,
           mx: "auto",
           minWidth: "85%",
         }}
       >
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 3 }}>
           <BackButton onClick={() => navigate(-1)} />
+          <Typography variant="h4" fontWeight={500} color="text.primary">
+            Volver
+          </Typography>
         </Box>
-        <Grid container spacing={5}>
+        <Grid container spacing={8}>
           {/* COLUMN 1 */}
           <Grid
             item
@@ -64,22 +67,20 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
           {/* COLUMN 2 */}
           <Grid item xs={12} md={8} lg={7}>
-            <Box sx={{ p: 3, mb: 3 }}>
-              <ProductDetailInfo product={product} />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Box>
+                <ProductDetailInfo product={product} />
 
-              <ProductDetailPricing product={product} />
-            </Box>
+                <ProductDetailPricing product={product} />
+              </Box>
 
-            {product.variants.length > 0 && (
-              <Box sx={{ p: 3, mb: 3 }}>
+              {product.variants.length > 0 && (
                 <ProductVariantsList variants={product.variants} />
-              </Box>
-            )}
-            {product.addons.length > 0 && (
-              <Box sx={{ p: 3 }}>
+              )}
+              {product.addons.length > 0 && (
                 <ProductAddonsList addons={product.addons} />
-              </Box>
-            )}
+              )}
+            </Box>
 
             {/* Related products / category list placeholder */}
             {/* <Box sx={{ mt: 6 }}>
