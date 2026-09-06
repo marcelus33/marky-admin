@@ -21,8 +21,8 @@ const ProductVariantsList: React.FC<{ variants: ProductVariant[] }> = ({
 
   return (
     <Box sx={{ mt: 0 }}>
-      <Typography variant="subtitle1" fontWeight={600} mb={4}>
-        Variaciones
+      <Typography variant="h5" fontWeight={700} mb={2}>
+        Variaciones de este producto
       </Typography>
       <Box display="flex" flexDirection="column" gap={2}>
         {variants.map((v, index) => {
@@ -31,23 +31,25 @@ const ProductVariantsList: React.FC<{ variants: ProductVariant[] }> = ({
             <Box
               key={v.id ?? index}
               sx={{
-                p: 3,
+                pl: 2,
+                pr: 4,
+                py: 2,
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                borderRadius: 2,
+                borderRadius: 3,
                 backgroundColor: "grey.50",
               }}
             >
-              <Box display="flex" gap={2} alignItems="center">
+              <Box display="flex" gap={4} alignItems="center">
                 <Box
                   component="img"
                   src={imageUrl}
                   alt={v.name}
                   sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 1,
+                    width: 60,
+                    height: 60,
+                    borderRadius: 3,
                     objectFit: "cover",
                     backgroundColor: "grey.200",
                   }}
