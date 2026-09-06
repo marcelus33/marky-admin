@@ -49,7 +49,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
       display="flex"
       alignItems="center"
       justifyContent="space-between"
-      height={44}
+      height={56}
       pl={1.5}
       pr={1}
       sx={{
@@ -66,17 +66,19 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
         <Box
           sx={{
             backgroundColor: "grey.400",
-            p: 2,
+            width: 44,
+            height: 44,
             borderRadius: 1.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexShrink: 0,
           }}
         >
           {IconComponent ? (
-            <IconComponent width={18} height={18} />
+            <IconComponent width={36} height={36} />
           ) : (
-            <CrownIcon width={18} height={18} />
+            <CrownIcon width={20} height={20} />
           )}
         </Box>
         <Typography
@@ -153,12 +155,12 @@ export const Main: React.FC<MainProps> = ({
   return (
     <Box sx={{ marginBottom: 4 }}>
       {/* Filtros y botón para crear categoría */}
-      <Box display="flex" alignItems="center" gap={4} mb={4}>
+      <Box display="flex" alignItems="stretch" gap={4} mb={4}>
         <TextField
           sx={{
             flex: 3,
             "& .MuiOutlinedInput-root": {
-              height: 40,
+              height: "100%",
               "& fieldset": { borderColor: "#E0E0E0" },
             },
             "& .MuiInputBase-input::placeholder": {

@@ -29,3 +29,4 @@ cline-prompt.txt
 SKILL.md
 frontend-local.md
 .env*
+.worktrees/

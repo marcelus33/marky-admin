@@ -178,18 +178,18 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
                   key={key}
                   onClick={() => setFieldValue("icon", key)}
                   sx={{
-                    width: 40,
-                    height: 40,
-                    p: 2,
+                    width: 56,
+                    height: 56,
                     bgcolor: isSelected ? "secondary.main" : "transparent",
                     borderRadius: 1.5,
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <IconComponent width="100%" height="100%" />
+                  <IconComponent width={44} height={44} />
                 </Box>
               );
             })}

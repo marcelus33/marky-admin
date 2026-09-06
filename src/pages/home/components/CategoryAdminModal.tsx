@@ -136,7 +136,9 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
                 <ArrowBackIcon sx={{ color: "#333", fontSize: 18 }} />
               </IconButton>
             )}
-            <DialogTitle sx={{ p: 0, fontSize: 16, fontWeight: 500, color: "#292929" }}>
+            <DialogTitle
+              sx={{ p: 0, fontSize: 16, fontWeight: 500, color: "#292929" }}
+            >
               {["main", "welcome"].includes(activeScreen) &&
                 "Administrar categorías"}
               {activeScreen === "sort" && "Ordenar categorías"}
@@ -211,8 +213,8 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
               onSubmit={(updatedCategory) => {
                 setCategories((prev) =>
                   prev.map((c) =>
-                    c.id === updatedCategory.id ? updatedCategory : c
-                  )
+                    c.id === updatedCategory.id ? updatedCategory : c,
+                  ),
                 );
                 setActiveScreen("main");
               }}
