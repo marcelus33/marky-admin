@@ -4,8 +4,6 @@ import {
   FormControlLabel,
   Switch,
   Radio,
-  TextField,
-  InputAdornment,
   Button,
   Select,
   MenuItem,
@@ -21,14 +19,17 @@ import Input from "../../../../components/Input";
 import { useEffect } from "react";
 import useAddPromotionToProductCategory from "../../../../hooks/useAddPromotionToProductCategory";
 
+const DISCOUNT_PERCENTAGE_OPTIONS = [5, 10, 15, 20, 30, 40, 50];
+const MULTIBUY_OPTIONS = ["2x1", "3x2", "4x3"];
+
 const getIconComponent = (cat: Category) => {
   const IconComponent =
     cat.icon && categoryIcons[cat.icon] ? categoryIcons[cat.icon] : null;
 
   return IconComponent ? (
-    <IconComponent fontSize="small" />
+    <IconComponent width={24} height={24} />
   ) : (
-    <CrownIcon fontSize="small" />
+    <CrownIcon width={24} height={24} />
   );
 };
 
@@ -66,9 +67,11 @@ const validationSchema = Yup.object({
       is: "descuento",
       then: (schema) =>
         schema
-          .required("Debe ingresar un porcentaje")
-          .min(1, "Mínimo 1%")
-          .max(100, "Máximo 100%"),
+          .required("Debe seleccionar un porcentaje")
+          .oneOf(
+            DISCOUNT_PERCENTAGE_OPTIONS,
+            "Selecciona uno de los porcentajes disponibles"
+          ),
       otherwise: (schema) => schema.nullable(),
     }),
 
@@ -282,29 +285,32 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
               <Box
                 display="flex"
                 alignItems="center"
-                gap={2}
+                gap={1.5}
                 mb={2}
-                sx={{ borderBottom: "1px solid #e0e0e0", pb: 2 }}
+                sx={{ boxShadow: "0px 1px 0px #E8E9EB", pb: 2 }}
               >
                 {category && (
                   <Box
                     sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: "grey.200",
-                      borderRadius: 1,
+                      width: 46,
+                      height: 46,
+                      bgcolor: "#F2F2F2",
+                      borderRadius: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     {getIconComponent(category)}
                   </Box>
                 )}
-                <Typography variant="body1">
+                <Typography sx={{ fontSize: 14, color: "#4B4B4B" }}>
                   {category?.label || "Categoría"}
                 </Typography>
               </Box>
 
               {/* ================== Sección Promoción ================ */}
-              <Typography variant="subtitle2" mb={1}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#333" }} mb={1}>
                 Promoción
               </Typography>
               <Box display="flex" flexDirection={"column"} gap={2} mb={2}>
@@ -320,6 +326,7 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
                       />
                     }
                     label="Activar promoción"
+                    sx={{ "& .MuiFormControlLabel-label": { fontSize: 14, color: "#4F4F4F" } }}
                   />
 
                   {values.isPromotionActive && (
@@ -336,39 +343,61 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
                           />
                         }
                         label="Descuento"
+                        sx={{ "& .MuiFormControlLabel-label": { fontSize: 14, color: "#4F4F4F" } }}
                       />
                       {values.promotionOption === "descuento" && (
-                        <TextField
-                          placeholder="Porcentaje de descuento (0-100)"
-                          type="number"
-                          name="discountPercentage"
-                          variant="outlined"
+                        <FormControl
                           size="small"
-                          value={values.discountPercentage || ""}
-                          onChange={(e) =>
-                            setFieldValue(
-                              "discountPercentage",
-                              Number(e.target.value)
-                            )
-                          }
-                          inputProps={{
-                            max: 100,
-                            min: 0,
-                            style: { padding: 12 },
-                          }}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <Typography>%</Typography>
-                              </InputAdornment>
-                            ),
-                          }}
                           sx={{
                             mb: 2,
                             ml: 8,
                             width: { xs: "100%", md: "50%" },
                           }}
-                        />
+                        >
+                          <Select
+                            displayEmpty
+                            value={values.discountPercentage ?? ""}
+                            onChange={(e) =>
+                              setFieldValue(
+                                "discountPercentage",
+                                Number(e.target.value)
+                              )
+                            }
+                            renderValue={(value) =>
+                              value === "" ? (
+                                <Typography sx={{ fontSize: 14, color: "#828282" }}>
+                                  Selecciona un porcentaje
+                                </Typography>
+                              ) : (
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    bgcolor: "#FF3E3E",
+                                    color: "white",
+                                    fontSize: 14,
+                                    fontWeight: 500,
+                                    borderRadius: 0.5,
+                                    px: 1.5,
+                                    py: 0.5,
+                                  }}
+                                >
+                                  -{value}%
+                                </Box>
+                              )
+                            }
+                            sx={{
+                              "& .MuiOutlinedInput-notchedOutline": {
+                                borderColor: "#D7D7D7",
+                              },
+                            }}
+                          >
+                            {DISCOUNT_PERCENTAGE_OPTIONS.map((option) => (
+                              <MenuItem key={option} value={option}>
+                                -{option}%
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                       )}
                     </>
                   )}
@@ -388,6 +417,7 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
                         />
                       }
                       label="Oferta"
+                      sx={{ "& .MuiFormControlLabel-label": { fontSize: 14, color: "#4F4F4F" } }}
                     />
                     {values.promotionOption === "oferta" && (
                       <FormControl
@@ -398,16 +428,22 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
                           width: { xs: "100%", md: "50%" },
                         }}
                       >
-                        {/* <InputLabel>Tipo de oferta</InputLabel> */}
                         <Select
                           value={values.multibuyOption}
-                          // label="Tipo de oferta"
                           onChange={(e) =>
                             setFieldValue("multibuyOption", e.target.value)
                           }
+                          sx={{
+                            "& .MuiOutlinedInput-notchedOutline": {
+                              borderColor: "#D7D7D7",
+                            },
+                          }}
                         >
-                          <MenuItem value="2x1">2x1</MenuItem>
-                          <MenuItem value="3x2">3x2</MenuItem>
+                          {MULTIBUY_OPTIONS.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
                         </Select>
                       </FormControl>
                     )}
@@ -418,7 +454,7 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
               {/* Sección Tiempo limitado */}
               {values.isPromotionActive && (
                 <>
-                  <Typography variant="subtitle2" mb={1}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#333" }} mb={1}>
                     Tiempo limitado
                   </Typography>
                   <FormControlLabel
@@ -432,6 +468,7 @@ export const Promotion: React.FC<PromotionProps> = ({ category, onSubmit }) => {
                       />
                     }
                     label="Activar cuenta regresiva"
+                    sx={{ "& .MuiFormControlLabel-label": { fontSize: 14, color: "#4F4F4F" } }}
                   />
 
                   {values.countdownActive && (

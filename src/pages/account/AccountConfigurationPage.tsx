@@ -1,22 +1,11 @@
-import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined";
-import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
-import CachedIcon from "@mui/icons-material/Cached";
-import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-import VerifiedIcon from "@mui/icons-material/Verified";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import {
-  Avatar,
   Box,
   Button,
-  Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -34,7 +23,12 @@ import {
 } from "@mui/material";
 import { Field, Form, Formik, useFormikContext } from "formik";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
+import { ReactComponent as ExchangeIcon } from "../../assets/icons/exchange.svg";
+import { ReactComponent as ParaguayFlagIcon } from "../../assets/icons/flag-paraguay.svg";
+import { ReactComponent as VenezuelaFlagIcon } from "../../assets/icons/flag-venezuela.svg";
+import { ReactComponent as LocationIcon } from "../../assets/icons/location-marker.svg";
 import BusinessTypeSelectorField from "../../components/BusinessTypeSelectorField";
 import CategorySelectionList from "../../components/CategorySelectionList";
 import FormikPhoneInput from "../../components/FormikPhoneInput";
@@ -48,15 +42,17 @@ import { useCategories } from "../../hooks/useCategories";
 import { useCities } from "../../hooks/useCities";
 import { useCountries } from "../../hooks/useCountries";
 import { useCurrencies } from "../../hooks/useCurrencies";
+import { useHomePageData } from "../../hooks/useHomePageData";
+import BusinessAvatar from "../home/components/BusinessAvatar";
+import { BUSINESS_CATEGORY_ICON_MAP } from "../../utils/businessCategoryIcons";
 import { displayFormikFormErrors } from "../../utils/utils";
 
 const SettingsCard: React.FC<{
   title: string;
-  icon?: React.ReactNode;
   onEdit?: () => void;
   children?: React.ReactNode;
   paperSx?: object;
-}> = ({ title, icon, onEdit, children, paperSx }) => {
+}> = ({ title, onEdit, children, paperSx }) => {
   return (
     <Paper
       elevation={0}
@@ -72,10 +68,7 @@ const SettingsCard: React.FC<{
       }}
     >
       <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box display="flex" alignItems="center" gap={2}>
-          {icon}
-          <Typography variant="h6">{title}</Typography>
-        </Box>
+        <Typography variant="h6">{title}</Typography>
         {onEdit && (
           <IconButton
             size="small"
@@ -213,23 +206,30 @@ const LocationFormFields: React.FC<{
 };
 
 const sidebarNavItemSx = {
-  borderRadius: 2,
+  borderRadius: "6px",
   mb: 1,
   "&.Mui-selected": {
     backgroundColor: "#F9F9F9",
-    boxShadow: "inset -4px 0 0 0 #347AEA",
     "&:hover": { backgroundColor: "#F9F9F9" },
   },
 };
 
+const CountryFlag: React.FC<{ countryName?: string }> = ({ countryName }) => {
+  if (countryName === "Paraguay") return <ParaguayFlagIcon width={24} height={18} />;
+  if (countryName === "Venezuela") return <VenezuelaFlagIcon width={24} height={18} />;
+  return null;
+};
+
 const AccountConfigurationPage: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [selectedSection, setSelectedSection] = useState<
     "configuration" | "security"
   >("configuration");
 
   const { data, isLoading } = useBusinessAccountInfo();
+  const { data: homePageData } = useHomePageData();
   const updateAccountInfo = useUpdateBusinessAccountInfo();
 
   const { categories: allCategories } = useCategories();
@@ -237,13 +237,7 @@ const AccountConfigurationPage: React.FC = () => {
   const { currencies } = useCurrencies();
 
   const [openModal, setOpenModal] = useState<
-    | null
-    | "id"
-    | "categories"
-    | "location"
-    | "business_type"
-    | "money"
-    | "access"
+    null | "categories" | "location" | "business_type" | "money" | "access"
   >(null);
   const exchangeFromCode = data?.is_primary_to_secondary
     ? data?.primary_currency_code
@@ -255,6 +249,73 @@ const AccountConfigurationPage: React.FC = () => {
   return (
     <Box>
       <Header />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: "18px",
+          px: { xs: 4, md: "38px" },
+          pt: "18px",
+          pb: "12px",
+          borderBottom: "1px solid #EDEDED",
+          bgcolor: "white",
+        }}
+      >
+        <IconButton
+          onClick={() => navigate(-1)}
+          aria-label="Volver"
+          sx={{ bgcolor: "#EDEDED", borderRadius: "6px", p: 2 }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography
+          sx={{
+            fontWeight: 700,
+            fontSize: isMobile ? 16 : 24,
+            color: "#292929",
+          }}
+        >
+          Mi cuenta
+        </Typography>
+      </Box>
+
+      {isMobile && (
+        <Box sx={{ display: "flex", bgcolor: "white" }}>
+          {(
+            [
+              { key: "configuration", label: "Configuración" },
+              { key: "security", label: "Seguridad" },
+            ] as const
+          ).map(({ key, label }) => {
+            const active = selectedSection === key;
+            return (
+              <Box
+                key={key}
+                onClick={() => setSelectedSection(key)}
+                sx={{
+                  flex: 1,
+                  textAlign: "center",
+                  py: 3.25,
+                  cursor: "pointer",
+                  borderBottom: active
+                    ? "2px solid #2563EB"
+                    : "1px solid #EEEEEE",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 14,
+                    color: active ? "#2563EB" : "#6B7280",
+                  }}
+                >
+                  {label}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
       <Box sx={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         {!isMobile && (
           <Box
@@ -264,27 +325,8 @@ const AccountConfigurationPage: React.FC = () => {
               borderRight: (t) => `1px solid ${t.palette.divider}`,
             }}
           >
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              mb={3}
-            >
-              <Avatar sx={{ width: 110, height: 110, mb: 2 }} />
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <Typography
-                  sx={{ fontSize: 18, fontWeight: 500, color: "#4b4b4b" }}
-                >
-                  {data?.business_name ?? "Nombre del Comercio"}
-                </Typography>
-                <VerifiedIcon sx={{ fontSize: 16, color: "#337AEA" }} />
-              </Box>
-              <Typography variant="caption" color="text.secondary">
-                Usuario
-              </Typography>
-            </Box>
             <Typography
-              sx={{ fontSize: 14, fontWeight: 500, color: "#9E9EA6", mb: 1 }}
+              sx={{ fontSize: 14, fontWeight: 700, color: "#374151", mb: 1 }}
             >
               Tu cuenta
             </Typography>
@@ -309,369 +351,254 @@ const AccountConfigurationPage: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText primary="Seguridad" />
               </ListItemButton>
-              {/* <ListItemButton sx={sidebarNavItemSx}>
-                <ListItemIcon>
-                  <CardMembershipOutlinedIcon />
-                </ListItemIcon>
-                <ListItemText primary="Subscripción" />
-              </ListItemButton>
-              <ListItemButton sx={sidebarNavItemSx}>
-                <ListItemIcon>
-                  <ReceiptLongOutlinedIcon />
-                </ListItemIcon>
-                <ListItemText primary="Facturación" />
-              </ListItemButton> */}
-            </List>
-            <Divider sx={{ my: 2 }} />
-            <Typography
-              sx={{ fontSize: 14, fontWeight: 500, color: "#9E9EA6", mb: 1 }}
-            >
-              Ayuda
-            </Typography>
-            <List>
-              <ListItemButton sx={sidebarNavItemSx}>
-                <ListItemIcon>
-                  <WhatsAppIcon />
-                </ListItemIcon>
-                <ListItemText primary="Atención al cliente" />
-              </ListItemButton>
             </List>
           </Box>
         )}
 
         <Box sx={{ flex: 1, p: { xs: 2, md: 6 } }}>
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            mb={3}
-          >
-            <Box>
-              <Typography
-                sx={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontSize: 28,
-                  fontWeight: 500,
-                  lineHeight: 1.5,
-                  color: "#000",
-                }}
-              >
-                {selectedSection === "configuration"
-                  ? "Configuración"
-                  : "Seguridad"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontSize: 16,
-                  color: "#7C8DB5",
-                  lineHeight: 1.5,
-                }}
-              >
-                @{data?.business_id ?? "nombre_empresa"}
-              </Typography>
-            </Box>
-            <Paper
-              elevation={0}
-              sx={{
-                boxShadow: "0px 2px 5px rgba(124,141,181,0.12)",
-                borderRadius: "8px",
-                px: 3,
-                py: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Typography sx={{ fontSize: 14, color: "#4b4b4b" }}>
-                Creada el 17/07/2025
-              </Typography>
-              <KeyboardArrowDownIcon sx={{ fontSize: 18, color: "#9E9EA6" }} />
-            </Paper>
-          </Box>
-
           {isLoading ? (
             <Typography>Cargando...</Typography>
           ) : selectedSection === "configuration" ? (
-            <Box>
-              {/* ID del comercio + QR Card */}
-              <Box
-                display="flex"
-                gap={3}
-                flexDirection={{ xs: "column", md: "row" }}
-                alignItems={{ md: "flex-start" }}
-              >
-                <Box flex={1}>
-                  <SettingsCard
-                    title="ID del comercio"
-                    icon={<BadgeOutlinedIcon />}
-                    onEdit={() => data && setOpenModal("id")}
+            <Box
+              display="flex"
+              gap="38px"
+              flexWrap="wrap"
+              justifyContent={isMobile ? "center" : "flex-start"}
+            >
+              <Box flex="1 1 0" minWidth={300} maxWidth={1024}>
+                {/* Categoría comercial */}
+                <SettingsCard
+                  title="Categoría comercial"
+                  onEdit={() => setOpenModal("categories")}
+                >
+                  {(data?.categories ?? []).length ? (
+                    <Box display="flex" gap={1} flexWrap="wrap">
+                      {data!.categories.map((c) => {
+                        const Icon = BUSINESS_CATEGORY_ICON_MAP[c.name];
+                        return (
+                          <Box
+                            key={c.id}
+                            sx={{
+                              bgcolor: "#E8F3FF",
+                              color: "#337AEA",
+                              fontSize: 14,
+                              px: 2,
+                              py: 1,
+                              borderRadius: "6px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            {Icon && <Icon width={20} height={20} />}
+                            {c.name}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        bgcolor: "#E8F3FF",
+                        color: "#337AEA",
+                        fontSize: 14,
+                        px: 2,
+                        py: 1,
+                        borderRadius: "6px",
+                        display: "inline-block",
+                      }}
+                    >
+                      Sin categoría
+                    </Box>
+                  )}
+                </SettingsCard>
+
+                {/* Ubicación */}
+                <SettingsCard
+                  title="Ubicación geográfica"
+                  onEdit={() => setOpenModal("location")}
+                >
+                  <Box
+                    display="flex"
+                    gap={2}
+                    flexDirection={{ xs: "column", md: "row" }}
                   >
-                    <FieldDisplay
-                      label="Nombre"
-                      value={data?.business_name}
-                      sx={{ mb: 2.5 }}
-                    />
-                    <FieldDisplay
-                      label="Usuario"
-                      value={data?.business_id}
-                      sx={{ mb: 2.5 }}
-                    />
+                    <Box flex={1}>
+                      <FieldDisplay
+                        label="País"
+                        value={
+                          data?.country_name ? (
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <CountryFlag countryName={data.country_name} />
+                              <Typography
+                                sx={{
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                  color: "#374151",
+                                }}
+                              >
+                                {data.country_name}
+                              </Typography>
+                            </Box>
+                          ) : undefined
+                        }
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <FieldDisplay label="Ciudad" value={data?.city_name} />
+                    </Box>
+                  </Box>
+                </SettingsCard>
+
+                {/* Tipo de negocio */}
+                <SettingsCard
+                  title="Tipo de negocio"
+                  onEdit={() => setOpenModal("business_type")}
+                >
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <LocationIcon width={24} height={24} />
                     <Box>
                       <Typography
                         sx={{
-                          fontSize: 14,
                           fontWeight: 700,
-                          color: "#4b4b4b",
-                          mb: 0.5,
+                          color: "#337AEA",
+                          fontSize: 14,
                         }}
                       >
-                        Tu enlace público
+                        {data?.business_type === "commercial"
+                          ? "Comercial"
+                          : data?.business_type === "entrepreneur"
+                            ? "Emprendedor"
+                            : data?.business_type || "Sin definir"}
                       </Typography>
-                      <Box display="flex" gap={1}>
-                        <Box
-                          sx={{
-                            flex: 1,
-                            backgroundColor: "#FAFAFA",
-                            borderRadius: "6px",
-                            py: 1.5,
-                            px: 3,
-                            minHeight: 48,
-                            display: "flex",
-                            alignItems: "center",
-                            fontSize: 14,
-                            color: "#4b4b4b",
-                          }}
-                        >
-                          marky.me/{data?.business_id ?? "..."}
-                        </Box>
-                        <Button
-                          variant="text"
-                          startIcon={<ContentCopyIcon />}
-                          sx={{
-                            bgcolor: "#EDEDED",
-                            borderRadius: "6px",
-                            px: 3,
-                            color: "#4b4b4b",
-                            textTransform: "none",
-                            whiteSpace: "nowrap",
-                            "&:hover": { bgcolor: "#E0E0E0" },
-                          }}
-                        >
-                          Copiar enlace
-                        </Button>
-                      </Box>
+                      <Typography sx={{ fontSize: 12, color: "#333" }}>
+                        {data?.business_type === "commercial"
+                          ? "Tu negocio dispone de sucursal para recibir clientes o comensales"
+                          : data?.business_type === "entrepreneur"
+                            ? "Tu negocio aun no cuenta con sucursal. Opera desde un centro de producción."
+                            : ""}
+                      </Typography>
                     </Box>
-                  </SettingsCard>
-                </Box>
+                  </Box>
+                </SettingsCard>
 
-                {/* <Box
-                  sx={{
-                    width: { xs: "100%", md: 280 },
-                    bgcolor: "#E8F3FF",
-                    borderRadius: "12px",
-                    p: 5,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 2,
-                    mb: "25px",
-                  }}
+                {/* Expresión monetaria */}
+                <SettingsCard
+                  title="Expresión monetaria"
+                  onEdit={() => setOpenModal("money")}
                 >
-                  <QrCode2Icon sx={{ fontSize: 80, color: "#337AEA" }} />
-                  <Typography
-                    sx={{
-                      fontSize: 14,
-                      color: "#4b4b4b",
-                      textAlign: "center",
-                    }}
+                  <Box
+                    display="flex"
+                    gap={2}
+                    flexDirection={{ xs: "column", md: "row" }}
                   >
-                    Comparte tu negocio con tus clientes
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    startIcon={<FileDownloadOutlinedIcon />}
-                    sx={{ borderRadius: "8px", textTransform: "none" }}
-                  >
-                    Descargar QR
-                  </Button>
-                </Box> */}
+                    <Box flex={1}>
+                      <FieldDisplay
+                        label="Moneda de uso"
+                        value={
+                          data?.primary_currency_code
+                            ? `${data.primary_currency_code} - ${data.primary_currency_name}`
+                            : undefined
+                        }
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <FieldDisplay
+                        label="Moneda Secundaria"
+                        value={
+                          data?.secondary_currency_code
+                            ? `${data.secondary_currency_code} - ${data.secondary_currency_name}`
+                            : undefined
+                        }
+                      />
+                    </Box>
+                  </Box>
+                  <Box mt={2}>
+                    <Typography variant="body2">
+                      Precios con tasa de cambio
+                    </Typography>
+                    <Typography variant="caption">
+                      Se mostrará el valor de cambio en tus productos.
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={2} mt={2}>
+                      <Box
+                        sx={{
+                          backgroundColor: "#FFF4E8",
+                          px: 2,
+                          py: 1,
+                          borderRadius: 1,
+                        }}
+                      >{`1 ${exchangeFromCode ?? ""}`}</Box>
+                      <Box>es igual a:</Box>
+                      <Box
+                        sx={{
+                          backgroundColor: "#FFF4E8",
+                          px: 2,
+                          py: 1,
+                          borderRadius: 1,
+                        }}
+                      >{`${data?.exchange_rate} ${exchangeToCode ?? ""}`}</Box>
+                      <IconButton
+                        sx={{ bgcolor: "#EDEDED", borderRadius: "6px", p: 2 }}
+                      >
+                        <ExchangeIcon />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </SettingsCard>
               </Box>
 
-              {/* Categorías */}
-              <SettingsCard
-                title="Categoría comercial"
-                icon={<CategoryOutlinedIcon />}
-                onEdit={() => setOpenModal("categories")}
-              >
-                {(data?.categories ?? []).length ? (
-                  <Box>
-                    <Typography sx={{ fontSize: 14, color: "#4b4b4b", mb: 1 }}>
-                      Categoría principal de tu negocio
-                    </Typography>
-                    <Typography sx={{ fontSize: 12, color: "#9E9EA6", mb: 2 }}>
-                      Especialidad
-                    </Typography>
-                    <Box display="flex" gap={1} flexWrap="wrap">
-                      {data!.categories.map((c) => (
-                        <Box
-                          key={c.id}
-                          sx={{
-                            bgcolor: "#E8F3FF",
-                            color: "#337AEA",
-                            fontSize: 14,
-                            px: 2,
-                            py: 1,
-                            borderRadius: "6px",
-                          }}
-                        >
-                          {c.name}
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-                ) : (
-                  <Box
+              {!isMobile && (
+                <Box width={330} flexShrink={0}>
+                  <Typography
+                    sx={{ fontSize: 18, fontWeight: 500, color: "#333", mb: 3 }}
+                  >
+                    Previsualización
+                  </Typography>
+                  <Paper
+                    elevation={0}
                     sx={{
-                      bgcolor: "#E8F3FF",
-                      color: "#337AEA",
-                      fontSize: 14,
-                      px: 2,
-                      py: 1,
-                      borderRadius: "6px",
-                      display: "inline-block",
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "12px",
+                      py: 6,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
                     }}
                   >
-                    Sin categoría
-                  </Box>
-                )}
-              </SettingsCard>
-
-              {/* Ubicación */}
-              <SettingsCard
-                title="Ubicación geográfica"
-                icon={<LocationOnOutlinedIcon />}
-                onEdit={() => setOpenModal("location")}
-              >
-                <Box
-                  display="flex"
-                  gap={2}
-                  flexDirection={{ xs: "column", md: "row" }}
-                >
-                  <Box flex={1}>
-                    <FieldDisplay label="País" value={data?.country_name} />
-                  </Box>
-                  <Box flex={1}>
-                    <FieldDisplay label="Ciudad" value={data?.city_name} />
-                  </Box>
-                </Box>
-              </SettingsCard>
-
-              {/* Tipo de negocio */}
-              <SettingsCard
-                title="Tipo de negocio"
-                icon={<StorefrontOutlinedIcon />}
-                onEdit={() => setOpenModal("business_type")}
-              >
-                <Box display="flex" alignItems="center" gap={2}>
-                  <StorefrontOutlinedIcon sx={{ color: "#337AEA" }} />
-                  <Box>
+                    <BusinessAvatar
+                      photo={homePageData?.profile_image}
+                      size={110}
+                      sx={{ mb: 3 }}
+                    />
                     <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#337AEA",
-                        fontSize: 14,
-                      }}
+                      sx={{ fontSize: 18, fontWeight: 500, color: "#374151" }}
                     >
-                      {data?.business_type === "commercial"
-                        ? "Comercial"
-                        : data?.business_type === "entrepreneur"
-                          ? "Emprendedor"
-                          : data?.business_type || "Sin definir"}
+                      {data?.business_name ?? "Nombre del comercio"}
                     </Typography>
-                    <Typography sx={{ fontSize: 12, color: "#9E9EA6" }}>
-                      {data?.business_type === "commercial"
-                        ? "Tu negocio dispone de sucursal para recibir clientes o comensales"
-                        : data?.business_type === "entrepreneur"
-                          ? "Tu negocio aun no cuenta con sucursal. Opera desde un centro de producción."
-                          : ""}
-                    </Typography>
-                  </Box>
-                </Box>
-              </SettingsCard>
-
-              {/* Expresión monetaria */}
-              <SettingsCard
-                title="Expresión monetaria"
-                icon={<AttachMoneyOutlinedIcon />}
-                onEdit={() => setOpenModal("money")}
-              >
-                <Box
-                  display="flex"
-                  gap={2}
-                  flexDirection={{ xs: "column", md: "row" }}
-                >
-                  <Box flex={1}>
-                    <FieldDisplay
-                      label="Moneda de uso"
-                      value={
-                        data?.primary_currency_code
-                          ? `${data.primary_currency_code} - ${data.primary_currency_name}`
-                          : undefined
-                      }
-                    />
-                  </Box>
-                  <Box flex={1}>
-                    <FieldDisplay
-                      label="Moneda secundaria"
-                      value={
-                        data?.secondary_currency_code
-                          ? `${data.secondary_currency_code} - ${data.secondary_currency_name}`
-                          : undefined
-                      }
-                    />
-                  </Box>
-                </Box>
-                <Box mt={2}>
-                  <Typography variant="body2">
-                    Precios con tasa de cambio
-                  </Typography>
-                  <Typography variant="caption">
-                    Se mostrará el valor de cambio en tus productos.
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={2} mt={2}>
-                    <Box
-                      sx={{
-                        backgroundColor: "#FFF4E8",
-                        px: 2,
-                        py: 1,
-                        borderRadius: 1,
-                      }}
-                    >{`1 ${exchangeFromCode ?? ""}`}</Box>
-                    <Box>es igual a:</Box>
-                    <Box
-                      sx={{
-                        backgroundColor: "#FFF4E8",
-                        px: 2,
-                        py: 1,
-                        borderRadius: 1,
-                      }}
-                    >{`${data?.exchange_rate} ${exchangeToCode ?? ""}`}</Box>
-                    <IconButton
-                      sx={{ bgcolor: "#EDEDED", borderRadius: "6px", p: 2 }}
+                    <Typography
+                      sx={{ fontSize: 14, color: "#4F4F4F", mt: 1 }}
                     >
-                      <CachedIcon />
-                    </IconButton>
-                  </Box>
+                      {(data?.categories ?? []).map((c) => c.name).join(", ") ||
+                        "Sin categoría"}
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={0.5} mt={1}>
+                      <StorefrontOutlinedIcon
+                        sx={{ fontSize: 14, color: "#2563EB" }}
+                      />
+                      <Typography sx={{ fontSize: 12, color: "#2563EB" }}>
+                        Negocio
+                      </Typography>
+                    </Box>
+                  </Paper>
                 </Box>
-              </SettingsCard>
+              )}
             </Box>
           ) : (
             // Security section
             <Box>
               <SettingsCard
                 title="Datos de acceso"
-                icon={<MailOutlineIcon />}
                 onEdit={() => setOpenModal("access")}
               >
                 <Box
@@ -683,9 +610,28 @@ const AccountConfigurationPage: React.FC = () => {
                     <FieldDisplay label="Email" value={data?.email} />
                   </Box>
                   <Box flex={1}>
-                    <FieldDisplay label="Teléfono" value={data?.phone_number} />
+                    <FieldDisplay
+                      label="Whatsapp o teléfono"
+                      value={data?.phone_number}
+                    />
                   </Box>
                 </Box>
+              </SettingsCard>
+
+              <SettingsCard title="Contraseña">
+                <Typography sx={{ fontSize: 14, color: "#4F4F4F", mb: 1 }}>
+                  Cambia tu contraseña en cualquier momento.
+                </Typography>
+                {/* No hay endpoint de cambio de contraseña autenticado todavía
+                    (authService.changePassword solo funciona con el link
+                    público de recuperación por email) — habilitar cuando el
+                    backend lo exponga. */}
+                <Typography
+                  component="span"
+                  sx={{ fontSize: 14, fontWeight: 500, color: "#337AEA" }}
+                >
+                  Cambiar contraseña
+                </Typography>
               </SettingsCard>
             </Box>
           )}
@@ -693,76 +639,6 @@ const AccountConfigurationPage: React.FC = () => {
       </Box>
 
       {/* MODALS */}
-      <CustomModal
-        open={openModal === "id"}
-        onClose={() => setOpenModal(null)}
-        title="Editar identidad del comercio"
-        sx={{ width: 520 }}
-        hideFooter
-      >
-        {!data ? (
-          <Box p={4}>
-            <Typography>Cargando...</Typography>
-          </Box>
-        ) : (
-          <Formik
-            enableReinitialize
-            initialValues={{
-              business_name: data.business_name ?? "",
-              business_id: data.business_id ?? "",
-            }}
-            validationSchema={Yup.object({
-              business_name: Yup.string().required("Requerido"),
-              business_id: Yup.string()
-                .required("Requerido")
-                .matches(/^[a-z0-9\-_]+$/, "Solo minúsculas, - y _")
-                .min(4)
-                .max(22),
-            })}
-            onSubmit={async (values, { setSubmitting, setFieldError }) => {
-              try {
-                setSubmitting(true);
-                await updateAccountInfo.mutateAsync({
-                  business_name: values.business_name,
-                  business_id: values.business_id,
-                });
-                setOpenModal(null);
-              } catch (err: any) {
-                displayFormikFormErrors(err, setFieldError);
-              } finally {
-                setSubmitting(false);
-              }
-            }}
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <Field
-                  name="business_name"
-                  component={Input}
-                  label="Nombre del comercio"
-                />
-                <Field
-                  name="business_id"
-                  component={Input}
-                  label="Usuario (slug)"
-                />
-                <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-                  <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={isSubmitting}
-                    sx={{ paddingX: 4 }}
-                  >
-                    Guardar
-                  </Button>
-                </Box>
-              </Form>
-            )}
-          </Formik>
-        )}
-      </CustomModal>
-
       <CustomModal
         open={openModal === "access"}
         onClose={() => setOpenModal(null)}
@@ -800,7 +676,7 @@ const AccountConfigurationPage: React.FC = () => {
               <Field
                 name="phone_number"
                 component={FormikPhoneInput}
-                label="Teléfono"
+                label="Whatsapp o teléfono"
               />
               <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
                 <Button onClick={() => setOpenModal(null)}>Cancelar</Button>
@@ -867,6 +743,10 @@ const AccountConfigurationPage: React.FC = () => {
                     maxSelectable={3}
                     selected={values.categories || []}
                     setSelected={handleSelectedChange}
+                    renderIcon={(cat) => {
+                      const Icon = BUSINESS_CATEGORY_ICON_MAP[cat.name];
+                      return Icon ? <Icon width={30} height={30} /> : null;
+                    }}
                   />
                 </Box>
                 <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
@@ -1157,7 +1037,9 @@ const AccountConfigurationPage: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          <Box sx={{ width: "fit-content", whiteSpace: "nowrap" }}>
+                          <Box
+                            sx={{ width: "fit-content", whiteSpace: "nowrap" }}
+                          >
                             <Typography id="modal-description" variant="body2">
                               es igual a:
                             </Typography>
@@ -1193,7 +1075,7 @@ const AccountConfigurationPage: React.FC = () => {
                               setFieldValue("exchange_rate", "");
                             }}
                           >
-                            <CachedIcon color="action" />
+                            <ExchangeIcon />
                           </Button>
                         </Box>
                       </Box>

@@ -10,7 +10,9 @@ import {
   Typography,
   FormLabel,
   Box,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import * as Yup from "yup";
 import CancelButton from "../../../components/CancelButton";
 import colors from "../../../themes/utils/colors";
@@ -30,8 +32,17 @@ const DescriptionModal = ({
   initialDescription: string;
   onSubmit: (description: string) => void;
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      fullScreen={isMobile}
+    >
       <Box
         sx={{
           display: "flex",
@@ -49,7 +60,17 @@ const DescriptionModal = ({
           <DialogTitle>Descripción del comercio</DialogTitle>
         </Box>
         <Box display={"flex"} sx={{ paddingY: 3 }}>
-          <XButton onClick={onClose} sx={{ marginRight: 2 }} />
+          <XButton
+            onClick={onClose}
+            sx={{
+              marginRight: 2,
+              ...(isMobile && {
+                backgroundColor: colors.light.grey[400],
+                borderRadius: "6px",
+                "&:hover": { backgroundColor: colors.light.grey[400] },
+              }),
+            }}
+          />
         </Box>
       </Box>
 
@@ -74,8 +95,25 @@ const DescriptionModal = ({
           dirty,
           isSubmitting,
         }) => (
-          <Form>
-            <DialogContent sx={{ maxHeight: "80vh" }}>
+          <Form
+            style={
+              isMobile
+                ? {
+                    display: "flex",
+                    flexDirection: "column",
+                    flex: 1,
+                    minHeight: 0,
+                  }
+                : undefined
+            }
+          >
+            <DialogContent
+              sx={
+                isMobile
+                  ? { flex: 1, overflowY: "auto" }
+                  : { maxHeight: "80vh" }
+              }
+            >
               <Box
                 sx={{
                   width: "100%",
@@ -84,9 +122,7 @@ const DescriptionModal = ({
                 }}
               >
                 <FormLabel>Descripción</FormLabel>
-                <Typography>
-                  {values.description?.length || 0}/100
-                </Typography>
+                <Typography>{values.description?.length || 0}/100</Typography>
               </Box>
               <TextField
                 sx={{ mt: 2 }}
@@ -106,8 +142,8 @@ const DescriptionModal = ({
                 variant="body2"
                 sx={{ mt: 4, color: colors.light.grey[900] }}
               >
-                Escribe una bio breve para presentar tu negocio en el perfil
-                público. Máximo 100 caracteres.
+                Sea creativo, informativo, descriptivo. Lo que desee. Será la
+                introducción pública de su comercio.
               </Typography>
             </DialogContent>
             <DialogActions
@@ -116,6 +152,8 @@ const DescriptionModal = ({
                 display: "flex",
                 gap: 2,
                 padding: 4,
+                flexShrink: 0,
+                ...(isMobile && { "& > button": { flex: 1 } }),
               }}
             >
               <CancelButton sx={{ paddingX: 4 }} onClick={onClose}>

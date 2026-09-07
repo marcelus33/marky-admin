@@ -4,16 +4,23 @@ import {
   DialogTitle,
   DialogContent,
   Button,
+  ButtonBase,
   Box,
-  Avatar,
   Typography,
   IconButton,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import EditIcon from "@mui/icons-material/Edit";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { ReactComponent as FacebookIcon } from "../../../assets/icons/facebook.svg";
 import XButton from "../../../components/XButton";
+import BusinessAvatar from "./BusinessAvatar";
+import colors from "../../../themes/utils/colors";
+import { ShowNotification } from "../../../utils/utils";
 import { Attribute } from "..";
 
 interface PresentationModalProps {
@@ -24,6 +31,7 @@ interface PresentationModalProps {
   onEditDescription: () => void;
   onEditAttributes: () => void;
   profilePhoto?: string;
+  businessId?: string;
   values: any;
 }
 
@@ -42,6 +50,65 @@ const attributesPlaceholder: Attribute[] = [
   },
 ];
 
+interface MobileRowProps {
+  label: string;
+  value?: string;
+  placeholder?: string;
+  onClick?: () => void;
+  last?: boolean;
+}
+
+const MobileRow: React.FC<MobileRowProps> = ({
+  label,
+  value,
+  placeholder,
+  onClick,
+  last,
+}) => {
+  const rowSx = {
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    gap: 2,
+    px: 4,
+    py: 3,
+    borderBottom: last ? "none" : `1px solid ${colors.light.grey[400]}`,
+  };
+  const content = (
+    <>
+      <Box flex={1} minWidth={0} textAlign="left">
+        <Typography
+          variant="body2"
+          sx={{ color: colors.light.text.secondary, mb: 1 }}
+        >
+          {label}
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: value ? colors.light.text.primary : colors.light.grey[900],
+            fontWeight: value ? 700 : 400,
+            wordBreak: "break-word",
+          }}
+        >
+          {value || placeholder}
+        </Typography>
+      </Box>
+      {onClick && (
+        <ChevronRightIcon sx={{ color: colors.light.text.disabled }} />
+      )}
+    </>
+  );
+
+  return onClick ? (
+    <ButtonBase onClick={onClick} sx={rowSx}>
+      {content}
+    </ButtonBase>
+  ) : (
+    <Box sx={rowSx}>{content}</Box>
+  );
+};
+
 const PresentationModal: React.FC<PresentationModalProps> = ({
   open,
   onClose,
@@ -50,9 +117,154 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
   onEditDescription,
   onEditAttributes,
   //   profilePhoto,
+  businessId,
   values,
 }) => {
   const { socialMedia, description, attributes, profilePhoto } = values;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const hasChannels =
+    socialMedia &&
+    (Object.values(socialMedia) as string[]).some(
+      (url: string) => url.trim() !== "",
+    );
+  const hasDescription = description && description.trim() !== "";
+  const hasAttributes = attributes && attributes.length > 0;
+
+  const handleCopyLink = async () => {
+    if (!businessId) return;
+    try {
+      await navigator.clipboard.writeText(`marky.one/${businessId}`);
+      ShowNotification({ message: "Enlace copiado", type: "success" });
+    } catch {
+      ShowNotification({ message: "No se pudo copiar el enlace", type: "error" });
+    }
+  };
+
+  if (isMobile) {
+    return (
+      <Dialog open={open} onClose={onClose} fullScreen>
+        <Box
+          sx={{
+            display: "flex",
+            width: "100%",
+            alignItems: "center",
+            borderBottom: `1px solid ${colors.light.grey[400]}`,
+          }}
+        >
+          <DialogTitle sx={{ flex: 1 }}>Editar perfil</DialogTitle>
+          <Box display={"flex"} sx={{ paddingY: 3 }}>
+            <XButton
+              onClick={onClose}
+              sx={{
+                marginRight: 3,
+                backgroundColor: colors.light.grey[400],
+                borderRadius: "6px",
+                "&:hover": { backgroundColor: colors.light.grey[400] },
+              }}
+            />
+          </Box>
+        </Box>
+        <DialogContent sx={{ p: 0 }}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap={3}
+            sx={{
+              px: 4,
+              py: 3,
+              borderBottom: `1px solid ${colors.light.grey[400]}`,
+            }}
+          >
+            <BusinessAvatar photo={profilePhoto} size={92} />
+            <Button
+              variant="outlined"
+              onClick={onEditPhoto}
+              sx={{
+                borderColor: colors.light.grey[800],
+                color: colors.light.text.primary,
+                px: 3,
+                boxShadow: 0,
+                textTransform: "none",
+              }}
+            >
+              Cambiar foto
+            </Button>
+          </Box>
+
+          <MobileRow label="Nombre" value={values.business_name} />
+          <MobileRow label="Usuario" value={businessId} />
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={2}
+            sx={{
+              width: "100%",
+              px: 4,
+              py: 3,
+              borderBottom: `1px solid ${colors.light.grey[400]}`,
+            }}
+          >
+            <Box flex={1} minWidth={0}>
+              <Typography
+                variant="body2"
+                sx={{ color: colors.light.text.primary, mb: 1 }}
+              >
+                Tu enlace público
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "primary.main",
+                  fontWeight: 700,
+                  wordBreak: "break-word",
+                }}
+              >
+                marky.one/{businessId || "..."}
+              </Typography>
+            </Box>
+            <IconButton onClick={handleCopyLink} size="small">
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          <MobileRow
+            label="Canales"
+            value={
+              hasChannels
+                ? (Object.entries(socialMedia) as [string, string][])
+                    .filter(([, url]) => url && url.trim() !== "")
+                    .map(([platform]) => platform)
+                    .join(", ")
+                : undefined
+            }
+            placeholder="Agrega tus canales de marca"
+            onClick={onEditChannels}
+          />
+          <MobileRow
+            label="Descripción"
+            value={hasDescription ? description : undefined}
+            placeholder="Escribe una breve descripción sobre tu negocio y cuál es tu producto estrella de tu propuesta."
+            onClick={onEditDescription}
+          />
+          <MobileRow
+            label="Atributos"
+            value={
+              hasAttributes
+                ? attributes.map((attr: any) => attr.name).join(", ")
+                : undefined
+            }
+            placeholder="Identifica lo que te distingue"
+            onClick={onEditAttributes}
+            last
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <Box
@@ -77,21 +289,20 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
           px={8}
         >
           <Box display={"flex"} alignItems={"center"} gap={3}>
-            <Avatar
-              src={profilePhoto || ""}
-              sx={{ width: 80, height: 80, bgcolor: "grey.300" }}
-            />
+            <BusinessAvatar photo={profilePhoto} size={80} />
             <Box display={"flex"} flexDirection={"column"} gap={1}>
               <Typography
                 variant="h3"
                 mt={1}
                 sx={{ fontSize: "14px", fontWeight: 700 }}
               >
-                Nombre comercial
+                {values.business_name}
               </Typography>
-              <Typography variant="body2" sx={{ color: "grey.500" }}>
-                @nombre-usuario
-              </Typography>
+              {businessId && (
+                <Typography variant="body2" sx={{ color: "grey.500" }}>
+                  @{businessId}
+                </Typography>
+              )}
             </Box>
           </Box>
           <Button
@@ -112,13 +323,7 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             justifyContent: "center",
             cursor: "pointer",
             mb: 4,
-            mx:
-              socialMedia &&
-              (Object.values(socialMedia) as string[]).some(
-                (url: string) => url.trim() !== ""
-              )
-                ? 0
-                : 8,
+            mx: hasChannels ? 0 : 8,
             p: 2,
             px: 8,
             pb: 4,
@@ -126,13 +331,7 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             "&:hover": {
               backgroundColor: "grey.100",
             },
-            border:
-              socialMedia &&
-              (Object.values(socialMedia) as string[]).some(
-                (url: string) => url.trim() !== ""
-              )
-                ? ""
-                : "1px dashed",
+            border: hasChannels ? "" : "1px dashed",
             borderColor: "primary.main",
             borderRadius: 1,
             position: "relative",
@@ -144,10 +343,7 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
           {/* <Typography variant="subtitle2" color="textSecondary">
             Canales
           </Typography> */}
-          {socialMedia &&
-          (Object.values(socialMedia) as string[]).some(
-            (url: string) => url.trim() !== ""
-          ) ? (
+          {hasChannels ? (
             <Box
               display="flex"
               alignItems="center"
@@ -271,11 +467,10 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             justifyContent: "center",
             cursor: "pointer",
             mb: 4,
-            mx: description && description.trim() !== "" ? 0 : 8,
+            mx: hasDescription ? 0 : 8,
             p: 2,
             px: 8,
-            border:
-              description && description.trim() !== "" ? "" : "1px dashed",
+            border: hasDescription ? "" : "1px dashed",
             borderColor: "primary.main",
             borderRadius: 1,
             backgroundColor: "inherit",
@@ -288,7 +483,7 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             },
           }}
         >
-          {description && description.trim() !== "" ? (
+          {hasDescription ? (
             <Typography
               variant="subtitle1"
               mt={1}
@@ -339,10 +534,10 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             cursor: "pointer",
             mb: 4,
             // p: 2,
-            mx: attributes && attributes.length > 0 ? 0 : 8,
+            mx: hasAttributes ? 0 : 8,
             px: 8,
             pb: 2,
-            border: attributes && attributes.length > 0 ? "" : "1px dashed",
+            border: hasAttributes ? "" : "1px dashed",
             borderColor: "primary.main",
             borderRadius: 1,
             backgroundColor: "inherit",
@@ -358,7 +553,7 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             alignItems: "center",
           }}
         >
-          {attributes && attributes.length > 0 ? (
+          {hasAttributes ? (
             <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
               {attributes.map((attr: any) => (
                 <Box

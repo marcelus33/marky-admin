@@ -8,21 +8,6 @@ interface AttributesInfoProps {
   onOpen: () => void;
 }
 
-const attributesPlaceholder: Attribute[] = [
-  {
-    id: 1,
-    name: "Wifi",
-  },
-  {
-    id: 2,
-    name: "Estacionamiento",
-  },
-  {
-    id: 3,
-    name: "+1",
-  },
-];
-
 const AttributesInfo: React.FC<AttributesInfoProps> = ({
   attributes,
   onOpen,
@@ -32,45 +17,26 @@ const AttributesInfo: React.FC<AttributesInfoProps> = ({
     <Box
       onClick={onOpen}
       sx={{
-        border: isEmpty ? "2px dashed" : "none",
-        borderColor: "primary.main",
-        padding: 4,
-        borderRadius: 2,
+        border: isEmpty ? "1px dashed #B8CDF5" : "none",
+        backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
+        borderRadius: isEmpty ? "6px" : 2,
+        py: isEmpty ? 4 : 4,
+        px: isEmpty ? 3 : 4,
         cursor: "pointer",
         textAlign: "center",
       }}
     >
       {isEmpty ? (
-        <Box
+        <Typography
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 2,
+            color: "#2563EB",
+            fontWeight: 700,
+            fontSize: 14,
+            lineHeight: "22px",
           }}
         >
-          <Typography color="primary" fontWeight={500}>
-            Definir atributos
-          </Typography>
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {attributes.length < 1 &&
-              attributesPlaceholder.map((attr: any) => (
-                <Box
-                  key={attr.id}
-                  sx={{
-                    backgroundColor: "grey.200",
-                    padding: 1,
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="body2" color="textDisabled">
-                    {attr.name}
-                  </Typography>
-                </Box>
-              ))}
-          </Box>
-        </Box>
+          Agrega tus atributos
+        </Typography>
       ) : (
         <Box display="flex" flexWrap="wrap" gap={1}>
           {attributes.map((attr: any) => (

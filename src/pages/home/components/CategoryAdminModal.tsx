@@ -123,27 +123,34 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
         <Box
           sx={{
             display: "flex",
+            alignItems: "center",
             justifyContent: "space-between",
             width: "100%",
-            borderBottom: "1px solid lightgrey",
+            boxShadow: "0px 1px 0px #E8E9EB",
+            p: 3,
           }}
         >
-          <Box display={"flex"}>
-            <IconButton onClick={goBack}>
-              <ArrowBackIcon sx={{ color: "black" }} />
-            </IconButton>
-            <DialogTitle>
+          <Box display={"flex"} alignItems={"center"}>
+            {["createEdit", "sort", "promotion"].includes(activeScreen) && (
+              <IconButton onClick={goBack} sx={{ mr: 1 }}>
+                <ArrowBackIcon sx={{ color: "#333", fontSize: 18 }} />
+              </IconButton>
+            )}
+            <DialogTitle
+              sx={{ p: 0, fontSize: 16, fontWeight: 500, color: "#292929" }}
+            >
               {["main", "welcome"].includes(activeScreen) &&
                 "Administrar categorías"}
               {activeScreen === "sort" && "Ordenar categorías"}
               {activeScreen === "createEdit" &&
                 `${categoryForm?.id ? "Editar" : "Nueva"} Categoría`}
-              {activeScreen === "promotion" && "Promoción"}
+              {activeScreen === "promotion" && "Categoría en promoción"}
             </DialogTitle>
           </Box>
-          <Box display={"flex"} sx={{ paddingY: 3 }}>
-            <XButton onClick={handleModalClose} sx={{ marginRight: 2 }} />
-          </Box>
+          <XButton
+            onClick={handleModalClose}
+            sx={{ bgcolor: "grey.400", borderRadius: 1.5 }}
+          />
         </Box>
         {/* ========== MODAL CONTENT ========== */}
         <DialogContent>
@@ -206,8 +213,8 @@ export const CategoryAdminModal: React.FC<CategoryAdminModalProps> = ({
               onSubmit={(updatedCategory) => {
                 setCategories((prev) =>
                   prev.map((c) =>
-                    c.id === updatedCategory.id ? updatedCategory : c
-                  )
+                    c.id === updatedCategory.id ? updatedCategory : c,
+                  ),
                 );
                 setActiveScreen("main");
               }}

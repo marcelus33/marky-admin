@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import categoryIcons from "../assets/icons/category/categoryIcons";
 import { ReactComponent as CrownIcon } from "../assets/icons/crown.svg";
+import AddProductTileIcon from "../assets/icons/add-product-tile-icon.svg";
 import { ROUTES } from "../routes/paths";
 import { CategoryWithProducts } from "../types/categoryWithProducts";
 import { usePromotionCountdown } from "../hooks/usePromotionCountdown";
@@ -89,7 +90,7 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
     return (
       <Box
         sx={{
-          backgroundColor: "grey.500",
+          backgroundColor: "#BDBDBD",
           color: "white",
           px: 2,
           py: 1,
@@ -252,32 +253,73 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
       <Box
         display={"grid"}
         gridTemplateColumns={{
-          xs: "repeat(2, 1fr)", // 2 columns on phones
-          sm: "repeat(3, 1fr)", // 3 on small screens
+          xs: "repeat(3, 1fr)", // 3 columns on phones
+          sm: "repeat(3, 1fr)", // 3 on tablets
           md: "repeat(4, 1fr)", // 4 on medium
           lg: "repeat(5, 1fr)", // ✅ 5 columns on large screens
         }}
-        gap={{ xs: 4, md: 6 }}
-        // gap={2}
+        gap={{ xs: 4, sm: 4, lg: 6 }}
       >
-        {category.products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            currentCategory={{ id: category.id, name: category.name }}
-            onClick={() => {
-              navigate(ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""));
+        {category.products.length === 0 ? (
+          <Box
+            onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
+            sx={{
+              aspectRatio: "1 / 1",
+              minWidth: 97,
+              minHeight: 97,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              border: "2px dashed",
+              borderColor: "primary.main",
+              borderRadius: "16px",
+              backgroundColor: "white",
+              cursor: "pointer",
             }}
-            onPromotionClick={onProductPromotionClick}
-            onDeleteClick={onProductDeleteClick}
-            onMoveClick={(prod, currentCategory) =>
-              onProductMoveClick?.(
-                prod,
-                currentCategory ?? { id: category.id, name: category.name },
-              )
-            }
-          />
-        ))}
+          >
+            <Box
+              component="img"
+              src={AddProductTileIcon}
+              alt=""
+              sx={{ width: 34, height: 34 }}
+            />
+            <Typography
+              sx={{
+                color: "primary.main",
+                fontWeight: 700,
+                fontSize: 14,
+                lineHeight: "16px",
+                textAlign: "center",
+                px: 3,
+              }}
+            >
+              Añade tu producto
+            </Typography>
+          </Box>
+        ) : (
+          category.products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              currentCategory={{ id: category.id, name: category.name }}
+              onClick={() => {
+                navigate(
+                  ROUTES.PRODUCT_DETAIL.replace(":id", product.id + ""),
+                );
+              }}
+              onPromotionClick={onProductPromotionClick}
+              onDeleteClick={onProductDeleteClick}
+              onMoveClick={(prod, currentCategory) =>
+                onProductMoveClick?.(
+                  prod,
+                  currentCategory ?? { id: category.id, name: category.name },
+                )
+              }
+            />
+          ))
+        )}
       </Box>
     </Box>
   );

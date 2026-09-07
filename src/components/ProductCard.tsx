@@ -3,40 +3,18 @@ import {
   Card,
   CardContent,
   CardMedia,
-  CircularProgress,
   Typography,
   Tooltip,
-  IconButton,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  Menu,
-  MenuItem,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import defaultImage from "../assets/images/default-product.png"; // you can replace this path
 import { styled } from "@mui/material/styles";
 import { ProductGridItem } from "../types/product";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import FileCopyIcon from "@mui/icons-material/FileCopy";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../routes/paths";
 import { formatPrice, truncateText } from "../utils/format";
-import { useUpdateProductAvailability } from "../hooks/useProductMutations";
-import useDuplicateProduct from "../hooks/useDuplicateProduct";
 import { usePromotionCountdown } from "../hooks/usePromotionCountdown";
 import ProductStopperTag from "./ProductStopperTag";
-
-interface ProductCategoryRef {
-  id: number | null;
-  name: string;
-}
+import ProductActionsMenu, { ProductCategoryRef } from "./ProductActionsMenu";
 
 interface ProductCardProps {
   product: ProductGridItem;
@@ -57,209 +35,13 @@ const LineClamp = styled(Typography)({
   overflow: "hidden",
 });
 
-const DropdownMenu: React.FC<{
-  product: ProductGridItem;
-  currentCategory?: ProductCategoryRef;
-  onPromotionClick?: (product: ProductGridItem) => void;
-  onDeleteClick?: (product: ProductGridItem) => void;
-  onMoveClick?: (
-    product: ProductGridItem,
-    currentCategory?: ProductCategoryRef,
-  ) => void;
-}> = ({
-  product,
-  currentCategory,
-  onPromotionClick,
-  onDeleteClick,
-  onMoveClick,
-}) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const updateAvailability = useUpdateProductAvailability();
-  const duplicateProduct = useDuplicateProduct();
-
-  // derive initial availability from product payload (may be snake_case or camelCase)
-  const initialIsAvailable = Boolean(
-    product.is_available ?? product.is_active ?? true,
-  );
-  const [isUnavailable, setIsUnavailable] = useState(!initialIsAvailable);
-  const navigate = useNavigate();
-
-  const open = Boolean(anchorEl);
-  const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => setAnchorEl(null);
-
-  return (
-    <Box
-      sx={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        opacity: 0,
-        transition: "opacity 0.2s",
-        zIndex: 2,
-        "& .MuiIconButton-root": {
-          padding: "4px",
-        },
-        pointerEvents: "auto",
-        backgroundColor: "grey.200",
-        borderRadius: 2,
-        p: 1,
-      }}
-      className="menu-button"
-    >
-      <IconButton
-        onClick={(e) => {
-          e.stopPropagation();
-          handleOpen(e);
-        }}
-      >
-        <MoreVertIcon fontSize="small" />
-      </IconButton>
-      {/*  */}
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        onClick={(e) => e.stopPropagation()}
-        PaperProps={{
-          sx: {
-            marginTop: 2,
-            backgroundColor: "white",
-            p: 1.5, // inner padding
-            maxWidth: 320, // optional, for spacing
-          },
-        }}
-      >
-        <MenuItem
-          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-            event.stopPropagation();
-            navigate(ROUTES.PRODUCT_EDIT.replace(":id", product.id + ""));
-          }}
-          sx={{ py: 4, borderRadius: 2 }}
-        >
-          <EditIcon fontSize="small" sx={{ mr: 4 }} />
-          Editar
-        </MenuItem>
-        <MenuItem
-          disabled={duplicateProduct.isPending}
-          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-            event.stopPropagation();
-            // Menu stays open (not handleClose()) while the fetch is in
-            // flight so the spinner below is visible; on success the
-            // hook navigates away, on error the toast fires and the item
-            // re-enables so the user can retry or dismiss the menu.
-            duplicateProduct.mutate(Number(product.id));
-          }}
-          sx={{ py: 4, borderRadius: 2 }}
-        >
-          {duplicateProduct.isPending ? (
-            <CircularProgress size={20} sx={{ mr: 4 }} />
-          ) : (
-            <FileCopyIcon fontSize="small" sx={{ mr: 4 }} />
-          )}
-          Duplicar
-        </MenuItem>
-        <MenuItem
-          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-            event.stopPropagation();
-            onMoveClick?.(product, currentCategory);
-            handleClose();
-          }}
-          sx={{ py: 4, borderRadius: 2 }}
-        >
-          <DriveFileMoveOutlinedIcon fontSize="small" sx={{ mr: 4 }} />
-          Mover a categoría
-        </MenuItem>
-        <MenuItem
-          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-            event.stopPropagation();
-            onPromotionClick?.(product);
-            handleClose();
-          }}
-          sx={{ py: 4, borderRadius: 2 }}
-        >
-          <LocalOfferIcon fontSize="small" sx={{ mr: 4 }} />
-          Producto en promoción
-        </MenuItem>
-        <MenuItem sx={{ py: 4, borderRadius: 2 }}>
-          <ContentCopyIcon fontSize="small" sx={{ mr: 4 }} />
-          Copiar URL
-        </MenuItem>
-        <MenuItem
-          onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-            event.stopPropagation();
-            onDeleteClick?.(product);
-            handleClose();
-          }}
-          sx={{ color: "error.main", py: 4, borderRadius: 2 }}
-        >
-          <DeleteIcon fontSize="small" sx={{ mr: 4 }} />
-          Eliminar
-        </MenuItem>
-        <Divider />
-        <Box px={2} py={1}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isUnavailable}
-                disabled={updateAvailability.isPending}
-                onChange={async (e) => {
-                  const checked = e.target.checked; // checked === true means "No disponible"
-                  const previous = isUnavailable;
-
-                  // optimistic update
-                  setIsUnavailable(checked);
-
-                  const id = product.id;
-                  if (id) {
-                    const fd = new FormData();
-                    // persist only the is_available field on the backend
-                    const newIsAvailable = !checked;
-                    fd.append(
-                      "is_available",
-                      newIsAvailable ? "true" : "false",
-                    );
-                    try {
-                      await updateAvailability.mutateAsync({
-                        id: Number(id),
-                        product: fd,
-                      });
-                      // close the dropdown menu after successful update
-                      handleClose();
-                    } catch (err) {
-                      // revert optimistic update on error
-                      setIsUnavailable(previous);
-                    }
-                  }
-                }}
-              />
-            }
-            label={
-              <Box>
-                <Typography>No disponible</Typography>
-              </Box>
-            }
-          />
-          <Box>
-            <Typography variant="caption" color="textDisabled">
-              Al marcar esta opción, el producto continuará mostrándose pero con
-              el estado "No disponible"
-            </Typography>
-          </Box>
-        </Box>
-      </Menu>
-    </Box>
-  );
-};
-
 const styles = {
   cardContainer: {
     position: "relative",
     width: "100%",
     boxShadow: 0,
     backgroundColor: "transparent",
+    borderRadius: 3,
     transition: "background-color 0.2s",
     cursor: "pointer", // 👈 makes it feel clickable
     "&:hover": {
@@ -305,29 +87,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const renderPromotionBadge = () => {
     if (!promotionCountdown) return null;
 
-    // The countdown badge always uses a fixed urgency color keyed to the
-    // phase (amber while scheduled, red while actively counting down). It
-    // must never depend on discount, multibuy, price, or any other product
-    // attribute.
+    // The countdown pill always uses the same danger-toned colors regardless
+    // of phase (scheduled vs. actively counting down) — it must never depend
+    // on discount, multibuy, price, or any other product attribute.
     return (
       <Box
         sx={{
-          backgroundColor:
-            promotionCountdown.phase === "starts"
-              ? "warning.main"
-              : "error.main",
-          color: "white",
-          px: 2,
+          backgroundColor: "error.light",
+          color: "error.main",
+          px: 1.5,
           py: 0.5,
           borderRadius: 1,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: 500,
           display: "flex",
           alignItems: "center",
-          mt: 1,
+          gap: 0.5,
+          mb: 2,
           width: "fit-content",
         }}
       >
+        <AccessTimeIcon sx={{ fontSize: 16 }} />
         {promotionCountdown.label}
       </Box>
     );
@@ -340,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return (
       <Box
         sx={{
-          backgroundColor: "grey.500",
+          backgroundColor: "#BDBDBD",
           color: "white",
           px: 2,
           py: 1,
@@ -374,7 +154,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           sx={{
             border: "1px solid",
             borderColor: "grey.200",
-            borderRadius: 2,
+            borderRadius: { xs: 3, lg: 4 },
             overflow: "hidden",
           }}
         >
@@ -469,13 +249,32 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Box>
       </Box>
 
-      <DropdownMenu
-        product={product}
-        currentCategory={currentCategory}
-        onPromotionClick={onPromotionClick}
-        onDeleteClick={onDeleteClick}
-        onMoveClick={onMoveClick}
-      />
+      <Box
+        sx={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          opacity: 0,
+          transition: "opacity 0.2s",
+          zIndex: 2,
+          "& .MuiIconButton-root": {
+            padding: "4px",
+          },
+          pointerEvents: "auto",
+          backgroundColor: "grey.200",
+          borderRadius: 2,
+          p: 1,
+        }}
+        className="menu-button"
+      >
+        <ProductActionsMenu
+          product={product}
+          currentCategory={currentCategory}
+          onPromotionClick={onPromotionClick}
+          onDeleteClick={onDeleteClick}
+          onMoveClick={onMoveClick}
+        />
+      </Box>
 
       <CardContent sx={{ p: 2, backgroundColor: "transparent", mt: 2 }}>
         {/* Views */}
@@ -498,18 +297,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
           return <ProductStopperTag stopper={stopper} />;
         })()}
 
-        {/* Product name */}
-        <LineClamp variant="subtitle1">{product.name}</LineClamp>
-
-        {/* Promotion badge: above the description but below the optional tags */}
+        {/* Countdown pill: below the stopper ribbon, above the title */}
         {renderPromotionBadge()}
+
+        {/* Product name */}
+        <LineClamp sx={{ fontSize: 14, fontWeight: 500, color: "#4F4F4F" }}>
+          {product.name}
+        </LineClamp>
+
         {/* Description summary: truncated to 60 chars, full text on hover */}
         {product.description && (
           <Tooltip title={product.description} arrow>
-            <LineClamp
-              variant="body2"
-              sx={{ mt: 1, mb: 1, color: "text.secondary" }}
-            >
+            <LineClamp sx={{ mt: 1, mb: 1, fontSize: 12, color: "#4F4F4F" }}>
               {truncateText(product.description, 60)}
             </LineClamp>
           </Tooltip>
@@ -523,12 +322,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <Box mt={1}>
           {hasPriceDiscount && !hasMultibuy && product.primaryPriceWithDiscount ? (
             <>
-              <Typography color="primary" fontWeight="bold">
+              <Typography color="primary" fontWeight={500} fontSize={18}>
                 {product.primaryPriceWithDiscount}
               </Typography>
               {product.primaryPrice && (
                 <Typography
-                  variant="body2"
+                  fontSize={14}
                   color="grey.500"
                   sx={{ textDecoration: "line-through" }}
                 >
@@ -536,29 +335,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 </Typography>
               )}
               {product.secondaryPriceWithDiscount && (
-                <Typography variant="body2" color="grey.500">
+                <Typography fontSize={14} color="grey.500">
                   {product.secondaryPriceWithDiscount}
                 </Typography>
               )}
             </>
           ) : product.primaryPrice ? (
             <>
-              <Typography color="primary" fontWeight="bold">
+              <Typography color="primary" fontWeight={500} fontSize={18}>
                 {product.primaryPrice}
               </Typography>
               {product.secondaryPrice && (
-                <Typography variant="body2" color="grey.500">
+                <Typography fontSize={14} color="grey.500">
                   {product.secondaryPrice}
                 </Typography>
               )}
             </>
           ) : (
             <>
-              <Typography color="primary" fontWeight="bold">
+              <Typography color="primary" fontWeight={500} fontSize={18}>
                 {formatPrice(product.price)}
               </Typography>
               {product.priceAlt && (
-                <Typography variant="body2" color="textSecondary">
+                <Typography fontSize={14} color="textSecondary">
                   {formatPrice(product.priceAlt)}
                 </Typography>
               )}

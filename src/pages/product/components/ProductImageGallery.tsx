@@ -6,45 +6,36 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { AddPhotoAlternate as AddPhotoIcon } from "@mui/icons-material";
+import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import CollectionsIcon from "@mui/icons-material/Collections";
-import { Box, Button, Grid, List, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useFormikContext } from "formik";
-import React, { useEffect, useState } from "react";
-import NoPicturesImage from "../../../assets/images/producto_sin_imagenes.png";
+import React from "react";
 import ImageCropModal from "../../../components/ImageCropModal";
 import { useImageCropper } from "../../../hooks/useImageCropper";
-import { MediaItemLocal, Product } from "../../../types/product";
-import { generateThumbnail } from "../../../utils/media";
+import { Product } from "../../../types/product";
 import { validateMedia } from "../../../utils/mediaValidation";
 import { ShowNotification } from "../../../utils/utils";
-import { SortableImageItem } from "./SortableImageItem";
-import { ThumbnailItem } from "./ThumbnailItem";
+import MediaTile from "./MediaTile";
 
-const ProductImageGallery = () => {
+interface ProductImageGalleryProps {
+  // Both optional and only used to restyle the existing global upload
+  // progress signal onto whichever tile(s) hold a pending (not-yet-saved)
+  // File — no new per-file upload pipeline.
+  uploadProgress?: number | null;
+  isSaving?: boolean;
+}
+
+const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
+  uploadProgress = null,
+  isSaving = false,
+}) => {
   const { values, setFieldValue } = useFormikContext<Product>();
   const { media = [] } = values;
-  const [selectedItem, setSelectedItem] = useState<MediaItemLocal | null>(
-    media[0],
-  );
-  const [videoThumbnail, setVideoThumbnail] = useState<string | undefined>(
-    undefined,
-  );
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-  );
+  const [activeMediaId, setActiveMediaId] = React.useState<string | number | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [activeMediaId, setActiveMediaId] = useState<string | number | null>(
-    null,
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
   const {
@@ -64,56 +55,6 @@ const ProductImageGallery = () => {
       handleCrop(activeMediaId, croppedImage);
     }
   });
-  useEffect(() => {
-    if (selectedItem?.media_type === "video" && selectedItem.file) {
-      const file = selectedItem.file;
-      const isFile =
-        file &&
-        typeof file === "object" &&
-        "name" in file &&
-        "size" in file &&
-        "type" in file;
-
-      if (isFile) {
-        generateThumbnail(URL.createObjectURL(file as File))
-          .then((thumb) => {
-            setVideoThumbnail(thumb);
-          })
-          .catch((error) => {
-            console.error("Error generating thumbnail:", error);
-            setVideoThumbnail(undefined);
-          });
-      } else if (typeof file === "string") {
-        setVideoThumbnail(undefined);
-      }
-    } else {
-      setVideoThumbnail(undefined);
-    }
-  }, [selectedItem]);
-
-  useEffect(() => {
-    const activeMedia = media.filter((item: any) => !item._delete);
-
-    // If there are no active items, clear selection
-    if (activeMedia.length === 0) {
-      setSelectedItem(null);
-      return;
-    }
-
-    // If nothing selected, pick the first active item
-    if (!selectedItem) {
-      setSelectedItem(activeMedia[0]);
-      return;
-    }
-
-    // If selected item was removed/marked deleted, pick first active item
-    const stillActive = activeMedia.find(
-      (item: any) => item.id === selectedItem.id,
-    );
-    if (!stillActive) {
-      setSelectedItem(activeMedia[0] || null);
-    }
-  }, [media, selectedItem]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -192,11 +133,6 @@ const ProductImageGallery = () => {
       .filter(Boolean);
 
     setFieldValue("media", newMedia);
-
-    // Update selected preview if needed
-    if (selectedItem && selectedItem.id === id) {
-      setSelectedItem(newMedia[0] || null);
-    }
   };
 
   const handleCrop = (id: string | number, file: File) => {
@@ -220,62 +156,20 @@ const ProductImageGallery = () => {
     }
   };
 
-  const getImageUrl = (item: any): string => {
-    try {
-      if (!item || !item.file) return "";
+  const activeMedia = media.filter((item: any) => !item._delete);
+  const images = activeMedia.filter((item: any) => item.media_type === "image");
+  const video = activeMedia.find((item: any) => item.media_type === "video");
 
-      const file = item.file;
-      const isFile = file && typeof file === "object" && "name" in file;
-
-      if (item.media_type === "image" || item.media_type === "video") {
-        if (isFile) {
-          return URL.createObjectURL(file as File);
-        }
-        return typeof file === "string" ? file : "";
-      }
-
-      return "";
-    } catch (error) {
-      console.error("Error en getImageUrl:", error, item);
-      return "";
-    }
+  // Per-tile caption while the whole payload is mid-upload (Publish click),
+  // shown only on tiles holding a pending (unsaved) File — restyles the
+  // existing global uploadProgress signal, no new per-file upload logic.
+  const captionFor = (item: any) => {
+    if (!isSaving || !item?.isNew) return undefined;
+    if (uploadProgress === null) return "Procesando...";
+    return `Subiendo...${uploadProgress}%`;
   };
 
-  const activeMedia = media.filter((item: any) => !item._delete);
-  const imageCount = activeMedia.filter(
-    (item: any) => item.media_type === "image",
-  ).length;
-  const videoCount = activeMedia.filter(
-    (item: any) => item.media_type === "video",
-  ).length;
-  // The two caps (3 images / 1 video) apply independently, so the button
-  // only fully disables once both are maxed out — otherwise the user can
-  // still add whichever type has room left.
-  const isGalleryFull = imageCount >= 3 && videoCount >= 1;
-
-  const itemsWithUrls = React.useMemo(() => {
-    return media
-      .filter((item: any) => !item._delete)
-      .map((item: any) => {
-        const file = item.file;
-        const isFile = file && typeof file === "object" && "name" in file;
-        const fileName =
-          item.name ||
-          (isFile
-            ? (file as File).name
-            : typeof file === "string"
-              ? file
-              : "Sin nombre");
-
-        return {
-          id: item.id.toString(),
-          name: fileName,
-          type: item.media_type,
-          url: typeof file === "string" ? file : "",
-          file: file,
-        };
-      });
-  }, [media]);
+  const imageSlots = [0, 1, 2].map((slotIndex) => images[slotIndex] ?? null);
 
   return (
     <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 2, padding: 5 }}>
@@ -291,227 +185,75 @@ const ProductImageGallery = () => {
         onCropComplete={handleCropComplete}
         handleZoomChange={handleZoomChange}
       />
-      <Box
-        sx={{
-          display: "flex",
-          // border: "1px solid",
-          flexDirection: { xs: "column", md: "row" },
-          justifyContent: "space-between",
-          alignItems: { md: "center" },
-          mb: 2,
-          gap: 2,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <CollectionsIcon />
-          <Typography variant="h6" fontWeight="bold">
-            Galería de tu producto
-          </Typography>
-        </Box>
-        <input
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-        {!!selectedItem && (
-          <Button
-            variant="contained"
-            color="secondary"
-            disabled={isGalleryFull}
-            sx={{
-              width: { xs: "100%", md: "auto" },
-              padding: "8px 12px 8px 12px",
-              backgroundColor: "#EDEDED",
-              color: "#4B4B4B",
-              boxShadow: 0,
-            }}
-            startIcon={<AddPhotoIcon />}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {isGalleryFull
-              ? "Máximo de archivos alcanzado"
-              : "Agregar contenido multimedia"}
-          </Button>
-        )}
+      <input
+        type="file"
+        multiple
+        accept="image/*,video/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
+      <Box display="flex" alignItems="center" gap={2} mb={1}>
+        <CollectionsIcon />
+        <Typography variant="h6" fontWeight="bold">
+          Imágenes y video del producto
+        </Typography>
       </Box>
-      {/* DISPLAY WHEN EMPTY */}
-      {!selectedItem && (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-          }}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Agrega hasta 3 imágenes y 1 video para presentar mejor tu producto.
+      </Typography>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext
+          items={images.map((item: any) => item.id.toString())}
+          strategy={horizontalListSortingStrategy}
         >
-          <img
-            src={NoPicturesImage}
-            alt="Producto sin imagenes"
-            style={{
-              width: "300px",
-              height: "300px",
-              objectFit: "contain",
-            }}
-          />
-
-          <Button
-            variant="contained"
-            color="secondary"
-            sx={{
-              width: { xs: "100%", md: "auto" },
-              padding: "8px 12px 8px 12px",
-              backgroundColor: "#EDEDED",
-              color: "#4B4B4B",
-              boxShadow: 0,
-            }}
-            startIcon={<AddPhotoIcon />}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Agregar contenido multimedia
-          </Button>
-        </Box>
-      )}
-      {/* ACTUAL GRID FOR THE IMAGES COMPONENT */}
-      {!!selectedItem && (
-        <Grid container spacing={2} mt={2}>
-          <Grid item xs={12} md={6}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                gap: { xs: 4, md: 0 },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "row", md: "column" },
-                  justifyContent: { xs: "center", md: "start" },
-                  alignContent: "space-around",
-                  gap: 4,
-                  alignItems: "flex-start",
-                  paddingX: 2,
-                  order: { xs: 2, md: 1 },
-                }}
-              >
-                {media
-                  .filter((item: any) => !item._delete)
-                  .map((item: any) => (
-                    <ThumbnailItem
-                      key={item.id}
-                      item={item}
-                      onClick={() => setSelectedItem(item)}
-                      isSelected={selectedItem?.id === item.id}
-                    />
-                  ))}
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                  height: "350px",
-                  width: "100%",
-                  order: { xs: 1, md: 2 },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: {
-                      xs: "100%",
-                      md: "90%",
-                    },
-                    height: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignContent: "center",
-                    alignItems: "center",
-                    border: "1px solid",
-                    borderColor: "grey.400",
-                    borderRadius: 2,
-                    padding: 5,
-                  }}
-                >
-                  {!selectedItem ? (
-                    <></>
-                  ) : selectedItem.media_type === "image" ? (
-                    <img
-                      src={getImageUrl(selectedItem)}
-                      alt={selectedItem.name || "Product image"}
-                      style={{
-                        borderRadius: 10,
-                        width: "300px",
-                        height: "300px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <video
-                      src={getImageUrl(selectedItem)}
-                      controls
-                      poster={videoThumbnail}
-                      style={{
-                        width: "260px",
-                        height: "260px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          </Grid>
-          {/* ================ SORTABLE LIST COLUMN ================ */}
-          <Grid item xs={12} md={6}>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={media
-                  .filter((item: any) => !item._delete)
-                  .map((item: any) => item.id.toString())}
-                strategy={verticalListSortingStrategy}
-              >
-                <List
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    p: 0,
-                  }}
-                >
-                  {itemsWithUrls.map((item: any) => (
-                    <SortableImageItem
-                      key={item.id}
-                      item={item}
-                      onDelete={handleDelete}
-                      onOpenCropModal={
-                        item.type === "image"
-                          ? handleOpenCropModalWithId
-                          : () => {}
-                      }
-                    />
-                  ))}
-                </List>
-              </SortableContext>
-            </DndContext>
-          </Grid>
-        </Grid>
-      )}
+          <Box display="flex" gap={2}>
+            {imageSlots.map((item, index) =>
+              item ? (
+                <MediaTile
+                  key={String(item.id)}
+                  id={String(item.id)}
+                  kind="image"
+                  filled
+                  sortable
+                  isCover={index === 0}
+                  file={item.file}
+                  caption={captionFor(item)}
+                  onDelete={() => handleDelete(String(item.id))}
+                  onCrop={() => handleOpenCropModalWithId(String(item.id))}
+                />
+              ) : (
+                <MediaTile
+                  key={`empty-image-${index}`}
+                  id={`empty-image-${index}`}
+                  kind="image"
+                  filled={false}
+                  onAdd={() => fileInputRef.current?.click()}
+                />
+              ),
+            )}
+            {video ? (
+              <MediaTile
+                key={String(video.id)}
+                id={String(video.id)}
+                kind="video"
+                filled
+                file={video.file}
+                caption={captionFor(video)}
+                onDelete={() => handleDelete(String(video.id))}
+              />
+            ) : (
+              <MediaTile
+                key="empty-video"
+                id="empty-video"
+                kind="video"
+                filled={false}
+                onAdd={() => fileInputRef.current?.click()}
+              />
+            )}
+          </Box>
+        </SortableContext>
+      </DndContext>
     </Box>
   );
 };

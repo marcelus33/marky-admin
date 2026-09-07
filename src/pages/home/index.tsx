@@ -1,9 +1,15 @@
 import { Box, Grid } from "@mui/material";
 import { Formik } from "formik";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, ChangeEvent } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import ImageCropModal from "../../components/ImageCropModal";
 import { useHomePageData } from "../../hooks/useHomePageData";
-import { useUpdateBusiness } from "../../hooks/useBusinessMutations";
+import { useBusinessAccountInfo } from "../../hooks/useBusinessAccountInfo";
+import {
+  useUpdateBusiness,
+  useUpdateBusinessProfileImage,
+} from "../../hooks/useBusinessMutations";
+import { useImageCropper } from "../../hooks/useImageCropper";
 import AttributesModal from "./components/AttributesModal";
 import { BusinessInfo } from "./components/businessInfo";
 import { ChannelWizardModal } from "./components/ChannelWizardModal";
@@ -43,6 +49,50 @@ const Home = () => {
 
   // Fetch home page data
   const { data: homePageData, isLoading, error } = useHomePageData();
+  const { data: businessAccountInfo } = useBusinessAccountInfo();
+
+  // Foto de perfil: se comparte entre el avatar de BusinessInfo y el botón
+  // "Cambiar foto" de PresentationModal, así ambos disparan la misma acción.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutate: updateProfileImage } = useUpdateBusinessProfileImage();
+  const setFieldValueRef = useRef<(field: string, value: any) => void>(
+    () => {},
+  );
+
+  const {
+    crop,
+    zoom,
+    croppingMedia,
+    imageUrl,
+    setCrop,
+    setZoom,
+    handleCropComplete,
+    handleOpenCropModal,
+    handleCloseCropModal,
+    handleApplyCrop,
+    handleZoomChange,
+  } = useImageCropper((croppedImage) => {
+    if (croppedImage) {
+      setFieldValueRef.current("profilePhoto", croppedImage);
+      const formData = new FormData();
+      formData.append("profile_image", croppedImage);
+      updateProfileImage(formData);
+    }
+  });
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleOpenCropModal(file);
+    }
+    if (event.target) {
+      event.target.value = "";
+    }
+  };
+
+  const handleOpenPhotoPicker = () => {
+    fileInputRef.current?.click();
+  };
 
   // Transform API data to form format
   const formInitialValues = useMemo(() => {
@@ -134,15 +184,32 @@ const Home = () => {
       }}
     >
       <Header />
-      <Box sx={{ flex: 1, p: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
+      <Box sx={{ flex: 1, px: { xs: 4, sm: 6, lg: 8 }, py: 3, height: "100%" }}>
+        <Grid
+          container
+          spacing={3}
+          sx={{ height: { xs: "auto", md: "100vh" } }}
+        >
+          <Grid
+            item
+            xs={12}
+            md={3}
+            px={{ xs: 0, md: 6 }}
+            sx={{
+              borderRight: (theme) => ({
+                xs: "none",
+                md: `1px solid ${theme.palette.grey[600]}`,
+              }),
+            }}
+          >
             <Formik
               initialValues={formInitialValues}
               onSubmit={handleSubmit}
               enableReinitialize
             >
               {({ values, setFieldValue }) => {
+                setFieldValueRef.current = setFieldValue;
+
                 // Transform socialMedia object to initialChannels format for ChannelWizardModal
                 const initialChannels = Object.entries(values.socialMedia)
                   .filter(
@@ -153,11 +220,36 @@ const Home = () => {
 
                 return (
                   <>
-                    <Box sx={{ position: "sticky", top: "4.7rem" }}>
+                    <ImageCropModal
+                      open={!!croppingMedia}
+                      onClose={handleCloseCropModal}
+                      onApply={handleApplyCrop}
+                      image={imageUrl}
+                      crop={crop}
+                      zoom={zoom}
+                      onCropChange={setCrop}
+                      onZoomChange={setZoom}
+                      onCropComplete={handleCropComplete}
+                      handleZoomChange={handleZoomChange}
+                    />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      style={{ display: "none" }}
+                      accept="image/*"
+                    />
+                    <Box
+                      sx={{
+                        position: { xs: "static", md: "sticky" },
+                        top: { md: "4.7rem" },
+                      }}
+                    >
                       <BusinessInfo
                         values={values}
                         homePageData={homePageData}
                         setFieldValue={setFieldValue}
+                        onOpenPhotoPicker={handleOpenPhotoPicker}
                         openSocialMediaModal={() =>
                           setOpenSocialMediaModal(true)
                         }
@@ -237,9 +329,7 @@ const Home = () => {
                         setOpenPresentationModal(false);
                         setShowBackButtonInModals(false);
                       }}
-                      onEditPhoto={() => {
-                        console.log("Abrir modal de cambiar foto");
-                      }}
+                      onEditPhoto={handleOpenPhotoPicker}
                       onEditChannels={() => {
                         setOpenSocialMediaModal(true);
                         setOpenPresentationModal(false);
@@ -257,6 +347,7 @@ const Home = () => {
                       }}
                       values={values}
                       profilePhoto={values.profilePhoto}
+                      businessId={businessAccountInfo?.business_id}
                     />
                   </>
                 );

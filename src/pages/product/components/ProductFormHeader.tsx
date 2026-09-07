@@ -1,6 +1,4 @@
 import { ArrowBack } from "@mui/icons-material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Box,
@@ -16,6 +14,8 @@ import {
 import { FormikProps } from "formik";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ReactComponent as DuplicateProductIcon } from "../../../assets/icons/product-form/duplicate-product.svg";
+import { ReactComponent as TrashIcon } from "../../../assets/icons/trash-icon.svg";
 import { Product } from "../../../types/product";
 import { useUpdateProductAvailability } from "../../product/../../hooks/useProductMutations";
 
@@ -24,6 +24,10 @@ interface ProductFormHeaderProps {
   onDeleteClick?: () => void;
   onDuplicateClick?: () => void;
   onBack?: () => void;
+  // Defaults to "Configuración" (desktop). On mobile, ProductFormPage passes
+  // the current section's name while a non-"Producto" section is open, so
+  // the header reads e.g. "Variaciones" instead.
+  title?: string;
 }
 
 const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
@@ -31,6 +35,7 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
   onDeleteClick,
   onDuplicateClick,
   onBack,
+  title = "Configuración",
 }) => {
   const updateAvailability = useUpdateProductAvailability();
   const navigate = useNavigate();
@@ -72,7 +77,7 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
           </IconButton>
         </Box>
         <Typography variant="h2" fontWeight="bold" sx={{ ml: 2 }}>
-          Configuración
+          {title}
         </Typography>
       </Box>
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -131,9 +136,11 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
           PaperProps={{
             sx: {
               marginTop: 2,
-              backgroundColor: "white", // light custom background
-              p: 2, // inner padding
-              maxWidth: 220, // optional, for spacing
+              backgroundColor: "white",
+              p: 2,
+              width: 260,
+              borderRadius: 3,
+              boxShadow: "1px 2px 3.5px rgba(194, 194, 194, 0.6)",
             },
           }}
         >
@@ -145,13 +152,17 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
               }}
               sx={{
                 borderRadius: 2,
-                p: 3,
+                px: 3,
+                py: 2,
                 display: "flex",
                 gap: 4,
+                "&:hover": { backgroundColor: "grey.50" },
               }}
             >
-              <LocalOfferIcon fontSize="medium" />
-              <Typography>Duplicar producto</Typography>
+              <DuplicateProductIcon width={24} height={24} />
+              <Typography variant="body2" color="text.secondary">
+                Duplicar producto
+              </Typography>
             </MenuItem>
           ) : null}
           <MenuItem
@@ -161,18 +172,21 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
             }}
             sx={{
               borderRadius: 2,
-              p: 3,
+              px: 3,
+              py: 2,
               display: "flex",
               gap: 4,
             }}
           >
-            <DeleteIcon fontSize="medium" />
-            <Typography color="error">Eliminar producto</Typography>
+            <TrashIcon width={18} height={19} />
+            <Typography variant="body2" color="error">
+              Eliminar producto
+            </Typography>
           </MenuItem>
 
-          <Divider />
+          <Divider sx={{ my: 1 }} />
 
-          <Box px={2} py={1}>
+          <Box px={3} py={2}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -210,13 +224,12 @@ const ProductFormHeader: React.FC<ProductFormHeaderProps> = ({
               label={<Typography variant="body2">Ocultar producto</Typography>}
               sx={{
                 "& .MuiSvgIcon-root": {
-                  fontSize: 28, // Bigger checkbox
-                  borderRadius: 6, // Rounded corners (not fully circular)
+                  fontSize: 22,
                 },
               }}
             />
-            <Box>
-              <Typography variant="caption" color="textDisabled">
+            <Box mt={1}>
+              <Typography variant="caption" color="grey.900">
                 Al marcar esta opción, el producto se ocultará a sus comensales.
                 Tu si podrás verlo.
               </Typography>

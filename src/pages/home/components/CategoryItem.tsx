@@ -55,38 +55,35 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
       display="flex"
       alignItems="center"
       justifyContent="space-between"
-      pb={2}
-      pt={1}
-      px={3}
-      mb={1}
-      sx={{ borderBottom: "1px solid #e0e0e0", borderRadius: 1, ...style }}
+      height={44}
+      pl={1.5}
+      pr={3}
+      sx={{ boxShadow: "0px 1px 0px #E8E9EB", ...style }}
     >
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box display="flex" alignItems="center" gap={1.5}>
         {isSortable && (
-          <Typography variant="body2" sx={{ cursor: "grab" }}>
+          <Typography variant="body2" sx={{ cursor: "grab", display: "flex" }}>
             <DragIndicatorIcon />
           </Typography>
         )}
         <Box
           sx={{
-            backgroundColor: "grey.600",
-            p: 1,
-            borderRadius: 1,
+            backgroundColor: "grey.400",
+            p: 2,
+            borderRadius: 1.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            mx: 2,
           }}
         >
           {IconComponent ? (
-            <IconComponent fontSize="small" />
+            <IconComponent width={18} height={18} />
           ) : (
-            <CrownIcon fontSize="small" />
+            <CrownIcon width={18} height={18} />
           )}
         </Box>
         <Typography
-          variant="body1"
-          sx={{ cursor: "pointer", pb: 1 }}
+          sx={{ cursor: "pointer", fontSize: 14, color: "#4F4F4F" }}
           // onClick={() => {
           //   setFieldValue("editingCategoryId", cat.id);
           //   setFieldValue("newCategoryName", cat.label);

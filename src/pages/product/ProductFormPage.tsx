@@ -1,23 +1,10 @@
-import {
-  Box,
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { AxiosProgressEvent } from "axios";
 import {
   Form,
   Formik,
-  FormikErrors,
   FormikHelpers,
   FormikProps,
-  getIn,
   setNestedObjectValues,
 } from "formik";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -48,12 +35,20 @@ import {
 } from "../../utils/promotionForm";
 import { ShowNotification } from "../../utils/utils";
 import AssignCategoryModal from "./components/AssignCategoryModal";
+import CompleteYourProductList from "./components/CompleteYourProductList";
 import ExtrasSection from "./components/ExtrasSection";
 import HighlightSection from "./components/HighlightSection";
+import PreviewPanel from "./components/PreviewPanel";
 import ProductFormHeader from "./components/ProductFormHeader";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SectionErrorBoundary from "../../components/SectionErrorBoundary";
+import {
+  getSectionDisplayName,
+  sectionHasError,
+} from "./components/sectionNavState";
+import SectionsNav from "./components/SectionsNav";
 import useDeleteProduct from "../../hooks/useDeleteProduct";
 import ProductSection from "./components/ProductSection";
 import SubmitSection from "./components/SubmitSection";
@@ -93,7 +88,10 @@ const addonItemSchema = Yup.object().shape({
 // multiPresentation/showExtras toggles — which live in plain component
 // state, not as Formik fields — without leftover/invalid rows in a
 // disabled section blocking publish or flagging that section as incomplete.
-const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) =>
+const buildValidationSchema = (
+  multiPresentation: boolean,
+  showExtras: boolean,
+) =>
   Yup.object().shape({
     name: Yup.string().required("El nombre del producto es requerido"),
     description: Yup.string()
@@ -125,8 +123,7 @@ const buildValidationSchema = (multiPresentation: boolean, showExtras: boolean) 
     isPromotionActive: Yup.boolean(),
     promotionOption: Yup.string().when("isPromotionActive", {
       is: true,
-      then: (schema) =>
-        schema.required("Debes seleccionar Descuento u Oferta"),
+      then: (schema) => schema.required("Debes seleccionar Descuento u Oferta"),
       otherwise: (schema) => schema.notRequired(),
     }),
     discountPercentage: Yup.number()
@@ -197,38 +194,11 @@ const buildNestedItemsPayload = (
     return acc;
   }, []);
 
-// Maps each side-nav section to the Yup field(s) whose errors belong to it,
-// so "Publicar" can flag exactly which sections are incomplete. Category is
-// deliberately excluded (see the comment on the `category` schema field
-// above).
-const SECTION_FIELDS: Record<string, string[]> = {
-  Producto: ["name", "description", "price"],
-  Variaciones: ["variants"],
-  "Adicionales o extras": ["addons"],
-  "Destacar producto": [
-    "promotionOption",
-    "discountPercentage",
-    "multibuyOption",
-    "promotionStartDate",
-    "promotionStartTime",
-    "promotionEndDate",
-    "promotionEndTime",
-  ],
-};
-
 // Maps a `?section=` deep-link query value (used by notification links) to
 // the side-nav section name it should preselect.
 const SECTION_SLUGS: Record<string, string> = {
   destacar: "Destacar producto",
 };
-
-const sectionHasError = (
-  sectionName: string,
-  errors: FormikErrors<Product>,
-): boolean =>
-  (SECTION_FIELDS[sectionName] ?? []).some(
-    (field) => getIn(errors, field) !== undefined,
-  );
 
 const ProductFormPage = () => {
   const { id } = useParams();
@@ -237,7 +207,6 @@ const ProductFormPage = () => {
   const updateProductMutation = useUpdateProduct();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("Producto");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -274,13 +243,16 @@ const ProductFormPage = () => {
     [multiPresentation, showExtras],
   );
 
-  const isSaving = createProductMutation.isPending || updateProductMutation.isPending;
+  const isSaving =
+    createProductMutation.isPending || updateProductMutation.isPending;
   // Percentage of the create/update request's body uploaded so far (mostly
   // meaningful when the product carries a video). null = no upload in flight.
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const handleUploadProgress = (progressEvent: AxiosProgressEvent) => {
     if (progressEvent.total) {
-      setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+      setUploadProgress(
+        Math.round((progressEvent.loaded * 100) / progressEvent.total),
+      );
     }
   };
 
@@ -417,10 +389,17 @@ const ProductFormPage = () => {
             variants: mappedVariants,
             addons: mappedAddons,
             //
+            // Yup's `stopper`/`discountPercentage` schemas aren't `.nullable()`
+            // (mirrors every other "no value" field in this form using ""/0
+            // as its empty sentinel, e.g. promotionOption/multibuyOption) —
+            // the backend can send either field as a literal `null` when
+            // unset, which Yup then rejects with "cannot be null" and blocks
+            // Publish even though nothing on the form actually changed.
+            stopper: productTemp.stopper ?? "",
             isPromotionActive,
             promotionOption,
             multibuyOption: multibuyOption,
-            discountPercentage: discountPercentage,
+            discountPercentage: discountPercentage ?? 0,
             countdownActive: !!promotionStartsAt,
             promotionStartDate,
             promotionStartTime,
@@ -501,15 +480,8 @@ const ProductFormPage = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isFormDirty]);
 
-  const handleDrawerClose = () => {
-    setMobileOpen(false);
-  };
-
   const handleSectionSelect = (sectionName: string) => {
     setSelectedSection(sectionName);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
   };
 
   const sections = [
@@ -521,6 +493,8 @@ const ProductFormPage = () => {
           formik={props}
           onOpenModal={() => setIsModalOpen(true)}
           selectedCategory={selectedCategory}
+          uploadProgress={uploadProgress}
+          isSaving={isSaving}
         />
       ),
     },
@@ -775,7 +749,11 @@ const ProductFormPage = () => {
         setUploadProgress(0);
         if (id) {
           updateProductMutation.mutate(
-            { id: Number(id), product: formData, onUploadProgress: handleUploadProgress },
+            {
+              id: Number(id),
+              product: formData,
+              onUploadProgress: handleUploadProgress,
+            },
             { onSuccess: handleSuccess, onError: handleError },
           );
         } else {
@@ -789,6 +767,27 @@ const ProductFormPage = () => {
       {(formikProps: FormikProps<Product>) => {
         console.log("Formik values:", formikProps.values);
         console.log("Formik errors:", formikProps.errors);
+        // Whether each section currently has active content — drives the
+        // Secciones nav's green/empty distinction (see sectionNavState.ts).
+        // "Producto" is always mandatory so its flag is unused by the state
+        // function but included for a complete map.
+        const activationFlags: Record<string, boolean> = {
+          Producto: true,
+          Variaciones: multiPresentation,
+          "Adicionales o extras": showExtras,
+          "Destacar producto":
+            !!formikProps.values.stopper ||
+            !!formikProps.values.isPromotionActive ||
+            !!formikProps.values.countdownActive,
+        };
+        // Red states only appear after the user has attempted to publish at
+        // least once — see hasAttemptedPublish below.
+        const navErrors = hasAttemptedPublish ? formikProps.errors : {};
+        // On mobile, viewing a non-"Producto" section replaces the whole
+        // body with just that section, full-screen; its own back caret
+        // returns to "Producto" instead of exiting the form.
+        const isMobileSectionScreen =
+          isMobile && selectedSection !== "Producto";
         return (
           <>
             <Header />
@@ -855,6 +854,11 @@ const ProductFormPage = () => {
               >
                 <ProductFormHeader
                   formik={formikProps}
+                  title={
+                    isMobile
+                      ? getSectionDisplayName(selectedSection)
+                      : undefined
+                  }
                   onDeleteClick={() => setOpenDeleteDialog(true)}
                   onDuplicateClick={() => {
                     const duplicated = buildDuplicatedProduct(
@@ -867,137 +871,30 @@ const ProductFormPage = () => {
                       }),
                     );
                   }}
-                  onBack={() => attemptNavigate(() => navigate(-1))}
+                  onBack={
+                    isMobileSectionScreen
+                      ? () => setSelectedSection("Producto")
+                      : () => attemptNavigate(() => navigate(-1))
+                  }
                 />
                 {/*  */}
                 <Box sx={{ display: "flex" }}>
-                  {isMobile ? (
-                    <Drawer
-                      variant="temporary"
-                      open={mobileOpen}
-                      onClose={handleDrawerClose}
-                      ModalProps={{
-                        keepMounted: true, // Better open performance on mobile.
-                      }}
-                      sx={{
-                        display: { xs: "block", md: "none" },
-                        "& .MuiDrawer-paper": {
-                          boxSizing: "border-box",
-                          width: 240,
-                        },
-                      }}
-                    >
-                      <Box>
-                        <List>
-                          {sections.map((section) => {
-                            const hasError =
-                              hasAttemptedPublish &&
-                              sectionHasError(
-                                section.name,
-                                formikProps.errors,
-                              );
-                            return (
-                              <ListItemButton
-                                key={section.name}
-                                selected={selectedSection === section.name}
-                                onClick={() =>
-                                  handleSectionSelect(section.name)
-                                }
-                                sx={{
-                                  borderRadius: 2,
-                                  mb: 1,
-                                  "&.Mui-selected": {
-                                    backgroundColor: "rgba(0, 0, 0, 0.08)",
-                                  },
-                                  "&.Mui-selected:hover": {
-                                    backgroundColor: "rgba(0, 0, 0, 0.12)",
-                                  },
-                                }}
-                              >
-                                <ListItemIcon>{section.icon}</ListItemIcon>
-                                <ListItemText
-                                  primary={section.name}
-                                  primaryTypographyProps={
-                                    hasError ? { color: "error" } : undefined
-                                  }
-                                />
-                                {hasError && (
-                                  <ErrorOutlineIcon
-                                    color="error"
-                                    fontSize="small"
-                                  />
-                                )}
-                              </ListItemButton>
-                            );
-                          })}
-                        </List>
-                      </Box>
-                    </Drawer>
-                  ) : (
-                    <Box
-                      sx={{
-                        width: 280,
-                        flexShrink: 0,
-                        pl: 10,
-                        mr: 10,
-                        // borderRight: "1px solid #e0e0e0",
-                      }}
-                    >
-                      <Typography
-                        variant="h5"
-                        sx={{ marginBottom: theme.spacing(2) }}
-                      >
-                        Información
-                      </Typography>
-                      <List>
-                        {sections.map((section) => {
-                          const hasError =
-                            hasAttemptedPublish &&
-                            sectionHasError(section.name, formikProps.errors);
-                          return (
-                            <ListItemButton
-                              key={section.name}
-                              selected={selectedSection === section.name}
-                              onClick={() => handleSectionSelect(section.name)}
-                              sx={{
-                                borderRadius: 2,
-                                mb: 1,
-                                "&.Mui-selected": {
-                                  backgroundColor: "grey.400",
-                                },
-                                "&.Mui-selected:hover": {
-                                  backgroundColor: "grey.400",
-                                },
-                              }}
-                            >
-                              <ListItemIcon>{section.icon}</ListItemIcon>
-                              <ListItemText
-                                primary={section.name}
-                                primaryTypographyProps={
-                                  hasError ? { color: "error" } : undefined
-                                }
-                              />
-                              {hasError && (
-                                <ErrorOutlineIcon
-                                  color="error"
-                                  fontSize="small"
-                                />
-                              )}
-                            </ListItemButton>
-                          );
-                        })}
-                      </List>
-                    </Box>
+                  {!isMobile && (
+                    <SectionsNav
+                      sections={sections}
+                      selectedSection={selectedSection}
+                      formikErrors={navErrors}
+                      activationFlags={activationFlags}
+                      onSelect={handleSectionSelect}
+                    />
                   )}
                   <Box
                     component="main"
                     sx={{
                       p: 3,
-                      width: {
-                        xs: "100%",
-                        md: `calc(100% - 240px)`,
-                        lg: "75%",
-                      },
+                      width: { xs: "100%", md: "auto" },
+                      flex: { md: 1 },
+                      minWidth: 0,
                       pb: 12, // Add padding to the bottom to avoid overlap with the submit section
                       mb: 12,
                     }}
@@ -1005,14 +902,50 @@ const ProductFormPage = () => {
                     <SectionErrorBoundary resetKey={selectedSection}>
                       {selectedComponent && selectedComponent(formikProps)}
                     </SectionErrorBoundary>
+                    {isMobile && selectedSection === "Producto" && (
+                      <CompleteYourProductList
+                        sections={[
+                          {
+                            name: "Variaciones",
+                            icon: <VariacionesMenuIcon />,
+                            description:
+                              "Agrega tamaños, sabores o presentaciones.",
+                          },
+                          {
+                            name: "Adicionales o extras",
+                            icon: <AdicionalesProductoMenuIcon />,
+                            description:
+                              "Extras que tus clientes pueden elegir.",
+                          },
+                          {
+                            name: "Destacar producto",
+                            icon: <DestacarMenuIcon />,
+                            description:
+                              "Marca este producto como favorito, recomendado o promoción.",
+                          },
+                        ]}
+                        selectedSection={selectedSection}
+                        formikErrors={navErrors}
+                        activationFlags={activationFlags}
+                        onSelect={handleSectionSelect}
+                      />
+                    )}
                   </Box>
+                  {!isMobile && (
+                    <PreviewPanel
+                      section={selectedSection}
+                      values={formikProps.values}
+                      selectedCategory={selectedCategory}
+                    />
+                  )}
                   <SubmitSection
-                    onSectionSelect={handleSectionSelect}
                     onPublish={handlePublishClick}
+                    onCancel={() => attemptNavigate(() => navigate(-1))}
                     isSubmitting={isSaving}
                     uploadProgress={uploadProgress}
                     isDirty={formikProps.dirty}
                     isEditMode={!!id}
+                    isMobile={isMobile}
                   />
                 </Box>
               </Box>
@@ -1020,10 +953,19 @@ const ProductFormPage = () => {
               {/* confirmation dialog for deleting product */}
               <ConfirmationDialog
                 open={Boolean(openDeleteDialog)}
-                title={"Eliminar producto"}
-                content={
-                  "¿Estás seguro que deseas eliminar este producto? Esta acción no se puede deshacer."
+                title="¿Estás seguro de eliminar este producto?"
+                content="Esta acción eliminará permanentemente el producto."
+                image={
+                  formikProps.values.media?.find(
+                    (m) => m.media_type === "image" && typeof m.file === "string",
+                  )?.file as string | undefined
                 }
+                imageOverlay={
+                  <ReportProblemIcon color="error" sx={{ fontSize: 28 }} />
+                }
+                confirmationCheckboxLabel="Confirmo que deseo eliminar el producto"
+                confirmColor="error"
+                confirmText="Eliminar"
                 onClose={() => setOpenDeleteDialog(false)}
                 onConfirm={() => {
                   if (id) {

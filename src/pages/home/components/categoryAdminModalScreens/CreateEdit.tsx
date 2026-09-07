@@ -35,7 +35,7 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
 
   const handleSubmit = (
     values: FormValues,
-    formikHelpers: FormikHelpers<FormValues>
+    formikHelpers: FormikHelpers<FormValues>,
   ) => {
     const payload = {
       name: values.name,
@@ -67,7 +67,7 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
               type: "error",
             });
           },
-        }
+        },
       );
     } else {
       createProductCategory.mutate(payload, {
@@ -123,33 +123,51 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
         <Form>
           {/* <FormResetter category={initialCategory} /> */}
           {/* Name input */}
-          <Box mb={4} sx={{ borderBottom: 1, borderColor: "grey.800", pb: 4 }}>
+          <Box mb={4}>
+            <Typography
+              component="label"
+              sx={{ fontSize: 14, fontWeight: 700, color: "#333" }}
+            >
+              Nombre de la categoría{" "}
+              <Box component="span" sx={{ color: "#FF3E3E" }}>
+                *
+              </Box>
+            </Typography>
             <TextField
               fullWidth
               name="name"
-              label="Nombre de la categoría"
+              placeholder="Ej. Bebidas"
               variant="outlined"
               value={values.name}
               onChange={handleChange}
               error={touched.name && Boolean(errors.name)}
               helperText={touched.name && errors.name}
+              sx={{
+                mt: 0.5,
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "grey.800",
+                },
+              }}
             />
           </Box>
 
           {/* Icon picker */}
-          <Typography variant="subtitle2" mb={1}>
-            Íconos disponibles
+          <Typography
+            sx={{ fontSize: 14, fontWeight: 700, color: "#333" }}
+            mb={2}
+          >
+            Íconos disponibles ({iconKeys.length})
           </Typography>
           <Box
-            display="grid"
-            gridTemplateColumns="repeat(auto-fill, minmax(85px, 1fr))"
-            gap={2}
+            display="flex"
+            flexWrap="wrap"
+            gap={"14px 12px"}
             mb={2}
             sx={{
               border: 1,
-              borderColor: "grey.800",
-              borderRadius: 1,
-              p: 4,
+              borderColor: "#E0E0E0",
+              borderRadius: 1.5,
+              p: 3,
             }}
           >
             {iconKeys.map((key) => {
@@ -160,17 +178,18 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
                   key={key}
                   onClick={() => setFieldValue("icon", key)}
                   sx={{
-                    width: 60,
-                    height: 60,
-                    bgcolor: isSelected ? "grey.300" : "transparent",
-                    borderRadius: 1,
+                    width: 56,
+                    height: 56,
+                    bgcolor: isSelected ? "secondary.main" : "transparent",
+                    borderRadius: 1.5,
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <IconComponent width="100%" height="100%" />
+                  <IconComponent width={44} height={44} />
                 </Box>
               );
             })}
@@ -182,7 +201,14 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
           )}
 
           {/* Actions */}
-          <Box display="flex" flexDirection="column" gap={3} mt={5}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            gap={3}
+            mt={5}
+            pt={4}
+            sx={{ boxShadow: "0px -1px 0px #E8E9EB" }}
+          >
             <Button
               type="submit"
               variant="contained"
@@ -201,7 +227,7 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
                 fullWidth
                 disabled={!isValid}
                 sx={{
-                  backgroundColor: "#EDEDED",
+                  backgroundColor: "grey.400",
                   color: "#4B4B4B",
                   boxShadow: 0,
                 }}
@@ -222,7 +248,7 @@ export const CreateEdit: React.FC<CreateEditProps> = ({
                         hasOffer: !!data.multibuy_option,
                         multibuyOption: data.multibuy_option ?? undefined,
                         discountPercentage: parseFloat(
-                          data.discount_percentage
+                          data.discount_percentage,
                         ),
                         promotionStartsAt:
                           data.promotion_starts_at ?? undefined,

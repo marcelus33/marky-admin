@@ -5,7 +5,6 @@ import {
   Checkbox,
   FormControlLabel,
   Grid,
-  IconButton,
   InputAdornment,
   TextField,
   useMediaQuery,
@@ -14,6 +13,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import SelectButtonField from "../../../components/SelectButtonField";
 import useDebounce from "../../../hooks/useDebounce";
+import CategoryFilterChips from "./CategoryFilterChips";
 
 // Create a separate component for the filters section
 const FilterSection: React.FC<{
@@ -23,7 +23,7 @@ const FilterSection: React.FC<{
 }> = ({ values, onFilterChange, setOpenCategoryModal }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [showFilters, setShowFilters] = useState(false);
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Keep the raw keystrokes local to this component instead of pushing them
@@ -56,76 +56,76 @@ const FilterSection: React.FC<{
     }
   }, [values.search]);
 
-  const handleToggleFilters = () => {
-    setShowFilters((prev) => !prev);
-  };
-
   if (isMobile) {
+    // Mobile drops free-text search and the "En promoción" checkbox in favor
+    // of a scrollable category chip row (per Figma's mobile frame — the
+    // dropdown/checkbox filter UI is tablet+ only).
     return (
-      <>
-        <Box display="flex" alignItems="center" gap={2} mb={2}>
-          <TextField
-            placeholder="Buscar por texto o SKU del producto"
-            name="search"
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-              // You can adjust the padding here as needed
-              sx: { paddingY: 1.5 },
-            }}
-          />
-          <IconButton
-            onClick={handleToggleFilters}
-            sx={{
-              backgroundColor: "#EDEDED !important",
-              borderRadius: 1,
-              p: 3,
-              color: showFilters ? "primary.main" : "inherit",
-              "&:hover": {
-                backgroundColor: "#EDEDED !important",
-              },
-              "&:active": {
-                backgroundColor: "#EDEDED !important",
-              },
-            }}
-          >
-            <FilterListIcon />
-          </IconButton>
+      <CategoryFilterChips values={values} onFilterChange={onFilterChange} />
+    );
+  } else if (!isDesktop) {
+    // Tablet (sm–md): search + a decorative filter icon + the always-visible
+    // category button + the "En promoción" checkbox, all in one row.
+    return (
+      <Box display="flex" alignItems="center" gap={2}>
+        <TextField
+          inputRef={searchInputRef}
+          placeholder="Buscar por texto o SKU del producto"
+          name="search"
+          variant="outlined"
+          size="small"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            sx: { paddingY: 1.5 },
+          }}
+        />
+        {/* Purely decorative per Figma — search/dropdown/checkbox below are
+            already always visible on tablet, so there's nothing for this
+            icon to toggle. Rendered as a static Box (not a button) so it
+            doesn't look clickable with no effect. */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#EDEDED",
+            borderRadius: 1,
+            p: 3,
+            flexShrink: 0,
+            color: "action.active",
+          }}
+        >
+          <FilterListIcon />
         </Box>
-        {showFilters && (
-          <Box display="flex" flexDirection="column" gap={2} mb={2}>
-            <SelectButtonField
-              placeholder="Categorías: Todas"
-              displayText={
-                values.categories?.length > 0
-                  ? `Categorías: ${values.categories?.length} seleccionadas`
-                  : undefined
-              }
-              onClick={setOpenCategoryModal}
-              sx={{ padding: 2.5 }}
+        <SelectButtonField
+          placeholder="Categorías: Todas"
+          displayText={
+            values.categories?.length > 0
+              ? `Categorías: ${values.categories?.length} seleccionadas`
+              : undefined
+          }
+          onClick={setOpenCategoryModal}
+          sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
+        />
+        <FormControlLabel
+          sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+          control={
+            <Checkbox
+              checked={values.offer}
+              onChange={(e) => onFilterChange({ offer: e.target.checked })}
+              color="primary"
             />
-            <FormControlLabel
-              sx={{ whiteSpace: "nowrap" }}
-              control={
-                <Checkbox
-                  checked={values.offer}
-                  onChange={(e) => onFilterChange({ offer: e.target.checked })}
-                  color="primary"
-                />
-              }
-              label="En promoción"
-            />
-          </Box>
-        )}
-      </>
+          }
+          label="En promoción"
+        />
+      </Box>
     );
   } else {
     return (

@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { ReactComponent as LogoMarkyBlack } from "../assets/icons/logo-marky-black.svg";
+import logoMarky from "../assets/images/marky-logo.png";
 
 interface AuthAsideProps {
   title: string;
@@ -37,7 +37,11 @@ const AuthAside: React.FC<AuthAsideProps> = ({
           paddingBottom: "50px",
         }}
       >
-        <LogoMarkyBlack style={{ marginBottom: theme.spacing(6) }} />
+        <img
+          src={logoMarky}
+          alt="Marky"
+          style={{ marginBottom: theme.spacing(6) }}
+        />
         <Typography
           sx={{
             fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',

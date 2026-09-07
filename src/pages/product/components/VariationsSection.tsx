@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -13,40 +13,23 @@ import { Field, FieldArray, FormikProps, getIn } from "formik";
 import NumberInput from "../../../components/NumberInput";
 import { useBusinessAccountInfo } from "../../../hooks/useBusinessAccountInfo";
 import { useImageCropper } from "../../../hooks/useImageCropper";
+import { useMediaObjectUrl } from "../../../hooks/useMediaObjectUrl";
 import ImageCropModal from "../../../components/ImageCropModal";
 import Input from "../../../components/Input";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { ReactComponent as AddVariationImageIcon } from "../../../assets/icons/product-form/add-variation-picture.svg";
 
-// Renders a variant's image preview. Previously this was done inline with
-// `URL.createObjectURL(variant.image)` called directly during render: it
-// created a brand-new blob URL (and leaked the previous one, since it was
-// never revoked) on every single render of the form, and would throw if
-// `variant.image` was ever something other than a File/Blob/string (which
-// would surface as an uncaught render error). This component instead only
-// creates/revokes the object URL when the underlying image actually changes,
-// and falls back to rendering nothing instead of throwing for unexpected
-// values.
+// Renders a variant's image preview via the shared useMediaObjectUrl hook
+// (create/revoke the object URL only when the underlying image actually
+// changes, instead of on every render). `image` is typed `unknown` here
+// because it comes straight off a FieldArray row; unsupported shapes fall
+// back to rendering nothing instead of throwing.
 const VariantImagePreview: React.FC<{ image: unknown }> = ({ image }) => {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!image) {
-      setUrl(null);
-      return;
-    }
-    if (typeof image === "string") {
-      setUrl(image);
-      return;
-    }
-    if (image instanceof File || image instanceof Blob) {
-      const objectUrl = URL.createObjectURL(image);
-      setUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-    // Unsupported shape: don't crash the render, just show the placeholder.
-    setUrl(null);
-  }, [image]);
+  const file =
+    typeof image === "string" || image instanceof File || image instanceof Blob
+      ? image
+      : null;
+  const url = useMediaObjectUrl(file);
 
   if (!url) return null;
   return (
@@ -159,9 +142,14 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
       >
         <LocalOfferIcon />
         <Typography variant="h6" fontWeight="bold">
-          Variaciones del producto base
+          Variaciones del producto base{" "}
+          {multiPresentation &&
+            `${values.variants.filter((v: any) => !v._delete).length}/${maxItems}`}
         </Typography>
       </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        Agrega variantes de tu producto base. Ej. Presentación 24 oz / 8 oz / 4 oz
+      </Typography>
       <FormControlLabel
         control={
           <Switch
@@ -210,7 +198,7 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                       sx={{
                         border: "2px dashed",
                         borderColor: imageError ? "error.main" : "primary.main",
-                        borderRadius: 1,
+                        borderRadius: 2,
                         width: 80,
                         height: 80,
                         display: "flex",
@@ -224,9 +212,18 @@ const VariationsSection: React.FC<VariationsSectionProps> = ({
                       {variant.image ? (
                         <VariantImagePreview image={variant.image} />
                       ) : (
-                        <IconButton>
-                          <AddVariationImageIcon />
-                        </IconButton>
+                        <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+                          <IconButton size="small" sx={{ p: 0 }}>
+                            <AddVariationImageIcon />
+                          </IconButton>
+                          <Typography
+                            variant="caption"
+                            fontWeight="bold"
+                            color={imageError ? "error.main" : "primary.main"}
+                          >
+                            Agregar
+                          </Typography>
+                        </Box>
                       )}
                     </Box>
                     <Typography

@@ -16,16 +16,25 @@ const DescriptionInfo: React.FC<DescriptionInfoProps> = ({
     <Box
       onClick={onOpen}
       sx={{
-        border: isEmpty ? "2px dashed" : "none",
-        borderColor: "primary.main",
-        padding: 4,
-        borderRadius: 2,
+        border: isEmpty ? "1px dashed #B8CDF5" : "none",
+        backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
+        borderRadius: isEmpty ? "6px" : 2,
+        py: isEmpty ? 4 : 4,
+        px: isEmpty ? 3 : 4,
         cursor: "pointer",
       }}
     >
       {isEmpty ? (
-        <Typography color="primary" fontWeight={500} textAlign={"center"}>
-          Añadir descripción
+        <Typography
+          sx={{
+            color: "#2563EB",
+            fontWeight: 700,
+            fontSize: 14,
+            lineHeight: "22px",
+            textAlign: "center",
+          }}
+        >
+          Agrega una descripción
         </Typography>
       ) : (
         <Typography

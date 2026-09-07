@@ -10,7 +10,6 @@ import {
   stepConnectorClasses,
   StepLabel,
   Stepper,
-  Switch,
   Typography,
 } from "@mui/material";
 import { StepIconProps } from "@mui/material/StepIcon";
@@ -22,12 +21,12 @@ import * as Yup from "yup";
 import { ReactComponent as CoffeeIcon } from "../assets/icons/coffee.svg";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { ReactComponent as ExchangeIcon } from "../assets/icons/exchange.svg";
-import categoryIcons from "../assets/icons/category/categoryIcons";
 import AuthAside from "../components/AuthAside";
 import AuthLayout from "../components/AuthLayout";
 import BusinessTypeSelectorField from "../components/BusinessTypeSelectorField";
 import CategorySelectionList from "../components/CategorySelectionList";
 import CustomSelectorField from "../components/CustomSelector";
+import CustomSwitch from "../components/CustomSwitch";
 import Input from "../components/Input";
 import Link from "../components/Link";
 import CustomModal from "../components/Modal";
@@ -48,6 +47,7 @@ import {
 import { Category } from "../services/categoriesService";
 import { buildBusinessProfilePayload } from "./Configuration.payload";
 import { useSessionStore } from "../stores/sessionStore";
+import { BUSINESS_CATEGORY_ICON_MAP } from "../utils/businessCategoryIcons";
 import colors from "../themes/utils/colors";
 import {
   sanitizeBusinessId,
@@ -97,22 +97,6 @@ const NumberedStepIcon: React.FC<StepIconProps> = ({
       {icon}
     </Box>
   );
-};
-
-// Categorías sembradas en el backend (business/management/commands/seed.py)
-// mapeadas a los íconos disponibles en src/assets/icons/category.
-// "Restaurante" no tiene ícono dedicado; se usa "cocina" como más cercano.
-const BUSINESS_CATEGORY_ICON_MAP: Record<
-  string,
-  React.FC<React.SVGProps<SVGSVGElement>>
-> = {
-  Restaurante: categoryIcons.cocina,
-  Pizzería: categoryIcons.pizza,
-  Cafetería: categoryIcons.cafe,
-  Heladería: categoryIcons.helado,
-  "Parrillada / Asados": categoryIcons.asado,
-  Panadería: categoryIcons.bagette,
-  Pastelería: categoryIcons.torta,
 };
 
 const MIN_BUSINESS_ID_LENGTH = 4;
@@ -511,9 +495,10 @@ const Configuration = () => {
                           alignItems: "stretch",
                           justifyContent: "flex-start",
                           border: `1px solid ${colors.light.grey[800]}`,
-                          borderRadius: theme.spacing(1),
-                          paddingX: theme.spacing(10),
-                          paddingY: theme.spacing(4),
+                          borderRadius: theme.spacing(1.5),
+                          paddingX: theme.spacing(6),
+                          paddingTop: theme.spacing(4),
+                          paddingBottom: theme.spacing(6),
                           marginTop: theme.spacing(4),
                         }}
                       >
@@ -640,10 +625,11 @@ const Configuration = () => {
                           flexDirection: "column",
                           alignItems: "stretch",
                           justifyContent: "flex-start",
-                          border: `1px solid ${colors.light.grey[800]}`,
-                          borderRadius: theme.spacing(1),
+                          border: `1px solid ${colors.light.grey[600]}`,
+                          borderRadius: theme.spacing(1.5),
                           paddingX: theme.spacing(6),
-                          paddingY: theme.spacing(4),
+                          paddingTop: theme.spacing(4),
+                          paddingBottom: theme.spacing(6),
                           marginTop: theme.spacing(4),
                         }}
                       >
@@ -728,17 +714,17 @@ const Configuration = () => {
                           flexDirection: "column",
                           alignItems: "stretch",
                           justifyContent: "flex-start",
-                          border: `1px solid ${colors.light.grey[800]}`,
-                          borderRadius: theme.spacing(1),
-                          paddingX: theme.spacing(4),
-                          paddingY: theme.spacing(4),
+                          border: `1px solid ${colors.light.grey[400]}`,
+                          borderRadius: theme.spacing(1.5),
+                          paddingX: theme.spacing(3),
+                          paddingY: theme.spacing(3),
                           marginTop: theme.spacing(4),
                         }}
                       >
                         <FormLabel>Mostrar tasa de cambio</FormLabel>
                         <FormControlLabel
                           control={
-                            <Switch
+                            <CustomSwitch
                               checked={values.enable_exchange_rate}
                               onChange={(e) => {
                                 const checkedValue = e.target.checked;
@@ -754,6 +740,12 @@ const Configuration = () => {
                             />
                           }
                           label="Activar"
+                          sx={{
+                            marginLeft: 0,
+                            marginRight: 0,
+                            my: 2,
+                            gap: theme.spacing(3),
+                          }}
                         />
                         <Typography
                           id="modal-description"
@@ -909,10 +901,7 @@ const Configuration = () => {
                 </Box>
                 <Box
                   sx={{
-                    marginTop:
-                      activeStep === 1 || activeStep === 2
-                        ? "65px"
-                        : theme.spacing(7),
+                    marginTop: theme.spacing(4),
                     width: "100%",
                     display: "flex",
                     gap: 3,
@@ -953,9 +942,9 @@ const Configuration = () => {
       </AuthLayout>
       {/* ================ MODAL CATEGORIAS =================== */}
       <CustomModal
+        fullScreenOnMobile
         sx={{
           width: {
-            xs: "90%",
             md: "50%",
           },
         }}
@@ -1005,9 +994,9 @@ const Configuration = () => {
       </CustomModal>
       {/* ================ MODAL PAISES =================== */}
       <CustomModal
+        fullScreenOnMobile
         sx={{
           width: {
-            xs: "90%",
             md: "50%",
           },
         }}
@@ -1055,9 +1044,9 @@ const Configuration = () => {
       </CustomModal>
       {/* ================ MODAL CIUDADES =================== */}
       <CustomModal
+        fullScreenOnMobile
         sx={{
           width: {
-            xs: "90%",
             md: "50%",
           },
         }}
@@ -1097,9 +1086,9 @@ const Configuration = () => {
       </CustomModal>
       {/* ================ MODAL MONEDAS =================== */}
       <CustomModal
+        fullScreenOnMobile
         sx={{
           width: {
-            xs: "90%",
             md: "50%",
           },
         }}
@@ -1147,9 +1136,9 @@ const Configuration = () => {
       </CustomModal>
       {/* ================ MODAL MONEDAS SECUNDARIAS =================== */}
       <CustomModal
+        fullScreenOnMobile
         sx={{
           width: {
-            xs: "90%",
             md: "50%",
           },
         }}

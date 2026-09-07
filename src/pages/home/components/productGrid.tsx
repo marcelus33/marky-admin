@@ -2,7 +2,8 @@ import AppsIcon from "@mui/icons-material/Apps";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import { Box, Button, Typography } from "@mui/material";
 import ConfirmationDialog from "../../../components/ConfirmationDialog";
-import WarningIcon from "@mui/icons-material/Warning";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import DeleteCategoryWarningImage from "../../../assets/images/delete-category-warning.png";
 import useDeleteProductCategory from "../../../hooks/useDeleteProductCategory";
 import useDeleteProduct from "../../../hooks/useDeleteProduct";
 import { useQueryClient } from "@tanstack/react-query";
@@ -102,8 +103,14 @@ export const ProductGrid: React.FC = () => {
   }, [categoriesWithProductsRaw, filters.search]);
 
   const productCount = categoriesWithProducts?.products_count || 0;
+  const categoriesCount = categoriesWithProducts?.results.length || 0;
   const { data: homePageData } = useHomePageData();
-  const showEmptyState = !hasFiltered && !isLoading && productCount === 0;
+  // The fully-empty illustration is only for a business with no categories
+  // at all yet. Once a category exists (even with zero products), it must
+  // render in the grid with its own "Añade tu producto" empty-state tile
+  // (see CategoryGroup) instead of the whole-page empty state — a product
+  // count of 0 alone isn't enough to trigger it.
+  const showEmptyState = !hasFiltered && !isLoading && categoriesCount === 0;
 
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openCategoryAdminModal, setOpenCategoryAdminModal] = useState(false);
@@ -177,7 +184,7 @@ export const ProductGrid: React.FC = () => {
   }
 
   return (
-    <Box p={2}>
+    <Box sx={{ px: { xs: 4, sm: 6, lg: 8 }, py: 2 }}>
       <Box
         mb={4}
         sx={{
@@ -189,21 +196,21 @@ export const ProductGrid: React.FC = () => {
         }}
       >
         <Typography variant="h2" sx={{ display: { xs: "none", md: "block" } }}>
-          Cuenta comercial
+          Productos
         </Typography>
         <Box
           display={"flex"}
           sx={{
             width: { xs: "100%", md: "auto" },
             gap: 3,
-            flexDirection: { xs: "column", md: "row" },
+            flexDirection: { xs: "column", sm: "row" },
           }}
         >
           <Button
             onClick={() => setOpenCategoryAdminModal(true)}
             variant="grey1"
             sx={{
-              width: { xs: "100%", md: "auto" },
+              width: { xs: "100%", sm: "50%", md: "auto" },
               padding: "8px 12px 8px 12px",
               color: "#4B4B4B",
               boxShadow: 0,
@@ -218,7 +225,7 @@ export const ProductGrid: React.FC = () => {
             color="primary"
             onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
             sx={{
-              width: { xs: "100%", md: "auto" },
+              width: { xs: "100%", sm: "50%", md: "auto" },
               padding: "8px 12px 8px 12px",
               boxShadow: 0,
             }}
@@ -315,24 +322,12 @@ export const ProductGrid: React.FC = () => {
       ))}
       <ConfirmationDialog
         open={Boolean(openDeleteCategoryDialog)}
-        title={"Eliminar categoría"}
-        content={
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"center"}
-            gap={4}
-          >
-            <WarningIcon color="warning" fontSize="large" />
-            <Typography variant="body2" fontSize={"medium"}>
-              ¿Deseas eliminar la categoría
-              {selectedCategoryToDelete
-                ? ` "${selectedCategoryToDelete.name}"`
-                : ""}
-              ? Esta acción no se puede deshacer.
-            </Typography>
-          </Box>
-        }
+        title="¿Estás seguro de eliminar esta categoría?"
+        content="Esta acción también eliminará permanentemente los productos vinculados."
+        image={DeleteCategoryWarningImage}
+        confirmationCheckboxLabel="Confirmo que deseo eliminar la categoría"
+        confirmColor="error"
+        confirmText="Eliminar"
         onClose={() => {
           if (!isDeletingCategory) {
             setOpenDeleteCategoryDialog(false);
@@ -355,24 +350,15 @@ export const ProductGrid: React.FC = () => {
       />
       <ConfirmationDialog
         open={Boolean(openDeleteProductDialog)}
-        title={"Eliminar producto"}
-        content={
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"center"}
-            gap={4}
-          >
-            <WarningIcon color="warning" fontSize="large" />
-            <Typography variant="body2" fontSize={"medium"}>
-              ¿Deseas eliminar el producto
-              {selectedProductToDelete
-                ? ` "${selectedProductToDelete.name}"`
-                : ""}
-              ? Esta acción no se puede deshacer.
-            </Typography>
-          </Box>
+        title="¿Estás seguro de eliminar este producto?"
+        content="Esta acción eliminará permanentemente el producto."
+        image={selectedProductToDelete?.image || undefined}
+        imageOverlay={
+          <ReportProblemIcon color="error" sx={{ fontSize: 28 }} />
         }
+        confirmationCheckboxLabel="Confirmo que deseo eliminar el producto"
+        confirmColor="error"
+        confirmText="Eliminar"
         onClose={() => {
           if (!isDeletingProduct) {
             setOpenDeleteProductDialog(false);
