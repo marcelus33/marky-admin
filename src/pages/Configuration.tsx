@@ -21,7 +21,6 @@ import * as Yup from "yup";
 import { ReactComponent as CoffeeIcon } from "../assets/icons/coffee.svg";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { ReactComponent as ExchangeIcon } from "../assets/icons/exchange.svg";
-import categoryIcons from "../assets/icons/category/categoryIcons";
 import AuthAside from "../components/AuthAside";
 import AuthLayout from "../components/AuthLayout";
 import BusinessTypeSelectorField from "../components/BusinessTypeSelectorField";
@@ -48,6 +47,7 @@ import {
 import { Category } from "../services/categoriesService";
 import { buildBusinessProfilePayload } from "./Configuration.payload";
 import { useSessionStore } from "../stores/sessionStore";
+import { BUSINESS_CATEGORY_ICON_MAP } from "../utils/businessCategoryIcons";
 import colors from "../themes/utils/colors";
 import {
   sanitizeBusinessId,
@@ -97,22 +97,6 @@ const NumberedStepIcon: React.FC<StepIconProps> = ({
       {icon}
     </Box>
   );
-};
-
-// Categorías sembradas en el backend (business/management/commands/seed.py)
-// mapeadas a los íconos disponibles en src/assets/icons/category.
-// "Restaurante" no tiene ícono dedicado; se usa "cocina" como más cercano.
-const BUSINESS_CATEGORY_ICON_MAP: Record<
-  string,
-  React.FC<React.SVGProps<SVGSVGElement>>
-> = {
-  Restaurante: categoryIcons.cocina,
-  Pizzería: categoryIcons.pizza,
-  Cafetería: categoryIcons.cafe,
-  Heladería: categoryIcons.helado,
-  "Parrillada / Asados": categoryIcons.asado,
-  Panadería: categoryIcons.bagette,
-  Pastelería: categoryIcons.torta,
 };
 
 const MIN_BUSINESS_ID_LENGTH = 4;
