@@ -5,7 +5,7 @@ import AttributesInfo from "./AttributesInfo";
 import BusinessAvatar from "./BusinessAvatar";
 import DescriptionInfo from "./DescriptionInfo";
 import SocialMediaInfo from "./SocialMediaInfo";
-import { PhotoCamera } from "@mui/icons-material";
+import { PhotoCamera, StorefrontOutlined } from "@mui/icons-material";
 
 export const BusinessInfo: React.FC<{
   values: any;
@@ -43,9 +43,9 @@ export const BusinessInfo: React.FC<{
     (values.attributes || []).length === 0;
 
   return (
-    <Box p={2}>
-      {/* Datos principales del negocio (avatar, nombre, etc.) */}
-      <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+    <Box display="flex" flexDirection="column" gap={6}>
+      {/* Datos principales del negocio (avatar, nombre, categoría, tipo de cuenta) */}
+      <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
         <Box
           onClick={onOpenPhotoPicker}
           sx={{
@@ -85,44 +85,43 @@ export const BusinessInfo: React.FC<{
         >
           {businessName}
         </Typography>
-        <Typography variant="body2" mt={1}>
-          {categoriesText}
-        </Typography>
-      </Box>
-      <Box display={"flex"} flexDirection={"column"} gap={1} mt={4}>
-        {isProfileIncomplete && (
-          <Typography
-            sx={{
-              color: "#374151",
-              fontWeight: 700,
-              fontSize: 14,
-              lineHeight: "18px",
-              textAlign: "center",
-              mb: 1,
-            }}
-          >
-            Completa el perfil de tu negocio
+        <Typography variant="body2">{categoriesText}</Typography>
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <StorefrontOutlined sx={{ fontSize: 14, color: "#2563EB" }} />
+          <Typography sx={{ fontSize: 12, color: "#2563EB" }}>
+            Negocio
           </Typography>
-        )}
-        {/* Redes sociales */}
-        <SocialMediaInfo
-          socialMedia={values.socialMedia}
-          onOpen={openSocialMediaModal}
-        />
+        </Box>
+      </Box>
+      {isProfileIncomplete && (
+        <Typography
+          sx={{
+            color: "#374151",
+            fontWeight: 700,
+            fontSize: 14,
+            lineHeight: "18px",
+            textAlign: "center",
+          }}
+        >
+          Completa el perfil de tu negocio
+        </Typography>
+      )}
+      {/* Redes sociales */}
+      <SocialMediaInfo
+        socialMedia={values.socialMedia}
+        onOpen={openSocialMediaModal}
+      />
+      <Box display="flex" flexDirection="column" gap={2}>
         {/* Descripción */}
-        <Box mt={2}>
-          <DescriptionInfo
-            description={values.description}
-            onOpen={openDescriptionModal}
-          />
-        </Box>
+        <DescriptionInfo
+          description={values.description}
+          onOpen={openDescriptionModal}
+        />
         {/* Atributos */}
-        <Box mt={2}>
-          <AttributesInfo
-            attributes={values.attributes}
-            onOpen={openAttributesModal}
-          />
-        </Box>
+        <AttributesInfo
+          attributes={values.attributes}
+          onOpen={openAttributesModal}
+        />
       </Box>
     </Box>
   );

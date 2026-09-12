@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box } from "@mui/material";
 import { Formik } from "formik";
 import { useState, useMemo, useRef, ChangeEvent } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -180,17 +180,23 @@ const Home = () => {
     >
       <Header />
       <Box sx={{ flex: 1, px: { xs: 4, sm: 6, lg: 8 }, py: 3, height: "100%" }}>
-        <Grid
-          container
-          spacing={3}
-          sx={{ height: { xs: "auto", md: "100vh" } }}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: { xs: 3, md: 0 },
+            height: { xs: "auto", md: "100vh" },
+          }}
         >
-          <Grid
-            item
-            xs={12}
-            md={3}
-            px={{ xs: 0, md: 6 }}
+          <Box
             sx={{
+              boxSizing: "border-box",
+              width: "100%",
+              flexBasis: { xs: "100%", md: "296px" },
+              maxWidth: { xs: "100%", md: "296px" },
+              flexGrow: 0,
+              flexShrink: 0,
+              px: { xs: 0, md: 8 },
               borderRight: (theme) => ({
                 xs: "none",
                 md: `1px solid ${theme.palette.grey[600]}`,
@@ -230,6 +236,10 @@ const Home = () => {
                       sx={{
                         position: { xs: "static", md: "sticky" },
                         top: { md: "4.7rem" },
+                        width: "100%",
+                        maxWidth: { md: "232px" },
+                        mx: { md: "auto" },
+                        boxSizing: "border-box",
                       }}
                     >
                       <BusinessInfo
@@ -339,11 +349,19 @@ const Home = () => {
                 );
               }}
             </Formik>
-          </Grid>
-          <Grid item xs={12} md={9}>
+          </Box>
+          <Box
+            sx={{
+              width: "100%",
+              minWidth: 0,
+              flexBasis: { xs: "100%", md: 0 },
+              flexGrow: { xs: 0, md: 1 },
+              maxWidth: { xs: "100%", md: "100%" },
+            }}
+          >
             <ProductGrid />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

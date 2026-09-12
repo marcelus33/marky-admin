@@ -27,9 +27,9 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
       sx={{
         border: isEmpty ? "1px dashed #B8CDF5" : "none",
         backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
-        borderRadius: isEmpty ? "6px" : 2,
-        py: isEmpty ? 4 : 2,
-        px: isEmpty ? 3 : 2,
+        borderRadius: isEmpty ? "6px" : 0,
+        py: isEmpty ? 4 : 0,
+        px: isEmpty ? 3 : 0,
         cursor: "pointer",
       }}
     >
@@ -62,7 +62,7 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
               >
                 <Box
                   sx={{
-                    border: "1px solid lightgrey",
+                    border: (theme) => `1px solid ${theme.palette.grey[800]}`,
                     borderRadius: 1,
                     p: 2,
                   }}

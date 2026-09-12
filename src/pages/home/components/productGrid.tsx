@@ -175,16 +175,12 @@ export const ProductGrid: React.FC = () => {
     });
   };
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
   if (error) {
     return <Typography>Error loading products.</Typography>;
   }
 
   return (
-    <Box sx={{ px: { xs: 4, sm: 6, lg: 8 }, py: 2 }}>
+    <Box sx={{ px: { xs: 0, md: 8 }, py: 2 }}>
       <Box
         mb={4}
         sx={{
@@ -202,22 +198,27 @@ export const ProductGrid: React.FC = () => {
           display={"flex"}
           sx={{
             width: { xs: "100%", md: "auto" },
-            gap: 3,
-            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: "18px", md: 3 },
           }}
         >
           <Button
             onClick={() => setOpenCategoryAdminModal(true)}
             variant="grey1"
             sx={{
-              width: { xs: "100%", sm: "50%", md: "auto" },
+              flex: { xs: "1 1 0", md: "0 0 auto" },
+              minWidth: 0,
               padding: "8px 12px 8px 12px",
               color: "#4B4B4B",
               boxShadow: 0,
             }}
             startIcon={<AppsIcon />}
           >
-            Administrar Categorías
+            <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+              Administrar Categorías
+            </Box>
+            <Box component="span" sx={{ display: { xs: "inline", md: "none" } }}>
+              Categorías
+            </Box>
           </Button>
           <Button
             startIcon={<LocalCafeIcon />}
@@ -225,12 +226,18 @@ export const ProductGrid: React.FC = () => {
             color="primary"
             onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
             sx={{
-              width: { xs: "100%", sm: "50%", md: "auto" },
+              flex: { xs: "1 1 0", md: "0 0 auto" },
+              minWidth: 0,
               padding: "8px 12px 8px 12px",
               boxShadow: 0,
             }}
           >
-            Agregar Producto
+            <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+              Agregar Producto
+            </Box>
+            <Box component="span" sx={{ display: { xs: "inline", md: "none" } }}>
+              Producto
+            </Box>
           </Button>
         </Box>
       </Box>
@@ -281,10 +288,11 @@ export const ProductGrid: React.FC = () => {
         />
       </Box>
       {/* Cuadrícula de productos */}
-      {showEmptyState && (
+      {isLoading && <LoadingSpinner />}
+      {!isLoading && showEmptyState && (
         <EmptyProducts businessName={homePageData?.business_name} />
       )}
-      {!showEmptyState && categoriesWithProducts?.results.map((cat) => (
+      {!isLoading && !showEmptyState && categoriesWithProducts?.results.map((cat) => (
         <CategoryGroup
           key={cat.id}
           category={cat}

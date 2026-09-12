@@ -5,6 +5,7 @@ import {
   Checkbox,
   FormControlLabel,
   Grid,
+  IconButton,
   InputAdornment,
   TextField,
   useMediaQuery,
@@ -35,6 +36,9 @@ const FilterSection: React.FC<{
   // typing instead of once per keystroke.
   const [searchTerm, setSearchTerm] = useState<string>(values.search ?? "");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [showFilters, setShowFilters] = useState(false);
+  const hasActiveFilters =
+    (values.categories?.length ?? 0) > 0 || Boolean(values.offer);
 
   // Keep local state in sync if the parent resets filters externally
   // (e.g. a "clear filters" action elsewhere).
@@ -64,67 +68,71 @@ const FilterSection: React.FC<{
       <CategoryFilterChips values={values} onFilterChange={onFilterChange} />
     );
   } else if (!isDesktop) {
-    // Tablet (sm–md): search + a decorative filter icon + the always-visible
-    // category button + the "En promoción" checkbox, all in one row.
+    // Tablet (sm–md): search + a filter-toggle icon on one row (per Figma);
+    // the icon shows/hides the category select + "En promoción" checkbox row
+    // below it, and turns blue whenever a filter is actually applied so it
+    // still reads as "on" when the row is collapsed.
     return (
-      <Box display="flex" alignItems="center" gap={2}>
-        <TextField
-          inputRef={searchInputRef}
-          placeholder="Buscar por texto o SKU del producto"
-          name="search"
-          variant="outlined"
-          size="small"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          fullWidth
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            sx: { paddingY: 1.5 },
-          }}
-        />
-        {/* Purely decorative per Figma — search/dropdown/checkbox below are
-            already always visible on tablet, so there's nothing for this
-            icon to toggle. Rendered as a static Box (not a button) so it
-            doesn't look clickable with no effect. */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#EDEDED",
-            borderRadius: 1,
-            p: 3,
-            flexShrink: 0,
-            color: "action.active",
-          }}
-        >
-          <FilterListIcon />
+      <Box display="flex" flexDirection="column" gap={3}>
+        <Box display="flex" alignItems="center" gap={2}>
+          <TextField
+            inputRef={searchInputRef}
+            placeholder="Buscar por texto o SKU del producto"
+            name="search"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              sx: { paddingY: 1.5 },
+            }}
+          />
+          <IconButton
+            onClick={() => setShowFilters((prev) => !prev)}
+            aria-label="Mostrar filtros"
+            aria-pressed={showFilters}
+            sx={{
+              backgroundColor: hasActiveFilters ? "secondary.main" : "#EDEDED",
+              color: hasActiveFilters ? "primary.main" : "action.active",
+              borderRadius: 1,
+              p: 3,
+              flexShrink: 0,
+            }}
+          >
+            <FilterListIcon />
+          </IconButton>
         </Box>
-        <SelectButtonField
-          placeholder="Categorías: Todas"
-          displayText={
-            values.categories?.length > 0
-              ? `Categorías: ${values.categories?.length} seleccionadas`
-              : undefined
-          }
-          onClick={setOpenCategoryModal}
-          sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
-        />
-        <FormControlLabel
-          sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
-          control={
-            <Checkbox
-              checked={values.offer}
-              onChange={(e) => onFilterChange({ offer: e.target.checked })}
-              color="primary"
+        {showFilters && (
+          <Box display="flex" alignItems="center" gap={6}>
+            <SelectButtonField
+              placeholder="Categorías: Todas"
+              displayText={
+                values.categories?.length > 0
+                  ? `Categorías: ${values.categories?.length} seleccionadas`
+                  : undefined
+              }
+              onClick={setOpenCategoryModal}
+              sx={{ flex: 1 }}
             />
-          }
-          label="En promoción"
-        />
+            <FormControlLabel
+              sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+              control={
+                <Checkbox
+                  checked={values.offer}
+                  onChange={(e) => onFilterChange({ offer: e.target.checked })}
+                  color="primary"
+                />
+              }
+              label="En promoción"
+            />
+          </Box>
+        )}
       </Box>
     );
   } else {
