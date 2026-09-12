@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
 import NumberInput from "./NumberInput";
 
 const renderField = () =>
@@ -74,5 +75,40 @@ describe("NumberInput normalizes the display on blur", () => {
     fireEvent.change(input, { target: { value: "1" } });
     fireEvent.blur(input);
     expect(input).toHaveValue("1,00");
+  });
+});
+
+describe("NumberInput error display for a nested array field (Variaciones/Adicionales price)", () => {
+  const renderNestedField = () =>
+    render(
+      <Formik
+        initialValues={{ items: [{ price: "" }] }}
+        validationSchema={Yup.object({
+          items: Yup.array().of(
+            Yup.object({
+              price: Yup.string().required("El precio es obligatorio"),
+            }),
+          ),
+        })}
+        onSubmit={() => {}}
+      >
+        <Form>
+          <Field
+            component={NumberInput}
+            name="items[0].price"
+            label="Precio"
+            required
+          />
+        </Form>
+      </Formik>,
+    );
+
+  it("shows the field as errored once touched, like a top-level field would", async () => {
+    renderNestedField();
+    const input = screen.getByRole("textbox");
+    fireEvent.blur(input);
+    await waitFor(() =>
+      expect(screen.getByText("El precio es obligatorio")).toBeInTheDocument(),
+    );
   });
 });

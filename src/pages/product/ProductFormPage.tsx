@@ -584,6 +584,7 @@ const ProductFormPage = () => {
       innerRef={formikRef}
       initialValues={initialValues}
       enableReinitialize
+      validateOnMount
       validationSchema={validationSchema}
       onSubmit={async (
         values: Product,
@@ -780,9 +781,6 @@ const ProductFormPage = () => {
             !!formikProps.values.isPromotionActive ||
             !!formikProps.values.countdownActive,
         };
-        // Red states only appear after the user has attempted to publish at
-        // least once — see hasAttemptedPublish below.
-        const navErrors = hasAttemptedPublish ? formikProps.errors : {};
         // On mobile, viewing a non-"Producto" section replaces the whole
         // body with just that section, full-screen; its own back caret
         // returns to "Producto" instead of exiting the form.
@@ -883,8 +881,9 @@ const ProductFormPage = () => {
                     <SectionsNav
                       sections={sections}
                       selectedSection={selectedSection}
-                      formikErrors={navErrors}
+                      formikErrors={formikProps.errors}
                       activationFlags={activationFlags}
+                      hasAttemptedPublish={hasAttemptedPublish}
                       onSelect={handleSectionSelect}
                     />
                   )}
@@ -925,8 +924,9 @@ const ProductFormPage = () => {
                           },
                         ]}
                         selectedSection={selectedSection}
-                        formikErrors={navErrors}
+                        formikErrors={formikProps.errors}
                         activationFlags={activationFlags}
+                        hasAttemptedPublish={hasAttemptedPublish}
                         onSelect={handleSectionSelect}
                       />
                     )}

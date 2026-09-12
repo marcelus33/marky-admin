@@ -18,6 +18,7 @@ interface SectionsNavProps {
   selectedSection: string;
   formikErrors: FormikErrors<Product>;
   activationFlags: Record<string, boolean>;
+  hasAttemptedPublish: boolean;
   onSelect: (sectionName: string) => void;
 }
 
@@ -73,6 +74,7 @@ const SectionsNav: React.FC<SectionsNavProps> = ({
   selectedSection,
   formikErrors,
   activationFlags,
+  hasAttemptedPublish,
   onSelect,
 }) => {
   return (
@@ -88,6 +90,7 @@ const SectionsNav: React.FC<SectionsNavProps> = ({
             formikErrors,
             activationFlags[section.name],
             section.name !== "Producto",
+            hasAttemptedPublish,
           );
           // Driven independently from `state`: an errored section must
           // always show the red icon (see getSectionNavState), but should
