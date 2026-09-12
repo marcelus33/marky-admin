@@ -176,7 +176,11 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         >
           <MenuItem
             onClick={() => {
-              navigate(ROUTES.PRODUCT_CREATE);
+              navigate(ROUTES.PRODUCT_CREATE, {
+                state: {
+                  preselectedCategory: { id: category.id, name: category.name },
+                },
+              });
               handleClose();
             }}
             sx={{
@@ -262,7 +266,13 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
       >
         {category.products.length === 0 ? (
           <Box
-            onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
+            onClick={() =>
+              navigate(ROUTES.PRODUCT_CREATE, {
+                state: {
+                  preselectedCategory: { id: category.id, name: category.name },
+                },
+              })
+            }
             sx={{
               aspectRatio: "1 / 1",
               minWidth: 97,
