@@ -33,7 +33,9 @@ export const BusinessInfo: React.FC<{
     : values.category || "Panaderia | Cafetería";
 
   const hasAnySocialMedia = Object.values(values.socialMedia || {}).some(
-    (url) => typeof url === "string" && url.trim() !== "",
+    (entries: any) =>
+      Array.isArray(entries) &&
+      entries.some((entry: any) => entry.url && entry.url.trim() !== ""),
   );
   const isProfileIncomplete =
     !hasAnySocialMedia ||

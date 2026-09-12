@@ -68,31 +68,34 @@ export const validateBusinessNameDebounced = debouncePromise(
   500,
 );
 
-// Interface for social media links
-export interface SocialMediaLinks {
-  facebook?: string;
-  instagram?: string;
-  whatsapp?: string;
-  website?: string;
+// Interface for a single business channel destination (Instagram, Facebook,
+// TikTok, WhatsApp, Enlaces). WhatsApp/Enlaces can have up to 3 per business.
+export interface SocialLink {
+  id: number;
+  platform: "instagram" | "facebook" | "tiktok" | "whatsapp" | "link";
+  platform_display: string;
+  label: string;
+  url: string;
+  order: number;
 }
 
-// POST/PUT: Update social media links in bulk
+export interface SocialMediaLinksReplacePayload {
+  channels: { platform: SocialLink["platform"]; label?: string; url: string }[];
+}
+
+export interface SocialMediaLinksReplaceResponse {
+  social_links: SocialLink[];
+}
+
+// POST: Replace the full set of social/contact channels for the business.
 export async function updateSocialMediaLinks(
-  data: SocialMediaLinks,
-): Promise<SocialMediaLinks> {
+  data: SocialMediaLinksReplacePayload,
+): Promise<SocialMediaLinksReplaceResponse> {
   const response = await api.post(
     `${baseURL}/social-media-links/bulk-update/`,
     data,
   );
   return response.data;
-}
-
-// Interface for social link
-export interface SocialLink {
-  id: number;
-  platform: "facebook" | "instagram" | "whatsapp" | "website";
-  platform_display: string;
-  url: string;
 }
 
 // Interface for category

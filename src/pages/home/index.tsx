@@ -12,7 +12,9 @@ import {
 import { useImageCropper } from "../../hooks/useImageCropper";
 import AttributesModal from "./components/AttributesModal";
 import { BusinessInfo } from "./components/businessInfo";
-import { ChannelWizardModal } from "./components/ChannelWizardModal";
+import { ChannelWizardModal } from "./components/channels/ChannelWizardModal";
+import { mapSocialLinksToChannels } from "../../mappers/channelMapper";
+import { ChannelsByKey } from "../../types/channel";
 import DescriptionModal from "./components/DescriptionModal";
 import { Header } from "../../components/Header";
 import PresentationModal from "./components/PresentationModal";
@@ -27,12 +29,7 @@ export interface Attribute {
 const branchFormInitialValues = {
   business_name: "",
   category: "",
-  // socialMedia: {
-  //   instagram: "",
-  //   facebook: "",
-  //   whatsapp: "",
-  // },
-  socialMedia: {},
+  socialMedia: {} as ChannelsByKey,
   description: "",
   attributes: [] as Attribute[],
   profilePhoto: "",
@@ -98,11 +95,9 @@ const Home = () => {
   const formInitialValues = useMemo(() => {
     if (!homePageData) return branchFormInitialValues;
 
-    // Transform social_links to socialMedia object
-    const socialMedia: Record<string, string> = {};
-    homePageData.social_links.forEach((link) => {
-      socialMedia[link.platform] = link.url;
-    });
+    // Agrupa los social_links del backend por canal (varias entradas por
+    // WhatsApp/Enlaces posibles, a diferencia de un simple aplanado).
+    const socialMedia = mapSocialLinksToChannels(homePageData.social_links);
 
     // Transform categories to category string
     const categoryNames = homePageData.categories
@@ -210,14 +205,6 @@ const Home = () => {
               {({ values, setFieldValue }) => {
                 setFieldValueRef.current = setFieldValue;
 
-                // Transform socialMedia object to initialChannels format for ChannelWizardModal
-                const initialChannels = Object.entries(values.socialMedia)
-                  .filter(
-                    ([key, url]) =>
-                      url && typeof url === "string" && url.trim() !== "",
-                  )
-                  .map(([type, url]) => ({ type, url }));
-
                 return (
                   <>
                     <ImageCropModal
@@ -277,8 +264,7 @@ const Home = () => {
                       }
                       open={openSocialMediaModal}
                       onClose={() => setOpenSocialMediaModal(false)}
-                      // @ts-ignore
-                      initialData={initialChannels}
+                      initialData={values.socialMedia}
                       onSubmit={(channels) => {
                         setFieldValue("socialMedia", channels);
                       }}
