@@ -449,8 +449,31 @@ const ProductFormPage = () => {
         }
       }
     }
+    // if a category was passed via navigation state (create from a category's
+    // "Añadir producto" action on Home), preselect it in the form
+    if (!id && (location.state as any)?.preselectedCategory) {
+      const cat = (location.state as any).preselectedCategory as {
+        id: number;
+        name: string;
+      };
+      setSelectedCategory({
+        id: cat.id,
+        label: cat.name,
+        name: cat.name,
+        order: 0,
+      });
+      setInitialValues((prev) => {
+        const updated: Product = {
+          ...prev,
+          //@ts-ignore
+          category: cat.id,
+        };
+        return updated;
+      });
+    }
     // location.state is intentionally omitted: this effect must only run when
-    // `id` changes. The duplicate-product state is read once on mount.
+    // `id` changes. The duplicate-product/preselected-category state is read
+    // once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 

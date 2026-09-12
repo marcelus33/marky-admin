@@ -118,15 +118,23 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
     const IconComponent =
       cat.icon && categoryIcons[cat.icon] ? categoryIcons[cat.icon] : null;
 
-    return IconComponent ? (
-      <Box sx={{ backgroundColor: "grey.200", borderRadius: 2, px: 1 }}>
-        <IconComponent fontSize="small" />
-      </Box>
-    ) : (
+    return (
       <Box
-        sx={{ backgroundColor: "grey.200", borderRadius: 2, px: 3.5, py: 3 }}
+        sx={{
+          backgroundColor: "grey.200",
+          borderRadius: 2,
+          width: 40,
+          height: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        <CrownIcon fontSize="small" />
+        {IconComponent ? (
+          <IconComponent fontSize="small" />
+        ) : (
+          <CrownIcon fontSize="small" />
+        )}
       </Box>
     );
   };
@@ -176,7 +184,11 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
         >
           <MenuItem
             onClick={() => {
-              navigate(ROUTES.PRODUCT_CREATE);
+              navigate(ROUTES.PRODUCT_CREATE, {
+                state: {
+                  preselectedCategory: { id: category.id, name: category.name },
+                },
+              });
               handleClose();
             }}
             sx={{
@@ -262,7 +274,13 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
       >
         {category.products.length === 0 ? (
           <Box
-            onClick={() => navigate(ROUTES.PRODUCT_CREATE)}
+            onClick={() =>
+              navigate(ROUTES.PRODUCT_CREATE, {
+                state: {
+                  preselectedCategory: { id: category.id, name: category.name },
+                },
+              })
+            }
             sx={{
               aspectRatio: "1 / 1",
               minWidth: 97,

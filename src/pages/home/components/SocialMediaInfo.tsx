@@ -62,12 +62,16 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
               >
                 <Box
                   sx={{
+                    width: 42,
+                    height: 42,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     border: (theme) => `1px solid ${theme.palette.grey[800]}`,
                     borderRadius: 1,
-                    p: 2,
                   }}
                 >
-                  <IconComponent />
+                  <IconComponent style={{ width: 26, height: 26 }} />
                 </Box>
               </Badge>
             );
