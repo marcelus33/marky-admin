@@ -118,15 +118,23 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
     const IconComponent =
       cat.icon && categoryIcons[cat.icon] ? categoryIcons[cat.icon] : null;
 
-    return IconComponent ? (
-      <Box sx={{ backgroundColor: "grey.200", borderRadius: 2, px: 1 }}>
-        <IconComponent fontSize="small" />
-      </Box>
-    ) : (
+    return (
       <Box
-        sx={{ backgroundColor: "grey.200", borderRadius: 2, px: 3.5, py: 3 }}
+        sx={{
+          backgroundColor: "grey.200",
+          borderRadius: 2,
+          width: 40,
+          height: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        <CrownIcon fontSize="small" />
+        {IconComponent ? (
+          <IconComponent fontSize="small" />
+        ) : (
+          <CrownIcon fontSize="small" />
+        )}
       </Box>
     );
   };
