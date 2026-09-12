@@ -449,8 +449,31 @@ const ProductFormPage = () => {
         }
       }
     }
+    // if a category was passed via navigation state (create from a category's
+    // "Añadir producto" action on Home), preselect it in the form
+    if (!id && (location.state as any)?.preselectedCategory) {
+      const cat = (location.state as any).preselectedCategory as {
+        id: number;
+        name: string;
+      };
+      setSelectedCategory({
+        id: cat.id,
+        label: cat.name,
+        name: cat.name,
+        order: 0,
+      });
+      setInitialValues((prev) => {
+        const updated: Product = {
+          ...prev,
+          //@ts-ignore
+          category: cat.id,
+        };
+        return updated;
+      });
+    }
     // location.state is intentionally omitted: this effect must only run when
-    // `id` changes. The duplicate-product state is read once on mount.
+    // `id` changes. The duplicate-product/preselected-category state is read
+    // once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -584,6 +607,7 @@ const ProductFormPage = () => {
       innerRef={formikRef}
       initialValues={initialValues}
       enableReinitialize
+      validateOnMount
       validationSchema={validationSchema}
       onSubmit={async (
         values: Product,
@@ -780,9 +804,6 @@ const ProductFormPage = () => {
             !!formikProps.values.isPromotionActive ||
             !!formikProps.values.countdownActive,
         };
-        // Red states only appear after the user has attempted to publish at
-        // least once — see hasAttemptedPublish below.
-        const navErrors = hasAttemptedPublish ? formikProps.errors : {};
         // On mobile, viewing a non-"Producto" section replaces the whole
         // body with just that section, full-screen; its own back caret
         // returns to "Producto" instead of exiting the form.
@@ -883,8 +904,9 @@ const ProductFormPage = () => {
                     <SectionsNav
                       sections={sections}
                       selectedSection={selectedSection}
-                      formikErrors={navErrors}
+                      formikErrors={formikProps.errors}
                       activationFlags={activationFlags}
+                      hasAttemptedPublish={hasAttemptedPublish}
                       onSelect={handleSectionSelect}
                     />
                   )}
@@ -925,8 +947,9 @@ const ProductFormPage = () => {
                           },
                         ]}
                         selectedSection={selectedSection}
-                        formikErrors={navErrors}
+                        formikErrors={formikProps.errors}
                         activationFlags={activationFlags}
+                        hasAttemptedPublish={hasAttemptedPublish}
                         onSelect={handleSectionSelect}
                       />
                     )}

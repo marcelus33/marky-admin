@@ -18,6 +18,7 @@ interface CompleteYourProductListProps {
   selectedSection: string;
   formikErrors: FormikErrors<Product>;
   activationFlags: Record<string, boolean>;
+  hasAttemptedPublish: boolean;
   onSelect: (sectionName: string) => void;
 }
 
@@ -66,6 +67,7 @@ const CompleteYourProductList: React.FC<CompleteYourProductListProps> = ({
   selectedSection,
   formikErrors,
   activationFlags,
+  hasAttemptedPublish,
   onSelect,
 }) => {
   return (
@@ -81,6 +83,7 @@ const CompleteYourProductList: React.FC<CompleteYourProductListProps> = ({
             formikErrors,
             activationFlags[section.name],
             true,
+            hasAttemptedPublish,
           );
           return (
             <Box

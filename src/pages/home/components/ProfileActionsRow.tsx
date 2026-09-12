@@ -38,8 +38,18 @@ const ProfileActionsRow: React.FC<ProfileActionsRowProps> = ({
   ];
 
   return (
-    <Box display="flex" alignItems="center" gap={4} p={2}>
-      <CancelButton sx={{ paddingX: 4, flex: 1 }} onClick={onEditProfile}>
+    <Box display="flex" alignItems="center" gap={3} mt={4}>
+      <CancelButton
+        sx={{
+          paddingX: 2,
+          flex: 1,
+          minWidth: 0,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+        onClick={onEditProfile}
+      >
         Editar Perfil
       </CancelButton>
       <IconButton

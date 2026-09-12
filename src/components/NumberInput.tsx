@@ -6,7 +6,7 @@ import {
   Typography,
   TextFieldProps,
 } from "@mui/material";
-import { FieldProps } from "formik";
+import { FieldProps, getIn } from "formik";
 
 const NumberInput: React.FC<
   FieldProps & {
@@ -123,10 +123,17 @@ const NumberInput: React.FC<
     form.setFieldValue(field.name, paddedRaw);
   };
 
+  // field.name can be a nested path (e.g. "variants[0].price"); touched/errors
+  // are nested objects/arrays, so a literal form.touched[field.name] lookup
+  // always misses for anything but a top-level field name. getIn resolves
+  // the path correctly in both cases.
+  const isTouched = getIn(form.touched, field.name);
+  const fieldError = getIn(form.errors, field.name);
+
   return (
     <FormControl
       fullWidth
-      error={Boolean(form.touched[field.name] && form.errors[field.name])}
+      error={Boolean(isTouched && fieldError)}
       disabled={disabled}
     >
       <FormLabel>
@@ -152,11 +159,9 @@ const NumberInput: React.FC<
         InputProps={{
           ...InputProps,
         }}
-        error={Boolean(form.touched[field.name] && form.errors[field.name])}
+        error={Boolean(isTouched && fieldError)}
         helperText={
-          form.touched[field.name] && form.errors[field.name]
-            ? String(form.errors[field.name])
-            : helperText
+          isTouched && fieldError ? String(fieldError) : helperText
         }
       />
     </FormControl>

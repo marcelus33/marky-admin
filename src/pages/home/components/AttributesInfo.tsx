@@ -2,6 +2,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { Attribute } from "..";
+import { BUSINESS_ATTRIBUTE_ICON_MAP } from "../../../utils/businessAttributeIcons";
 
 interface AttributesInfoProps {
   attributes: Attribute[];
@@ -19,11 +20,11 @@ const AttributesInfo: React.FC<AttributesInfoProps> = ({
       sx={{
         border: isEmpty ? "1px dashed #B8CDF5" : "none",
         backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
-        borderRadius: isEmpty ? "6px" : 2,
-        py: isEmpty ? 4 : 4,
-        px: isEmpty ? 3 : 4,
+        borderRadius: isEmpty ? "6px" : 0,
+        py: isEmpty ? 4 : 0,
+        px: isEmpty ? 3 : 0,
         cursor: "pointer",
-        textAlign: "center",
+        textAlign: isEmpty ? "center" : "left",
       }}
     >
       {isEmpty ? (
@@ -38,17 +39,40 @@ const AttributesInfo: React.FC<AttributesInfoProps> = ({
           Agrega tus atributos
         </Typography>
       ) : (
-        <Box display="flex" flexWrap="wrap" gap={1}>
-          {attributes.map((attr: any) => (
-            <Box
-              key={attr.id}
-              sx={{ backgroundColor: "#E8F3FF", padding: 1, borderRadius: 1 }}
-            >
-              <Typography variant="body2" color="primary">
-                {attr.name}
-              </Typography>
-            </Box>
-          ))}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            columnGap: 6,
+            rowGap: 2,
+          }}
+        >
+          {attributes.map((attr: any) => {
+            const Icon = BUSINESS_ATTRIBUTE_ICON_MAP[attr.name];
+            return (
+              <Box
+                key={attr.id}
+                display="flex"
+                alignItems="center"
+                gap={1}
+                sx={{ flexShrink: 0 }}
+              >
+                {Icon && (
+                  <Icon sx={{ fontSize: 18, color: "#4F4F4F", flexShrink: 0 }} />
+                )}
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    lineHeight: "16px",
+                    color: "#4F4F4F",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {attr.name}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
       )}
     </Box>

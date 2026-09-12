@@ -51,7 +51,15 @@ export const getSectionNavState = (
   formikErrors: FormikErrors<Product>,
   isActivated: boolean,
   isOptional: boolean,
+  // Only gates whether a real error is allowed to render as "red" (true
+  // once the user has clicked "Publicar" at least once) — it must NOT gate
+  // whether a section can be "green". formikErrors here is always the
+  // live, real Formik errors (see ProductFormPage), so completeness is
+  // judged from actual validation, not from "not currently selected".
+  canShowError: boolean,
 ): SectionNavState => {
+  const hasError = sectionHasError(sectionName, formikErrors);
+
   // Error takes priority over "currently selected": otherwise navigating a
   // user straight to the section Publicar just flagged (see
   // ProductFormPage's handlePublishClick) makes that section "blue" and
@@ -59,8 +67,11 @@ export const getSectionNavState = (
   // wrong — the Figma nav (node 5540:24337) always shows red for an
   // errored section regardless of selection; "currently selected" is
   // conveyed separately via the pill background/text in SectionsNav.
-  if (sectionHasError(sectionName, formikErrors)) return "red";
+  if (canShowError && hasError) return "red";
   if (isOptional && !isActivated) return "empty";
   if (sectionName === selectedSection) return "blue";
-  return "green";
+  // Only genuinely valid sections read as "completed" — an incomplete
+  // section that hasn't been flagged red yet is "empty" (pending), never
+  // "green". This is the fix for the false-positive-completed bug.
+  return hasError ? "empty" : "green";
 };

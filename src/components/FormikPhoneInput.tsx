@@ -1,5 +1,5 @@
 import React from "react";
-import { FieldProps } from "formik";
+import { FieldProps, getIn } from "formik";
 import { Box, Typography } from "@mui/material";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/material.css"; // Asegúrate de importar los estilos necesarios para el PhoneInput
@@ -11,6 +11,7 @@ interface FormikPhoneInputProps {
   placeholder?: string;
   country?: string;
   required?: boolean;
+  sx?: object;
 }
 
 const FormikPhoneInput: React.FC<FormikPhoneInputProps & FieldProps> = ({
@@ -20,12 +21,14 @@ const FormikPhoneInput: React.FC<FormikPhoneInputProps & FieldProps> = ({
   form: { touched, errors },
   placeholder = "",
   country = "py",
+  sx,
 }) => {
   const theme = useTheme();
-  const error = touched[field.name] && errors[field.name];
+  const fieldError = getIn(errors, field.name);
+  const error = getIn(touched, field.name) && fieldError;
 
   return (
-    <Box sx={{ marginBottom: theme.spacing(4) }}>
+    <Box sx={{ marginBottom: theme.spacing(4), ...sx }}>
       {/* Custom Label */}
       <Typography
         variant="body1"
@@ -66,7 +69,7 @@ const FormikPhoneInput: React.FC<FormikPhoneInputProps & FieldProps> = ({
       />
       {error && (
         <Typography variant="caption" color="error" sx={{ marginLeft: "14px" }}>
-          {errors[field.name] as string}
+          {fieldError as string}
         </Typography>
       )}
     </Box>

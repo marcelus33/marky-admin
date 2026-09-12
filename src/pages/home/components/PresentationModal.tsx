@@ -22,6 +22,7 @@ import BusinessAvatar from "./BusinessAvatar";
 import colors from "../../../themes/utils/colors";
 import { ShowNotification } from "../../../utils/utils";
 import { Attribute } from "..";
+import { ALL_CHANNEL_KEYS, CHANNEL_META } from "./channels/channels.constants";
 
 interface PresentationModalProps {
   open: boolean;
@@ -124,11 +125,14 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const hasChannels =
-    socialMedia &&
-    (Object.values(socialMedia) as string[]).some(
-      (url: string) => url.trim() !== "",
-    );
+  const filledChannelKeys = socialMedia
+    ? ALL_CHANNEL_KEYS.filter((key) =>
+        (socialMedia[key] || []).some(
+          (entry: any) => entry.url && entry.url.trim() !== "",
+        ),
+      )
+    : [];
+  const hasChannels = filledChannelKeys.length > 0;
   const hasDescription = description && description.trim() !== "";
   const hasAttributes = attributes && attributes.length > 0;
 
@@ -234,10 +238,7 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
             label="Canales"
             value={
               hasChannels
-                ? (Object.entries(socialMedia) as [string, string][])
-                    .filter(([, url]) => url && url.trim() !== "")
-                    .map(([platform]) => platform)
-                    .join(", ")
+                ? filledChannelKeys.map((key) => CHANNEL_META[key].label).join(", ")
                 : undefined
             }
             placeholder="Agrega tus canales de marca"
@@ -351,39 +352,21 @@ const PresentationModal: React.FC<PresentationModalProps> = ({
               gap={1}
               mt={1}
             >
-              {socialMedia.instagram && socialMedia.instagram.trim() !== "" && (
-                <Box
-                  sx={{
-                    border: "1px solid lightgrey",
-                    borderRadius: 1,
-                    p: 2,
-                  }}
-                >
-                  <InstagramIcon />
-                </Box>
-              )}
-              {socialMedia.facebook && socialMedia.facebook.trim() !== "" && (
-                <Box
-                  sx={{
-                    border: "1px solid lightgrey",
-                    borderRadius: 1,
-                    p: 1.8,
-                  }}
-                >
-                  <FacebookIcon />
-                </Box>
-              )}
-              {socialMedia.whatsapp && socialMedia.whatsapp.trim() !== "" && (
-                <Box
-                  sx={{
-                    border: "1px solid lightgrey",
-                    borderRadius: 1,
-                    p: 2,
-                  }}
-                >
-                  <WhatsAppIcon />
-                </Box>
-              )}
+              {filledChannelKeys.map((key) => {
+                const IconComponent = CHANNEL_META[key].icon;
+                return (
+                  <Box
+                    key={key}
+                    sx={{
+                      border: "1px solid lightgrey",
+                      borderRadius: 1,
+                      p: 2,
+                    }}
+                  >
+                    <IconComponent />
+                  </Box>
+                );
+              })}
             </Box>
           ) : (
             <Box

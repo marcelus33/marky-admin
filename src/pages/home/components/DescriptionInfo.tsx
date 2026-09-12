@@ -18,9 +18,9 @@ const DescriptionInfo: React.FC<DescriptionInfoProps> = ({
       sx={{
         border: isEmpty ? "1px dashed #B8CDF5" : "none",
         backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
-        borderRadius: isEmpty ? "6px" : 2,
-        py: isEmpty ? 4 : 4,
-        px: isEmpty ? 3 : 4,
+        borderRadius: isEmpty ? "6px" : 0,
+        py: isEmpty ? 4 : 0,
+        px: isEmpty ? 3 : 0,
         cursor: "pointer",
       }}
     >
@@ -41,6 +41,9 @@ const DescriptionInfo: React.FC<DescriptionInfoProps> = ({
           sx={{
             whiteSpace: "pre-line",
             wordBreak: "break-word",
+            fontSize: 14,
+            color: "#374151",
+            lineHeight: "18px",
           }}
         >
           {description}

@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import FormHelperText from "@mui/material/FormHelperText";
-import { IconButton, InputAdornment, Typography } from "@mui/material";
+import { Box, IconButton, InputAdornment, Typography } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface InputProps {
@@ -16,6 +16,9 @@ interface InputProps {
   maxLength?: number;
   // "remaining" (default) shows characters left; "fraction" shows current/max
   counterFormat?: "remaining" | "fraction";
+  // "adornment" (default, current behavior) renders the counter inside the
+  // input; "label" renders it aligned right in the FormLabel row, as in Figma
+  counterPosition?: "adornment" | "label";
   helperText?: string;
   disabled?: boolean;
   placeholder?: string;
@@ -46,6 +49,7 @@ const Input: React.FC<InputProps> = ({
   helperText: helperTextProp,
   maxLength,
   counterFormat = "remaining",
+  counterPosition = "adornment",
   disabled = false,
   placeholder,
   value: valueProp,
@@ -97,7 +101,7 @@ const Input: React.FC<InputProps> = ({
           </IconButton>
         </InputAdornment>
       )}
-      {maxLength !== undefined && (
+      {maxLength !== undefined && counterPosition === "adornment" && (
         <InputAdornment position="end">
           <Typography variant="caption" color="textSecondary">
             {counterFormat === "fraction"
@@ -116,9 +120,24 @@ const Input: React.FC<InputProps> = ({
 
   return (
     <FormControl fullWidth error={error} disabled={disabled} sx={sx}>
-      <FormLabel>
-        {label} {required && <span style={{ color: "red" }}>*</span>}
-      </FormLabel>
+      <Box
+        sx={
+          maxLength !== undefined && counterPosition === "label"
+            ? { display: "flex", justifyContent: "space-between", alignItems: "baseline" }
+            : undefined
+        }
+      >
+        <FormLabel>
+          {label} {required && <span style={{ color: "red" }}>*</span>}
+        </FormLabel>
+        {maxLength !== undefined && counterPosition === "label" && (
+          <Typography variant="caption" color="textSecondary">
+            {counterFormat === "fraction"
+              ? `${currentValue?.length || 0}/${maxLength}`
+              : maxLength - (currentValue?.length || 0)}
+          </Typography>
+        )}
+      </Box>
       <TextField
         name={inputName}
         value={currentValue}

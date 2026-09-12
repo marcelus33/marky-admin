@@ -1,17 +1,10 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
-import InstagramIcon from "@mui/icons-material/Instagram";
-import { ReactComponent as FacebookIcon } from "../../../assets/icons/facebook.svg";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import LanguageIcon from "@mui/icons-material/Language";
+import { Badge, Box, Typography } from "@mui/material";
+import { ALL_CHANNEL_KEYS, CHANNEL_META } from "./channels/channels.constants";
+import { ChannelsByKey } from "../../../types/channel";
 
 interface SocialMediaInfoProps {
-  socialMedia: {
-    instagram?: string;
-    facebook?: string;
-    whatsapp?: string;
-    website?: string;
-  };
+  socialMedia: ChannelsByKey;
   onOpen: () => void;
 }
 
@@ -19,15 +12,14 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
   socialMedia,
   onOpen,
 }) => {
-  const hasInstagram =
-    socialMedia.instagram && socialMedia.instagram.trim() !== "";
-  const hasFacebook =
-    socialMedia.facebook && socialMedia.facebook.trim() !== "";
-  const hasWhatsApp =
-    socialMedia.whatsapp && socialMedia.whatsapp.trim() !== "";
-  const hasWebsite = socialMedia.website && socialMedia.website.trim() !== "";
+  const filledChannels = ALL_CHANNEL_KEYS.map((key) => ({
+    key,
+    entries: (socialMedia?.[key] || []).filter(
+      (entry) => entry.url && entry.url.trim() !== "",
+    ),
+  })).filter(({ entries }) => entries.length > 0);
 
-  const isEmpty = !hasInstagram && !hasFacebook && !hasWhatsApp;
+  const isEmpty = filledChannels.length === 0;
 
   return (
     <Box
@@ -35,9 +27,9 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
       sx={{
         border: isEmpty ? "1px dashed #B8CDF5" : "none",
         backgroundColor: isEmpty ? "#FAFCFF" : "transparent",
-        borderRadius: isEmpty ? "6px" : 2,
-        py: isEmpty ? 4 : 2,
-        px: isEmpty ? 3 : 2,
+        borderRadius: isEmpty ? "6px" : 0,
+        py: isEmpty ? 4 : 0,
+        px: isEmpty ? 3 : 0,
         cursor: "pointer",
       }}
     >
@@ -58,52 +50,32 @@ const SocialMediaInfo: React.FC<SocialMediaInfoProps> = ({
           display="flex"
           alignItems="center"
           gap={3}
-          sx={{ border: "0px solid red", justifyContent: "center" }}
+          sx={{ justifyContent: "center" }}
         >
-          {hasInstagram && (
-            <Box
-              sx={{
-                border: "1px solid lightgrey",
-                borderRadius: 1,
-                p: 2,
-              }}
-            >
-              <InstagramIcon />
-            </Box>
-          )}
-          {hasFacebook && (
-            <Box
-              sx={{
-                border: "1px solid lightgrey",
-                borderRadius: 1,
-                p: 1.8,
-              }}
-            >
-              <FacebookIcon />
-            </Box>
-          )}
-          {hasWhatsApp && (
-            <Box
-              sx={{
-                border: "1px solid lightgrey",
-                borderRadius: 1,
-                p: 2,
-              }}
-            >
-              <WhatsAppIcon />
-            </Box>
-          )}
-          {hasWebsite && (
-            <Box
-              sx={{
-                border: "1px solid lightgrey",
-                borderRadius: 1,
-                p: 2,
-              }}
-            >
-              <LanguageIcon />
-            </Box>
-          )}
+          {filledChannels.map(({ key, entries }) => {
+            const IconComponent = CHANNEL_META[key].icon;
+            return (
+              <Badge
+                key={key}
+                badgeContent={entries.length > 1 ? entries.length : undefined}
+                color="primary"
+              >
+                <Box
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: (theme) => `1px solid ${theme.palette.grey[800]}`,
+                    borderRadius: 1,
+                  }}
+                >
+                  <IconComponent style={{ width: 26, height: 26 }} />
+                </Box>
+              </Badge>
+            );
+          })}
         </Box>
       )}
     </Box>
